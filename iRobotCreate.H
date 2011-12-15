@@ -3,12 +3,14 @@
 
 #include <nrt/Core/Blackboard/Module.H>
 #include <nrt/Robotics/Messages/TransformMessage.H>
+#include <nrt/Robotics/Messages/VelocityMessage.H>
 
 class SerialPort; 
 
 namespace irobotcreate
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( OdometryUpdatePort );
+	NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
 
   static const nrt::ParameterCategory ParamCat("iRobot Create Related Options");
 
@@ -23,6 +25,7 @@ namespace irobotcreate
 }
 
 class iRobotCreateModule : public nrt::Module,
+													 public nrt::MessageSubscriber<irobotcreate::VelocityCommand>,
                            public nrt::MessagePoster<irobotcreate::OdometryUpdatePort>
 {
   public:
@@ -31,6 +34,8 @@ class iRobotCreateModule : public nrt::Module,
     void run();
 
     void serialDevCallback(std::string const & dev);
+
+		void onMessage(irobotcreate::VelocityCommand msg);
 
   private:
 		std::mutex itsMtx;
