@@ -8,6 +8,7 @@ using namespace irobotcreate;
 // ######################################################################
 iRobotCreateModule::iRobotCreateModule(std::string const& instanceName) :
   Module(instanceName),
+	itsSerialPort(nullptr),
   itsOdometryBaseFrame(BaseFrameParamDef, this),
   itsOdometryOdomFrame(OdomFrameParamDef, this),
   itsSerialDev(SerialDevParam, this, &iRobotCreateModule::serialDevCallback)
@@ -24,7 +25,12 @@ void iRobotCreateModule::serialDevCallback(std::string const & dev)
 	try
 	{
 		itsSerialPort = std::make_shared<SerialPort>(dev);
-		itsSerialPort->Open(SerialPort::BAUD_57600);
+		itsSerialPort->Open(
+				SerialPort::BAUD_57600,
+				SerialPort::CHAR_SIZE_8,
+				SerialPort::PARITY_NONE,
+				SerialPort::STOP_BITS_1,
+				SerialPort::FLOW_CONTROL_NONE);
 	}
 	catch(SerialPort::AlreadyOpen & e)
 	{
@@ -47,6 +53,8 @@ void iRobotCreateModule::serialDevCallback(std::string const & dev)
 	// Put the iRobot into full command mode
 	itsSerialPort->WriteByte(132);
 
+	// Turn on the play LED to yellow
+	itsSerialPort->Write(std::string({byte(139), byte(2), byte(255), byte(255)}));
 }
 
 // ######################################################################
@@ -61,33 +69,40 @@ void iRobotCreateModule::onMessage(VelocityCommand msg)
 	// The distance each wheel should travel to accomodate the rotational velocity
 	double const rotwheeldist = rotvel * radius; 
 
-	int const leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)/1000.0, -500.0, 500.0));
-	int const rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)/1000.0, -500.0, 500.0));
+	nrt::int16 const leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)*1000.0, -500.0, 500.0));
+	nrt::int16 const rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)*1000.0, -500.0, 500.0));
 
 	std::string command = 
 	{
-		nrt::byte(145),
-		(rightspeed >> 8) && 0x00FF,
-		(rightspeed >> 0) && 0x00FF,
-		(leftspeed >> 8) && 0x00FF,
-		(leftspeed >> 0) && 0x00FF
+		byte(145),
+		byte((rightspeed >> 8) & 0x00FF),
+		byte((rightspeed >> 0) & 0x00FF),
+		byte((leftspeed >> 8) & 0x00FF),
+		byte((leftspeed >> 0) & 0x00FF)
 	};
+
 
 	{
 		std::lock_guard<std::mutex> lock(itsMtx);
+		if(!itsSerialPort) return;
+
+		NRT_INFO("Sending Serial Port Command");
 		itsSerialPort->Write(command);
 	}
+	NRT_INFO("Sent Velocity [" << leftspeed << "," << rightspeed << "]");
 }
 
 // ######################################################################
 void iRobotCreateModule::run()
 {
-  while(running())
-  {
-		std::lock_guard<std::mutex> lock(itsMtx);
-		NRT_INFO("I'm Awesome");
-		usleep(100000);
-  }
+  //while(running())
+  //{
+	//	//std::lock_guard<std::mutex> lock(itsMtx);
+	//	//if(!itsSerialPort) return;
+
+	//	//NRT_INFO("I'm Awesome");
+	//	//sleep(1);
+  //}
 }
 
 NRT_REGISTER_MODULE(iRobotCreateModule);
