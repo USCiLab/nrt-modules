@@ -1,1 +1,21 @@
 build/
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# OS Specific things
+.DS_Store*
+ehthumbs.db
+Icon?
+Thumbs.db
+*.swp
