@@ -1,7 +1,7 @@
 Module: 
   general: 
-    displayname: SixAxis 
-    classname: SixAxisModule 
+    displayname: ThreeSixtyController 
+    classname: ThreeSixtyControllerModule 
     category: /Robotics/Utils
     synopsis: A simple module to allow joystick control of robots. 
     description: > 
@@ -39,7 +39,7 @@ Module:
   files: 
     icon:  
     screenshots: 
-    objectfile: build/SixAxis.so 
+    objectfile: build/ThreeSixtyController.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

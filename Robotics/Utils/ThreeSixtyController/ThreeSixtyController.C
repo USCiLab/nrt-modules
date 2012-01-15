@@ -1,4 +1,4 @@
-#include "SixAxis.H"
+#include "ThreeSixtyController.H"
 #include <nrt/ImageProc/IO/ImageSink/DisplayImageSink.H>
 #include <nrt/ImageProc/Drawing/Text.H>
 
@@ -6,16 +6,16 @@ using namespace nrt;
 using namespace sixaxis;
 
 // ######################################################################
-SixAxisModule::SixAxisModule(std::string const & instanceName) :
+ThreeSixtyControllerModule::ThreeSixtyControllerModule(std::string const & instanceName) :
   Module(instanceName),
   itsDisplaySink(new DisplayImageSink),
-  itsJoystickDev(JoystickDevParam, this, &SixAxisModule::joystickDevCallback)
+  itsJoystickDev(JoystickDevParam, this, &ThreeSixtyControllerModule::joystickDevCallback)
 { 
   addSubComponent(itsDisplaySink);
 }
 
 // ######################################################################
-void SixAxisModule::joystickDevCallback(std::string const & dev)
+void ThreeSixtyControllerModule::joystickDevCallback(std::string const & dev)
 {
   std::lock_guard<std::mutex> lock(itsMtx);
 
@@ -40,7 +40,7 @@ void SixAxisModule::joystickDevCallback(std::string const & dev)
 }
 
 // ######################################################################
-void SixAxisModule::run()
+void ThreeSixtyControllerModule::run()
 {
   while(running())
   {
@@ -90,4 +90,4 @@ void SixAxisModule::run()
   }
 }
 
-NRT_REGISTER_MODULE(SixAxisModule);
+NRT_REGISTER_MODULE(ThreeSixtyControllerModule);

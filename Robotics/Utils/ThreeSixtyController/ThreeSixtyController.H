@@ -13,20 +13,20 @@ namespace sixaxis
 {
   NRT_DECLARE_MESSAGEPOSTER_PORT( VelocityCommand, nrt::VelocityMessage, void, "A velocity to send" );
 
-  static const nrt::ParameterCategory ParamCat("SixAxis Related Options");
+  static const nrt::ParameterCategory ParamCat("ThreeSixtyController Related Options");
 
   static const nrt::ParameterDef<std::string> JoystickDevParam("joystickdev",
       "The joystick device file", "", ParamCat);
 }
 
-//! A simple module to allow joystick control of robots with a Sony SixAxis controller
-/*! This module simply opens a new GTK window, and allows users to use a SixAxis controller to send out
+//! A simple module to allow joystick control of robots with a Sony ThreeSixtyController controller
+/*! This module simply opens a new GTK window, and allows users to use a ThreeSixtyController controller to send out
   velocity command messages. */
-class SixAxisModule : public nrt::Module,
+class ThreeSixtyControllerModule : public nrt::Module,
   public nrt::MessagePoster<sixaxis::VelocityCommand>
 {
   public:
-    SixAxisModule(std::string const& instanceName="");
+    ThreeSixtyControllerModule(std::string const& instanceName="");
 
     void run();
 
