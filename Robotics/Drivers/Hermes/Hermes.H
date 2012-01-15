@@ -10,7 +10,7 @@ class SerialPort;
 namespace hermes
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( OdometryUpdatePort );
-	NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
+  NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
 
   static const nrt::ParameterCategory ParamCat("Hermes Related Options");
 
@@ -25,8 +25,8 @@ namespace hermes
 }
 
 class HermesModule : public nrt::Module,
-										 public nrt::MessageSubscriber<hermes::VelocityCommand>,
-                     public nrt::MessagePoster<hermes::OdometryUpdatePort>
+  public nrt::MessageSubscriber<hermes::VelocityCommand>,
+  public nrt::MessagePoster<hermes::OdometryUpdatePort>
 {
   public:
     HermesModule(std::string const& instanceName="");
@@ -35,10 +35,10 @@ class HermesModule : public nrt::Module,
 
     void serialDevCallback(std::string const & dev);
 
-		void onMessage(hermes::VelocityCommand msg);
+    void onMessage(hermes::VelocityCommand msg);
 
   private:
-		std::mutex itsMtx;
+    std::mutex itsMtx;
     std::shared_ptr<SerialPort> itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;

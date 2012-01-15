@@ -21,9 +21,9 @@ namespace sixaxis
 
 //! A simple module to allow joystick control of robots with a Sony SixAxis controller
 /*! This module simply opens a new GTK window, and allows users to use a SixAxis controller to send out
-    velocity command messages. */
+  velocity command messages. */
 class SixAxisModule : public nrt::Module,
-                      public nrt::MessagePoster<sixaxis::VelocityCommand>
+  public nrt::MessagePoster<sixaxis::VelocityCommand>
 {
   public:
     SixAxisModule(std::string const& instanceName="");
@@ -33,15 +33,15 @@ class SixAxisModule : public nrt::Module,
     void joystickDevCallback(std::string const & dev);
 
   private:
-	std::mutex itsMtx;
-	std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
-  nrt::Parameter<std::string> itsJoystickDev;
-	double itsAngularVel;
-	double itsLinearVel;
-  int joy_fd, num_axes, num_buttons;
-  std::vector<int> axis;
-  std::vector<int> button;
-  struct js_event js;
+    std::mutex itsMtx;
+    std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
+    nrt::Parameter<std::string> itsJoystickDev;
+    double itsAngularVel;
+    double itsLinearVel;
+    int joy_fd, num_axes, num_buttons;
+    std::vector<int> axis;
+    std::vector<int> button;
+    struct js_event js;
 };
 
 #endif // SIXAXIS_H 

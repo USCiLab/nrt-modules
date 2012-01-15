@@ -34,7 +34,7 @@ int main()
   while (1)
   {
     read(joy_fd, &js, sizeof(struct js_event));
-    
+
     switch (js.type & ~JS_EVENT_INIT)
     {
       case JS_EVENT_AXIS:
@@ -47,10 +47,10 @@ int main()
     }
 
     printf("X: %6d  Y: %6d  ", axis[0], axis[1]);
-    
+
     if (num_axes > 2)
       printf("Z: %6d  ", axis[2]);
-    
+
     if (num_axes > 3)
       printf("R: %6d  ", axis[3]);
 

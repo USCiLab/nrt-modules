@@ -10,7 +10,7 @@ class SerialPort;
 namespace irobotcreate
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( OdometryUpdatePort );
-	NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
+  NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
 
   static const nrt::ParameterCategory ParamCat("iRobot Create Related Options");
 
@@ -25,8 +25,8 @@ namespace irobotcreate
 }
 
 class iRobotCreateModule : public nrt::Module,
-													 public nrt::MessageSubscriber<irobotcreate::VelocityCommand>,
-                           public nrt::MessagePoster<irobotcreate::OdometryUpdatePort>
+  public nrt::MessageSubscriber<irobotcreate::VelocityCommand>,
+  public nrt::MessagePoster<irobotcreate::OdometryUpdatePort>
 {
   public:
     iRobotCreateModule(std::string const& instanceName="");
@@ -35,10 +35,10 @@ class iRobotCreateModule : public nrt::Module,
 
     void serialDevCallback(std::string const & dev);
 
-		void onMessage(irobotcreate::VelocityCommand msg);
+    void onMessage(irobotcreate::VelocityCommand msg);
 
   private:
-		std::mutex itsMtx;
+    std::mutex itsMtx;
     std::shared_ptr<SerialPort> itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;

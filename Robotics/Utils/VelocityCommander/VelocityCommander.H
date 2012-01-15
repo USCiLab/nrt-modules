@@ -13,22 +13,22 @@ namespace velocitycommander
 
 //! A simple module to allow keyboard control of robots
 /*! This module simply opens a new GTK window, and allows users to use the arrow keys to send out
-    velocity command messages. */
+  velocity command messages. */
 class VelocityCommanderModule : public nrt::Module,
-                                public nrt::MessagePoster<velocitycommander::VelocityCommand>
+  public nrt::MessagePoster<velocitycommander::VelocityCommand>
 {
   public:
     VelocityCommanderModule(std::string const& instanceName="");
 
     void run();
 
-	void keyCallback(nrt::int32 key);
+    void keyCallback(nrt::int32 key);
 
   private:
-	std::mutex itsMtx;
-	std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
-	double itsAngularVel;
-	double itsLinearVel;
+    std::mutex itsMtx;
+    std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
+    double itsAngularVel;
+    double itsLinearVel;
 };
 
 #endif // VELOCITYCOMMANDER_H 
