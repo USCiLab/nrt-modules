@@ -1,0 +1,61 @@
+Module: 
+  general: 
+    displayname: Hermes
+    classname: HermesModule 
+    category: /Robotics/Drivers
+    synopsis: This author is too lazy to write a synopsis! 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/Hermes.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
