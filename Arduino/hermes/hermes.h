@@ -11,3 +11,22 @@
 // Commands
 #define CMD_RESET     97
 #define CMD_SETSPEED  98 // {leftSpeed 0-127} {rightSpeed 0-127}
+
+// Globals
+Servo Left;
+Servo Right;
+
+// 
+// Debug 
+// 
+#define DEBUG
+
+#ifdef DEBUG
+#define LOG_RAW(message) Serial.write(message);
+#define LOG(message) Serial.println(message);
+#else
+#define LOG_RAW(message) ;
+#define LOG(message) ;
+#endif
+
+int timeRunning;
