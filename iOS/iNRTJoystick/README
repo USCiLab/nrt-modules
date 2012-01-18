@@ -1,0 +1,21 @@
+iOS application using UDP to send commands from an iPhone to an Arduino MEGA2560 with Ethernet shield.
+
+Controls include:
+
+-- Arcade style drive (throttle, steering)
+-- Full range of head motion (for robot)
+-- Left and right arms move up and down
+-- Button to switch LED display patterns
+
+How it works:
+
+-- uses cocos2d for joystick and button inputs
+-- takes in position of joysticks and converts to a scale of 0-255
+-- converts those values to ASCII unsigned char to be send over UDP
+-- simple!
+
+Notes:
+
+-- this was an upgrade from using HTML GET commands to send data
+-- it is now much faster!
+-- but it is now very important to add markers in your data you know are there for the receiving side
