@@ -16,6 +16,7 @@
 
 @property (retain) RootViewController *rootViewController;
 @property (retain, nonatomic) IBOutlet UITextField *hostnameField;
+@property (retain, nonatomic) IBOutlet UITextField *portField;
 
 - (IBAction)connectTapped:(id)sender;
 

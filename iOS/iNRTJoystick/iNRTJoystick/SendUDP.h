@@ -17,10 +17,8 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#define SERVERPORT 61557			// the port users will be connecting to
-
 //Initialize network connection
-int SUDP_Init(const char* ipaddress);
+int SUDP_Init(const char* ipaddress, unsigned int port);
 
 //Send a UDP packet
 int SUDP_SendMsg(const char * data, int length);

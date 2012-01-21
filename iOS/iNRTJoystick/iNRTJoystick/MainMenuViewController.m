@@ -11,6 +11,7 @@
 
 @implementation MainMenuViewController
 @synthesize hostnameField = _hostnameField;
+@synthesize portField = _portField;
 
 @synthesize rootViewController = _rootViewController;
 
@@ -19,14 +20,27 @@
     SUDP_Close();
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     [defaults setObject:[self hostnameField].text forKey:@"hostname"];
+    [defaults setObject:[self portField].text forKey:@"port"];
     [defaults synchronize];
-    SUDP_Init([[self hostnameField].text cStringUsingEncoding:NSASCIIStringEncoding]);
     
-    if (_rootViewController == nil)
+    if ( SUDP_Init([[self hostnameField].text cStringUsingEncoding:NSASCIIStringEncoding], [[self portField].text intValue]) < 0 )
     {
-        self.rootViewController = [[[RootViewController alloc] initWithNibName:nil bundle:nil] autorelease];
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" 
+                                                        message:@"Couldn't connect to host." 
+                                                       delegate:nil 
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [alert show];
+        [alert release];
     }
-    [self.navigationController pushViewController:_rootViewController animated:YES];
+    else
+    {
+        if (_rootViewController == nil)
+        {
+            self.rootViewController = [[[RootViewController alloc] initWithNibName:nil bundle:nil] autorelease];
+        }
+        [self.navigationController pushViewController:_rootViewController animated:YES];
+    }
 }
 
 - (void)dealloc
@@ -34,6 +48,7 @@
     [_rootViewController release];
     _rootViewController = nil;
     [_hostnameField release];
+    [_portField release];
     [super dealloc];
 }
 
@@ -61,15 +76,17 @@
     [super viewDidLoad];
     // Do any additional setup after loading the view from its nib.
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-    if ( [defaults stringForKey:@"hostname"] != nil)
-    {
-        [_hostnameField setText:[defaults stringForKey:@"hostname"]];
-    }
+    NSString *hostname = [defaults stringForKey:@"hostname"];
+    NSString *port = [defaults stringForKey:@"port"];
+
+    [_hostnameField setText:hostname];
+    [_portField setText:port];
 }
 
 - (void)viewDidUnload
 {
     [self setHostnameField:nil];
+    [self setPortField:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;

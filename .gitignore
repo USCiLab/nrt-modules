@@ -19,3 +19,11 @@ ehthumbs.db
 Icon?
 Thumbs.db
 *.swp
+
+*~.nib
+
+*.pbxuser
+*.perspective
+*.perspectivev3
+*.xcworkspace
+xcuserdata

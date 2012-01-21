@@ -15,7 +15,6 @@
 @interface RobotLayer : CCLayer
 {
     SneakyJoystick *leftJoystick;
-    SneakyJoystick *rightJoystick;
 }
 
 +(CCScene *) scene;

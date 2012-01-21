@@ -123,8 +123,15 @@
         NSString *key = @"hostname";
         NSString *value = @"192.168.1.102";
         [defaults setObject:value forKey:key];
-        [defaults synchronize];
     }
+    
+    if ( [defaults stringForKey:@"port"] == nil)
+    {
+        NSString *key = @"port";
+        NSString *value = @"61557";
+        [defaults setObject:value forKey:key];
+    }
+    [defaults synchronize];
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {
@@ -135,7 +142,18 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSString *host = [defaults stringForKey:@"hostname"];
-    SUDP_Init([host cStringUsingEncoding:NSASCIIStringEncoding]);
+    NSString *port = [defaults stringForKey:@"port"];
+
+    if ( SUDP_Init([host cStringUsingEncoding:NSASCIIStringEncoding], [port intValue]) < 0 )
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" 
+                                                        message:@"Couldn't connect to host." 
+                                                       delegate:nil 
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [alert show];
+        [alert release];
+    }
 	[[CCDirector sharedDirector] resume];
 }
 
@@ -151,7 +169,18 @@
 -(void) applicationWillEnterForeground:(UIApplication*)application {
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     NSString *host = [defaults stringForKey:@"hostname"];
-    SUDP_Init([host cStringUsingEncoding:NSASCIIStringEncoding]);
+    NSString *port = [defaults stringForKey:@"port"];
+
+    if ( SUDP_Init([host cStringUsingEncoding:NSASCIIStringEncoding], [port intValue]) < 0 )
+    {
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"Error" 
+                                                        message:@"Couldn't connect to host." 
+                                                       delegate:nil 
+                                              cancelButtonTitle:@"OK"
+                                              otherButtonTitles:nil];
+        [alert show];
+        [alert release];
+    }
 	[[CCDirector sharedDirector] startAnimation];
 }
 

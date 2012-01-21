@@ -44,8 +44,8 @@ int count = 0;
 		CGSize size = [[CCDirector sharedDirector] winSize];
 
         SneakyJoystickSkinnedBase *leftJoy = [[SneakyJoystickSkinnedBase alloc] init];
-        leftJoy.position = ccp(110, size.height/2);
-        leftJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:75];
+        leftJoy.position = ccp(150, size.height/2);
+        leftJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:145];
         leftJoy.thumbSprite = [ColoredCircleSprite circleWithColor:ccc4(0, 0, 255, 200) radius:40];
         leftJoy.joystick = [[[SneakyJoystick alloc] initWithRect:CGRectMake(0, 0, 100, 100)] autorelease];
         leftJoystick = [leftJoy.joystick retain];
@@ -54,18 +54,6 @@ int count = 0;
         [self addChild:leftJoy];
         [leftJoy release];
         [leftJoystick release];
-
-        SneakyJoystickSkinnedBase *rightJoy = [[SneakyJoystickSkinnedBase alloc] init];
-        rightJoy.position = ccp(size.width-110, size.height/2);
-        rightJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:75];
-        rightJoy.thumbSprite = [ColoredCircleSprite circleWithColor:ccc4(0, 0, 255, 200) radius:40];
-        rightJoy.joystick = [[[SneakyJoystick alloc] initWithRect:CGRectMake(0, 0, 100, 100)] autorelease];
-        rightJoystick = [rightJoy.joystick retain];
-        rightJoystick.deadRadius = 10;
-        rightJoystick.hasDeadzone = YES;
-        [self addChild:rightJoy];
-        [rightJoy release];
-        [rightJoystick release];
         
 		[self scheduleUpdate];
     }
@@ -79,13 +67,13 @@ int count = 0;
         // write out the left.x, left.y, right.x, right.y positions
         char data[6];
         
-        // the radius of the joysticks is 75
+        // the radius of the joysticks is 145
         
         data[0] = 's';
-        data[1] = (((leftJoystick.stickPosition.x / 75.0) + 1.0)/2) * 255;
-        data[2] = (((leftJoystick.stickPosition.y / 75.0) + 1.0)/2) * 255;
-        data[3] = (((rightJoystick.stickPosition.x / 75.0) + 1.0)/2) * 255;
-        data[4] = (((rightJoystick.stickPosition.y / 75.0) + 1.0)/2) * 255;
+        data[1] = (((-leftJoystick.stickPosition.x / 145.0) + 1.0)/2) * 255;
+        data[2] = (((-leftJoystick.stickPosition.y / 145.0) + 1.0)/2) * 255;
+        data[3] = 0;
+        data[4] = 0;
         data[5] = 'e';
 
         SUDP_SendMsg(data, 6);
