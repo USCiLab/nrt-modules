@@ -1,0 +1,18 @@
+//
+//  RootViewController.h
+//  DiscoTech Controller
+//
+//  Created by D. Grayson Smith on 7/12/11.
+//  Copyright __MyCompanyName__ 2011. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+
+@interface RootViewController : UIViewController {
+
+}
+
+- (IBAction)backTapped:(id)sender;
+
+@end
