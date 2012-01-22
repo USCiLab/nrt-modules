@@ -1,0 +1,62 @@
+Module: 
+  general: 
+    displayname: WebVisualizer 
+    classname: WebVisualizerModule 
+    category: /Robotics/Utils
+    synopsis: A simple module to allow joystick control of robots. 
+    description: > 
+      This module simply opens a new GTK window, and allows users to use the
+      joystick to send out velocity command messages.
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/WebVisualizer.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
