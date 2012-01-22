@@ -10,9 +10,16 @@ nrtlib.loadModule(
 		position = (200, 0))
 
 nrtlib.loadModule(
-		logicalpath="/Robotics/Utils/SixAxisModule",
+		logicalpath="/Robotics/Utils/iNRTJoystickModule",
 		bbnick="local",
-		instancename = 'MySixAxis',
-		parameters = {'joystickdev': '/dev/input/js1'},
+		instancename = 'MyiPhone',
 		postertopics = {'VelocityCommand' : 'HermesVelocity'},
-		position = (-200, 0))
+		position = (-200, 200))
+
+#nrtlib.loadModule(
+#		logicalpath="/Robotics/Utils/ThreeSixtyControllerModule",
+#		bbnick="local",
+#		instancename = 'MySixAxis',
+#		parameters = {'joystickdev': '/dev/input/js1'},
+#		postertopics = {'VelocityCommand' : 'HermesVelocity'},
+#		position = (-200, 0))
