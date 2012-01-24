@@ -26,4 +26,5 @@ Thumbs.db
 *.perspective
 *.perspectivev3
 *.xcworkspace
+*.xcuserstate
 xcuserdata
