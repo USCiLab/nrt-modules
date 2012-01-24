@@ -131,13 +131,35 @@ void iNRTJoystickModule::run()
                 linear = (doc[i]["y"].GetInt() - 128) / 12; // the "up-down" axis moves it forward (0=full backwards, 127=stopped, 255=full forwards)
                 angular = (doc[i]["x"].GetInt() - 128) / 6; // the "left-right" axis turns it (0=fully turning left, 127=stopped, 255=fully turning right)
               }
+              /*
+               *else if ( doc[i]["joystick"].GetInt() == 1 )
+               *{
+               *  // process another joystick
+               *}
+              */
             }
-            else {
+            else if ( doc[i].IsString() )
+            {
+              if ( doc[i].GetString() == "refresh" )
+              {
+                // send the URL
+                // prepare the string: [{"url": "http://www.google.com/"}]
+                memset(json, 0, BUFLEN);
+                sprintf(json, "[{\"url\": \"%s\"}]", itsWebviewURL.getValue());
+                if ( sendto(itsSocket, json, BUFLEN, 0, (struct sockaddr*)&other, (unsigned int*)&olen) == -1 )
+                {
+                  NRT_FATAL("Error sending URL back to iNRTJoystick: " << errno);
+                }
+              }
+            }
+            else
+            {
               NRT_INFO("Unexpected JSON data (data wasn't a map!)");
             }
           }
         }
-        else {
+        else
+        {
           NRT_INFO("Unexpected JSON data (top level object must be an array!)");
         }
       }
