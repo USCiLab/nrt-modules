@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 
+set(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} rapidjson/)
+
 set(CMAKE_MODULE_PATH /home/sagar/workspace/nrt/CMakeModules)
 include(NRTHelpers)
 

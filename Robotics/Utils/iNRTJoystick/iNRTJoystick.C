@@ -10,6 +10,10 @@
 #include <fcntl.h>
 #include <errno.h>
 
+#include "rapidjson/document.h"
+#include "rapidjson/prettywriter.h"
+#include "rapidjson/filestream.h"
+
 using namespace nrt;
 using namespace inrtjoystick;
 
@@ -75,11 +79,14 @@ void iNRTJoystickModule::run()
 {
   struct sockaddr_in other;
   int olen = sizeof(other);
-  unsigned char axis[6];
+
+  #define BUFLEN 512 
+  unsigned char json[BUFLEN];
 
   fd_set rfds;
   struct timeval tv;
   int retval;
+  rapidjson::Document doc;
 
   while(running())
   {
@@ -104,22 +111,41 @@ void iNRTJoystickModule::run()
 
       else if (retval)
       {
-        if ( recvfrom(itsSocket, axis, 6, 0, (struct sockaddr*)&other, (unsigned int*)&olen) < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN) )
+        memset(json, 0, BUFLEN);
+        if ( recvfrom(itsSocket, json, BUFLEN, 0, (struct sockaddr*)&other, (unsigned int*)&olen) < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN) )
           NRT_FATAL("Cannot receive on socket: " << errno);
 
-        if (axis[0] == 's' && axis[5] == 'e')
+        NRT_INFO("Read JSON string: " << json);
+
+        if (doc.Parse<0>((const char*)json).HasParseError())
+          NRT_FATAL("JSON parsing error (JSON data follows): " << json);
+
+        if ( doc.IsArray() )
         {
-          // (x - 128) / 12 ==> map the x from (-128, 128) to (-10, 10)
-          // (y - 128) / 6  ==> map the y from (-128, 128) to (-20, 20)
-          linear = (axis[2] - 128)/12;
-          angular = (axis[1] - 128)/6;
+          for (rapidjson::SizeType i = 0; i < doc.Size(); i++)
+          {
+            if ( doc[i].IsObject() )
+            {
+              if ( doc[i]["joystick"].GetInt() == 0 )
+              {
+                linear = (doc[i]["y"].GetInt() - 128) / 12; // the "up-down" axis moves it forward (0=full backwards, 127=stopped, 255=full forwards)
+                angular = (doc[i]["x"].GetInt() - 128) / 6; // the "left-right" axis turns it (0=fully turning left, 127=stopped, 255=fully turning right)
+              }
+            }
+            else {
+              NRT_INFO("Unexpected JSON data (data wasn't a map!)");
+            }
+          }
+        }
+        else {
+          NRT_INFO("Unexpected JSON data (top level object must be an array!)");
         }
       }
     }
   
     Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
-    nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f (raw: %d)", linear, axis[2]));
-    nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f (raw: %d)", angular, axis[1]));
+    nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
+    nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
     itsDisplaySink->out(GenericImage(image), "Velocity Commander");
 
     if ( !(itsLinearVel == linear && itsAngularVel == angular) )
