@@ -35,7 +35,7 @@ int count = 0;
 	return scene;
 }
 
-- (id)init
+- (id)init	
 {
     NSLog(@"initializing joysticks");
     self = [super init];
@@ -64,19 +64,21 @@ int count = 0;
 {
     if (SUDP_IsOpen())
     {
-        // write out the left.x, left.y, right.x, right.y positions
-        char data[6];
+        int x = (((leftJoystick.stickPosition.x / 145.0) + 1.0)/2) * 255;
+        int y = (((leftJoystick.stickPosition.y / 145.0) + 1.0)/2) * 255;
         
-        // the radius of the joysticks is 145
-        
-        data[0] = 's';
-        data[1] = (((-leftJoystick.stickPosition.x / 145.0) + 1.0)/2) * 255;
-        data[2] = (((-leftJoystick.stickPosition.y / 145.0) + 1.0)/2) * 255;
-        data[3] = 0;
-        data[4] = 0;
-        data[5] = 'e';
+        NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
+                              [NSNumber numberWithInt:0], @"joystick",
+                              [NSNumber numberWithInt:x], @"x",
+                              [NSNumber numberWithInt:y], @"y",
+                              nil];
 
-        SUDP_SendMsg(data, 6);
+        NSArray *array = [NSArray arrayWithObject:dict];
+        
+        NSError *error = nil;
+        id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
+        
+        SUDP_SendMsg([data bytes], [data length]);
     }
 }
 

@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1B8042E214CA36780097199F /* MainWindow-iPad.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1B8042E114CA36780097199F /* MainWindow-iPad.xib */; };
 		1BCBAAB514C6C4FB002A6E47 /* Icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 1BCBAAB414C6C4FB002A6E47 /* Icon@2x.png */; };
 		1BCBAAB714C6C509002A6E47 /* Icon.png in Resources */ = {isa = PBXBuildFile; fileRef = 1BCBAAB614C6C509002A6E47 /* Icon.png */; };
 		1BED435214C555CD005FE3A2 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 1BED435114C555CD005FE3A2 /* MainWindow.xib */; };
@@ -133,6 +134,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1B8042E114CA36780097199F /* MainWindow-iPad.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = "MainWindow-iPad.xib"; path = "iPad/MainWindow-iPad.xib"; sourceTree = "<group>"; };
 		1BCBAAB414C6C4FB002A6E47 /* Icon@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Icon@2x.png"; path = "../Icon@2x.png"; sourceTree = "<group>"; };
 		1BCBAAB614C6C509002A6E47 /* Icon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = Icon.png; path = ../Icon.png; sourceTree = "<group>"; };
 		1BED435114C555CD005FE3A2 /* MainWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MainWindow.xib; sourceTree = "<group>"; };
@@ -406,6 +408,33 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		1B8042E014CA36750097199F /* iPad */ = {
+			isa = PBXGroup;
+			children = (
+				1B8042E114CA36780097199F /* MainWindow-iPad.xib */,
+			);
+			name = iPad;
+			sourceTree = "<group>";
+		};
+		1BA5D4D614C8F827008884ED /* SneakyJoystick */ = {
+			isa = PBXGroup;
+			children = (
+				5BA0B09113CD007300F9F212 /* ColoredCircleSprite.h */,
+				5BA0B09213CD007300F9F212 /* ColoredCircleSprite.m */,
+				5BAF270E13CDEEB3002C91F8 /* ColoredSquareSprite.h */,
+				5BAF270F13CDEEB3002C91F8 /* ColoredSquareSprite.m */,
+				5BA0B08513CCFF8400F9F212 /* SneakyJoystick.h */,
+				5BA0B08613CCFF8400F9F212 /* SneakyJoystick.m */,
+				5BA0B08713CCFF8400F9F212 /* SneakyJoystickSkinnedBase.h */,
+				5BA0B08813CCFF8400F9F212 /* SneakyJoystickSkinnedBase.m */,
+				5BA0B08913CCFF8400F9F212 /* SneakyButton.h */,
+				5BA0B08A13CCFF8400F9F212 /* SneakyButton.m */,
+				5BA0B08B13CCFF8400F9F212 /* SneakyButtonSkinnedBase.h */,
+				5BA0B08C13CCFF8400F9F212 /* SneakyButtonSkinnedBase.m */,
+			);
+			name = SneakyJoystick;
+			sourceTree = "<group>";
+		};
 		1BED435E14C5E9E2005FE3A2 /* UIViews */ = {
 			isa = PBXGroup;
 			children = (
@@ -457,13 +486,11 @@
 			children = (
 				5BA0B06913CCFB1F00F9F212 /* AppDelegate.h */,
 				5BA0B06A13CCFB1F00F9F212 /* AppDelegate.m */,
-				5BA0B07213CCFB1F00F9F212 /* GameConfig.h */,
-				5BA0AF2C13CCFB1C00F9F212 /* libs */,
-				5BA0AF1813CCFB1C00F9F212 /* Resources */,
 				5BA0B08213CCFECB00F9F212 /* RobotLayer.h */,
 				5BA0B08313CCFECB00F9F212 /* RobotLayer.m */,
-				5BA0B07C13CCFDF800F9F212 /* SceneManager.h */,
-				5BA0B07D13CCFDF800F9F212 /* SceneManager.m */,
+				5BA0AF2C13CCFB1C00F9F212 /* libs */,
+				5BA0AF1813CCFB1C00F9F212 /* Resources */,
+				1B8042E014CA36750097199F /* iPad */,
 				5BA0B06513CCFB1F00F9F212 /* Supporting Files */,
 				1BED435E14C5E9E2005FE3A2 /* UIViews */,
 			);
@@ -476,20 +503,6 @@
 				1BCBAAB614C6C509002A6E47 /* Icon.png */,
 				1BCBAAB414C6C4FB002A6E47 /* Icon@2x.png */,
 				1BED438814C6C1C8005FE3A2 /* background.png */,
-				5B118E3A13CE02910052E176 /* SendUDP.c */,
-				5B118E3B13CE02910052E176 /* SendUDP.h */,
-				5BA0B09113CD007300F9F212 /* ColoredCircleSprite.h */,
-				5BA0B09213CD007300F9F212 /* ColoredCircleSprite.m */,
-				5BAF270E13CDEEB3002C91F8 /* ColoredSquareSprite.h */,
-				5BAF270F13CDEEB3002C91F8 /* ColoredSquareSprite.m */,
-				5BA0B08513CCFF8400F9F212 /* SneakyJoystick.h */,
-				5BA0B08613CCFF8400F9F212 /* SneakyJoystick.m */,
-				5BA0B08713CCFF8400F9F212 /* SneakyJoystickSkinnedBase.h */,
-				5BA0B08813CCFF8400F9F212 /* SneakyJoystickSkinnedBase.m */,
-				5BA0B08913CCFF8400F9F212 /* SneakyButton.h */,
-				5BA0B08A13CCFF8400F9F212 /* SneakyButton.m */,
-				5BA0B08B13CCFF8400F9F212 /* SneakyButtonSkinnedBase.h */,
-				5BA0B08C13CCFF8400F9F212 /* SneakyButtonSkinnedBase.m */,
 				5BA0AF1913CCFB1C00F9F212 /* Default.png */,
 				5BA0AF1B13CCFB1C00F9F212 /* fps_images.png */,
 				5BA0AF2913CCFB1C00F9F212 /* Info.plist */,
@@ -500,15 +513,21 @@
 		5BA0AF2C13CCFB1C00F9F212 /* libs */ = {
 			isa = PBXGroup;
 			children = (
-				5BA0B02213CCFB1E00F9F212 /* LICENSE_cocos2d.txt */,
-				5BA0B03113CCFB1E00F9F212 /* LICENSE_CocosDenshion.txt */,
-				5BA0B03C13CCFB1E00F9F212 /* LICENSE_TouchJSON.txt */,
-				5BA0B06413CCFB1F00F9F212 /* LICENSE_FontLabel.txt */,
+				5BA0B07C13CCFDF800F9F212 /* SceneManager.h */,
+				5BA0B07D13CCFDF800F9F212 /* SceneManager.m */,
 				5BA0AF2D13CCFB1C00F9F212 /* cocos2d */,
 				5BA0B02313CCFB1E00F9F212 /* CocosDenshion */,
 				5BA0B03213CCFB1E00F9F212 /* cocoslive */,
-				5BA0B03D13CCFB1E00F9F212 /* TouchJSON */,
 				5BA0B05313CCFB1F00F9F212 /* FontLabel */,
+				5BA0B07213CCFB1F00F9F212 /* GameConfig.h */,
+				5BA0B02213CCFB1E00F9F212 /* LICENSE_cocos2d.txt */,
+				5BA0B03113CCFB1E00F9F212 /* LICENSE_CocosDenshion.txt */,
+				5BA0B06413CCFB1F00F9F212 /* LICENSE_FontLabel.txt */,
+				5BA0B03C13CCFB1E00F9F212 /* LICENSE_TouchJSON.txt */,
+				5B118E3A13CE02910052E176 /* SendUDP.c */,
+				5B118E3B13CE02910052E176 /* SendUDP.h */,
+				1BA5D4D614C8F827008884ED /* SneakyJoystick */,
+				5BA0B03D13CCFB1E00F9F212 /* TouchJSON */,
 			);
 			name = libs;
 			sourceTree = "<group>";
@@ -833,6 +852,9 @@
 /* Begin PBXProject section */
 		5BA0AEFA13CCFB1B00F9F212 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 5BA0AEFD13CCFB1B00F9F212 /* Build configuration list for PBXProject "iNRTJoystick" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -863,6 +885,7 @@
 				1BED438914C6C1C8005FE3A2 /* background.png in Resources */,
 				1BCBAAB514C6C4FB002A6E47 /* Icon@2x.png in Resources */,
 				1BCBAAB714C6C509002A6E47 /* Icon.png in Resources */,
+				1B8042E214CA36780097199F /* MainWindow-iPad.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1031,10 +1054,12 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = iNRTJoystick/Prefix.pch;
 				"GCC_THUMB_SUPPORT[arch=armv6]" = "";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = iNRTJoystick/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = "-lz";
 				PRODUCT_NAME = iNRTJoystick;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1047,10 +1072,12 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = iNRTJoystick/Prefix.pch;
 				"GCC_THUMB_SUPPORT[arch=armv6]" = "";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INFOPLIST_FILE = iNRTJoystick/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				OTHER_LDFLAGS = "-lz";
 				PRODUCT_NAME = iNRTJoystick;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				WRAPPER_EXTENSION = app;
 			};
