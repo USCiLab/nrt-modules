@@ -16,7 +16,12 @@ class censor :	public nrt::Module,
 
     virtual void run();
 
-		virtual void onMessage(IncomingTextPort, msg);
+		virtual void onMessage(IncomingTextPort msg);
+		
+	private:
+		
+		int readyToSend;
+		std::string messageContents;
 };
 
 #endif // CENSOR_H
