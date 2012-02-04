@@ -140,13 +140,13 @@ void iNRTJoystickModule::run()
             }
             else if ( doc[i].IsString() )
             {
+              // ["refresh"]
               if ( doc[i].GetString() == "refresh" )
               {
                 // send the URL
                 // prepare the string: [{"url": "http://www.google.com/"}]
-                memset(json, 0, BUFLEN);
-                sprintf(json, "[{\"url\": \"%s\"}]", itsWebviewURL.getValue());
-                if ( sendto(itsSocket, json, BUFLEN, 0, (struct sockaddr*)&other, (unsigned int*)&olen) == -1 )
+                std::string urljson("[{\"url\": \"" + itsWebviewURL.getVal() + "\"}]");
+                if ( sendto(itsSocket, urljson.c_str(), urljson.length(), 0, (struct sockaddr*)&other, olen) == -1 )
                 {
                   NRT_FATAL("Error sending URL back to iNRTJoystick: " << errno);
                 }
