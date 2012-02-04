@@ -12,6 +12,10 @@ Module:
 
  
     subscriberports: 
+      - name: JoystickInfo
+        inmsg: nrt::JoystickMessage
+        retmsg: void
+        description: "Joystick data"
 
     checkerports: 
 

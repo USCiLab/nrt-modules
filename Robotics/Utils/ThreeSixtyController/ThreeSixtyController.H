@@ -3,6 +3,7 @@
 
 #include <nrt/Core/Blackboard/Module.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
+#include <nrt/Robotics/Messages/JoystickMessage.H>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
@@ -11,37 +12,29 @@ namespace nrt { class DisplayImageSink; }
 
 namespace sixaxis 
 {
-  NRT_DECLARE_MESSAGEPOSTER_PORT( VelocityCommand, nrt::VelocityMessage, void, "A velocity to send" );
-
-  static const nrt::ParameterCategory ParamCat("ThreeSixtyController Related Options");
-
-  static const nrt::ParameterDef<std::string> JoystickDevParam("joystickdev",
-      "The joystick device file", "", ParamCat);
+  NRT_DECLARE_MESSAGESUBSCRIBER_PORT( JoystickInfo,     nrt::JoystickMessage, void, "The joystick data");
+  NRT_DECLARE_MESSAGEPOSTER_PORT(     VelocityCommand,  nrt::VelocityMessage, void, "A velocity to send");
 }
 
 //! A simple module to allow joystick control of robots with a Sony ThreeSixtyController controller
 /*! This module simply opens a new GTK window, and allows users to use a ThreeSixtyController controller to send out
   velocity command messages. */
 class ThreeSixtyControllerModule : public nrt::Module,
-  public nrt::MessagePoster<sixaxis::VelocityCommand>
+                                   public nrt::MessageSubscriber<sixaxis::JoystickInfo>,
+                                   public nrt::MessagePoster<sixaxis::VelocityCommand>
 {
   public:
     ThreeSixtyControllerModule(std::string const& instanceName="");
 
-    void run();
+    void run(); 
 
-    void joystickDevCallback(std::string const & dev);
+    virtual void onMessage(sixaxis::JoystickInfo msg);
 
   private:
-    std::mutex itsMtx;
     std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
-    nrt::Parameter<std::string> itsJoystickDev;
+    std::mutex itsMtx;
     double itsAngularVel;
     double itsLinearVel;
-    int joy_fd, num_axes, num_buttons;
-    std::vector<int> axis;
-    std::vector<int> button;
-    struct js_event js;
 };
 
 #endif // SIXAXIS_H 
