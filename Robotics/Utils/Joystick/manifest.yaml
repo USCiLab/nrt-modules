@@ -1,0 +1,65 @@
+Module: 
+  general: 
+    displayname: Joystick 
+    classname: JoystickModule 
+    category: /Robotics/Utils
+    synopsis: A simple module to allow joystick control of robots. 
+    description: > 
+      This module converts js_event data from linux/joystick.h to JoystickMessages.
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: JoystickCommand 
+        outmsg: nrt::JoystickMessage
+        retmsg: void
+        description: "The joystick data"
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/Joystick.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
