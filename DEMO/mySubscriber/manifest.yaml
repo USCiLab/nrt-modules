@@ -1,0 +1,60 @@
+Module: 
+  general: 
+    displayname: MySubscriber 
+    classname: MySubscriber 
+    category: /DEMO
+    synopsis: An awesome subscriber demo
+    description: > 
+      Does just what you tell it
+ 
+    keywords: 
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/MySubscriber.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
