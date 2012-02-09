@@ -1,0 +1,78 @@
+Module: 
+  general: 
+    displayname: Kalman Filter 
+    classname: KalmanFilterModule 
+    category: 
+    synopsis: A simple 1 dimensional linear Kalman filter. 
+    description: > 
+      The Kalman filter module is useful for filtering data from a rate sensor
+      and an absolute sensor.
+ 
+    keywords: 
+      - kalman filter
+      - filtering
+      - sensing
+      - bayes
+      - bayesian
+ 
+    subscriberports: 
+      - name: RateMeasurement
+        inmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "A measurement of the current rate of the system"
+      - name: AbsoluteMeasurement
+        inmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "A measurement of the absolute position of the system"
+
+    checkerports: 
+
+    posterports: 
+      - name: FilteredOutput
+        outmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "The Kalman filtered output"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: KalmanFilterModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
