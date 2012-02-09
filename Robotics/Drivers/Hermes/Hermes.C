@@ -101,6 +101,15 @@ void HermesModule::run()
   //	//NRT_INFO("I'm Awesome");
   //	//sleep(1);
   //}
+  std::unique_ptr<Message<double>> SerialOutPtr(new Message<double>);
+  unsigned char dataIn;
+  while(itsSerialPort->IsDataAvailable())
+  {
+  	dataIn = itsSerialPort->ReadByte();
+  	SerialOutPtr->value = (double)dataIn;
+  	
+  	post<SerialOut>(SerialOutPtr);
+  }
 }
 
 NRT_REGISTER_MODULE(HermesModule);

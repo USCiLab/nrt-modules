@@ -13,7 +13,7 @@ void MySubscriber::onMessage(SomeTextPort msg)
 
 void MySubscriber::onMessage(SomeNumberPort msg)
 {
-  float messageContents = msg->value;
+  double messageContents = msg->value;
   NRT_INFO("I got some number: [" << messageContents << "]");
 }
 

@@ -16,31 +16,31 @@ void censor::onMessage(IncomingTextPort msg)
 	std::string vulgars[] = {"damn","hate","hell","sucks"};
 
 	for(int i=0; i<4; i++) {
-		int found = messageContents.find(vulgars[i],0);
-		if(found > 0) {
+		size_t found = messageContents.find(vulgars[i],0);
+		if(found != std::string::npos) {
 			NRT_INFO("found vulgarity");
 			switch(i) {
 				case 0:
-					messageContents.erase(found,4);
-					messageContents.insert(found,"darn");
+					messageContents.erase(int(found),4);
+					messageContents.insert(int(found),"darn");
 					break;
 				case 1:
-					messageContents.erase(found,4);
-					messageContents.insert(found,"love");
+					messageContents.erase(int(found),4);
+					messageContents.insert(int(found),"love");
 					break;
 				case 2:
-					messageContents.erase(found,4);
-					messageContents.insert(found,"heck");
+					messageContents.erase(int(found),4);
+					messageContents.insert(int(found),"heck");
 					break;
 				case 3:
-					messageContents.erase(found,5);
-					messageContents.insert(found,"is too bad");
+					messageContents.erase(int(found),5);
+					messageContents.insert(int(found),"is too bad");
 					break;
 			}
 		}
 	}
 	
-	//NRT_INFO("Censored text: [" << messageContents << "]");
+	NRT_INFO("Censored text: [" << messageContents << "]");
 	readyToSend = 1;
 }
 
