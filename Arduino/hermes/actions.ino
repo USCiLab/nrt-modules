@@ -50,10 +50,6 @@ void cmd_setSpeed(int leftSpeed, int rightSpeed)
 
   //LOG((byte)leftSpeed);
   //LOG((byte)rightSpeed);
-  if( leftSpeed == 64 && rightSpeed == 64)
-    ;
-  else
-    timeRunning = millis();
 
   if(leftSpeed < 0 || rightSpeed < 0)
     return;
