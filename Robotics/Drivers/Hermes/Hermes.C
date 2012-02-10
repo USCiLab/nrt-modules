@@ -2,6 +2,18 @@
 #include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
 
+/** From the arduino code **/
+#define SEN_COMPASS   99
+union compassPacket {
+  unsigned char raw[4];
+  float heading;
+};
+#define SEN_GYRO      100
+union gyroPacket {
+  unsigned char raw[12];
+  float xyz[3];
+};
+
 using namespace nrt;
 using namespace hermes; 
 
@@ -93,23 +105,47 @@ void HermesModule::onMessage(VelocityCommand msg)
 // ######################################################################
 void HermesModule::run()
 {
-  //while(running())
-  //{
-  //	//std::lock_guard<std::mutex> lock(itsMtx);
-  //	//if(!itsSerialPort) return;
-
-  //	//NRT_INFO("I'm Awesome");
-  //	//sleep(1);
-  //}
-  std::unique_ptr<Message<double>> SerialOutPtr(new Message<double>);
-  unsigned char dataIn;
-  while(itsSerialPort->IsDataAvailable())
-  {
-  	dataIn = itsSerialPort->ReadByte();
-  	SerialOutPtr->value = (double)dataIn;
-  	
-  	post<SerialOut>(SerialOutPtr);
-  }
+  while(running())
+   {
+     std::lock_guard<std::mutex> lock(itsMtx);
+     if(!itsSerialPort) return;
+     
+     while(itsSerialPort->IsDataAvailable())
+     {
+       unsigned char dataIn = itsSerialPort->ReadByte();
+       if(dataIn == SEN_COMPASS)
+       {
+         NRT_INFO("Compass: " << dataIn);
+         compassPacket packet;
+         for(int i=0; i<sizeof(compassPacket); i++)
+         {
+           packet.raw[i] = itsSerialPort->ReadByte();
+         }
+         NRT_INFO("Data: " << packet.heading);         
+       } else if(dataIn == SEN_GYRO) {
+         NRT_INFO("Gyro: " << dataIn);
+         gyroPacket packet;
+         for(int i=0; i<sizeof(gyroPacket); i++)
+         {
+           packet.raw[i] = itsSerialPort->ReadByte();
+         }
+         NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
+       } else
+         NRT_INFO("Unrecognized: " << dataIn);
+     }
+     
+     NRT_INFO("I'm Awesome");
+     sleep(1);
+   }
+   // std::unique_ptr<Message<double>> SerialOutPtr(new Message<double>);
+  // unsigned char dataIn;
+  // while(itsSerialPort->IsDataAvailable())
+  // {
+  //   dataIn = itsSerialPort->ReadByte();
+  //   SerialOutPtr->value = (double)dataIn;
+  //   
+  //   post<SerialOut>(SerialOutPtr);
+  // }
 }
 
 NRT_REGISTER_MODULE(HermesModule);
