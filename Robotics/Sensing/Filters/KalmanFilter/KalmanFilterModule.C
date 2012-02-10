@@ -17,8 +17,16 @@ KalmanFilterModule::KalmanFilterModule(std::string const& instanceName) :
 void KalmanFilterModule::onMessage(RateMeasurement msg)
 {
   std::lock_guard<std::mutex> _(itsMtx);
+  if (itsLastTime == nrt::Time())
+  {
+    itsLastTime = nrt::now();
+    return;
+  }
 
-  itsX = itsX + itsBParam.getVal() * msg->value;
+  nrt::Duration duration = nrt::now() - itsLastTime;
+  itsLastTime = nrt::now();
+
+  itsX = itsX + itsBParam.getVal() * msg->value * duration.count();
   itsP = itsP + itsQParam.getVal();
 
   std::unique_ptr<nrt::Message<nrt::real>> output(new nrt::Message<nrt::real>(itsX));

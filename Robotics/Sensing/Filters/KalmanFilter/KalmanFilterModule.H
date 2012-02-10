@@ -40,6 +40,7 @@ class KalmanFilterModule : public nrt::Module,
     nrt::Parameter<nrt::real> itsHParam;
     nrt::Parameter<nrt::real> itsQParam;
     nrt::Parameter<nrt::real> itsRParam;
+    nrt::Time itsLastTime;
 };
 
 #endif // HERMES_H 
