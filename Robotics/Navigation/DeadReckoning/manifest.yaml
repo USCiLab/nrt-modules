@@ -2,7 +2,7 @@ Module:
   general: 
     displayname: Dead Reckoning 
     classname: DeadReckoningModule 
-    category: /Robotics/Navigation
+    category: 
     synopsis: This author is too lazy to write a synopsis! 
     description: > 
       This author is too lazy to write a description!
@@ -36,7 +36,7 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.png 
     screenshots: 
     objectfile: build/DeadReckoningModule.so 
     docfiles: 
