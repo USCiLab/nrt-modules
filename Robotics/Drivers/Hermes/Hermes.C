@@ -115,33 +115,30 @@ void HermesModule::run()
        unsigned char dataIn = itsSerialPort->ReadByte();
        if(dataIn == SEN_COMPASS)
        {
-         NRT_INFO("Compass: " << dataIn);
+         //NRT_INFO("Compass: " << dataIn);
          compassPacket packet;
          for(int i=0; i<sizeof(compassPacket); i++)
          {
            packet.raw[i] = itsSerialPort->ReadByte();
          }
-         NRT_INFO("Data: " << packet.heading);         
+         //NRT_INFO("Data: " << packet.heading);         
          Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
          msg->value = packet.heading;
          post<CompassZ>(msg);
        } else if(dataIn == SEN_GYRO) {
-         NRT_INFO("Gyro: " << dataIn);
+         //NRT_INFO("Gyro: " << dataIn);
          gyroPacket packet;
          for(int i=0; i<sizeof(gyroPacket); i++)
          {
            packet.raw[i] = itsSerialPort->ReadByte();
          }
-         NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
+         //NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
          Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-         msg->value = packet.xyz[2];
+         msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
          post<GyroZ>(msg);
        } else
          NRT_INFO("Unrecognized: " << dataIn);
      }
-     
-     NRT_INFO("I'm Awesome");
-     sleep(1);
    }
 }
 
