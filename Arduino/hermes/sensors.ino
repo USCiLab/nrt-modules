@@ -4,21 +4,24 @@ void sensorUpdate()
   if(millis()%500 == 0)
   {
     MagnetometerRaw raw = magnetometer.ReadRawAxis();
-    float heading = atan2(raw.YAxis, raw.XAxis);
-    if(heading < 0)
-      heading += 2*PI;
+    compassPacket packet;
+    packet.heading = atan2(raw.YAxis, raw.XAxis);
+    if(packet.heading < 0)
+      packet.heading += 2*PI;
     Serial.write(SEN_COMPASS);
-    Serial.write(heading);
+    for(int i=0; i<sizeof(compassPacket); i++)
+      Serial.write(packet.raw[i]);
   }
   if(millis()%300 == 0)
   {
     if(gyro.isRawDataReady())
     {
-      gyro.readGyro(xyz);
+      gyroPacket packet;
+      gyro.readGyro(packet.xyz);
       Serial.write(SEN_GYRO);
-      Serial.write(xyz[0]);
-      Serial.write(xyz[1]);
-      Serial.write(xyz[2]);
+      for(int i=0; i<sizeof(gyroPacket); i++)
+        Serial.write(packet.raw[i]);
+      
     }
   }
 }

@@ -14,7 +14,15 @@
 
 // Sensors
 #define SEN_COMPASS   99
+union compassPacket {
+  byte raw[4];
+  float heading;
+};
 #define SEN_GYRO      100
+union gyroPacket {
+  byte raw[12];
+  float xyz[3];
+};
 
 // Globals
 Servo Left;
