@@ -1,7 +1,7 @@
 #include "Hermes.H"
 #include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
-#include "Firmware/sensordata.h"
+#include "Firmware/hermes/sensordata.h"
 
 using namespace nrt;
 using namespace hermes; 
