@@ -4,6 +4,7 @@
 #include "HMC5883L.h"
 #include "ITG3200.h"
 #include "hermes.h"
+#include "sensordata.h"
 
 HMC5883L magnetometer;
 ITG3200 gyro;
