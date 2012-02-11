@@ -1,19 +1,7 @@
 #include "Hermes.H"
 #include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
-
-/** From the arduino code **/
-#define SEN_COMPASS   99
-union compassPacket {
-  unsigned char raw[4];
-  float heading;
-};
-
-#define SEN_GYRO      100
-union gyroPacket {
-  unsigned char raw[12];
-  float xyz[3];
-};
+#include "Firmware/sensordata.h"
 
 using namespace nrt;
 using namespace hermes; 

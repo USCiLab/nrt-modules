@@ -11,7 +11,6 @@ namespace hermes
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( OdometryUpdatePort );
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
-  NRT_DECLARE_MESSAGEPOSTER_PORT( SerialOut, nrt::Message<double>, void, "The serial output from the Arduino" );
 
   NRT_DECLARE_MESSAGEPOSTER_PORT( CompassZ, nrt::Message<nrt::real>, void, "The Z component of Hermes' compass" );
   NRT_DECLARE_MESSAGEPOSTER_PORT( GyroZ, nrt::Message<nrt::real>, void, "The Z component of Hermes' gyroscope" );
@@ -30,7 +29,7 @@ namespace hermes
 
 class HermesModule : public nrt::Module,
   public nrt::MessageSubscriber<hermes::VelocityCommand>,
-  public nrt::MessagePoster<hermes::OdometryUpdatePort, hermes::SerialOut, hermes::CompassZ, hermes::GyroZ>
+  public nrt::MessagePoster<hermes::OdometryUpdatePort, hermes::CompassZ, hermes::GyroZ>
 {
   public:
     HermesModule(std::string const& instanceName="");
