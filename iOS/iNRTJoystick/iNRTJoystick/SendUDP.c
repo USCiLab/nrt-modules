@@ -36,6 +36,18 @@ int SUDP_SendMsg(const char * data, int length)
     return numbytes;
 }
 
+int SUDP_RecvMsg(const char * data, int length)
+{
+    unsigned int yes = 1;
+    int numbytes;
+    if ( (numbytes = recvfrom(sockfd, data, length, 0, (struct sockaddr *)&their_addr, &yes)) )
+    {
+        perror("recvfrom");
+        return -1;
+    }
+    return numbytes;
+}
+
 //Close the socket
 int SUDP_Close(){
     close(sockfd);
