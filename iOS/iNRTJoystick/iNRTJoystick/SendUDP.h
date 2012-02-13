@@ -23,6 +23,9 @@ int SUDP_Init(const char* ipaddress, unsigned int port);
 //Send a UDP packet
 int SUDP_SendMsg(const char * data, int length);
 
+// Recieve a packet on the sending socket
+int SUDP_RecvMsg(const char * data, int length);
+
 //Close the socket
 int SUDP_Close();
 

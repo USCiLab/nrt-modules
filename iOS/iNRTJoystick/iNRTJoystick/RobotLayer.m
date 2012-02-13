@@ -56,6 +56,19 @@ int count = 0;
         [leftJoystick release];
         
 		[self scheduleUpdate];
+        
+        /* request the webview url */
+        NSArray *array = [NSArray arrayWithObject:@"refresh"];
+        NSError *error = nil;
+        id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
+
+        NSLog(@"Doing request: %s\n", [data bytes]);
+        SUDP_SendMsg([data bytes], [data length]);
+        
+        NSLog(@"Waiting for reply...");
+        char buf[512];
+        SUDP_RecvMsg(buf, 512);
+        NSLog(@"Got reply: %s\n", buf);
     }
     return self;
 }

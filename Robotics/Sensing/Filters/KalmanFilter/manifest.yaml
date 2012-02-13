@@ -2,7 +2,7 @@ Module:
   general: 
     displayname: Kalman Filter 
     classname: KalmanFilterModule 
-    category: 
+    category: /Robotics/Sensing/Filters
     synopsis: A simple 1 dimensional linear Kalman filter. 
     description: > 
       The Kalman filter module is useful for filtering data from a rate sensor
@@ -51,7 +51,7 @@ Module:
   files: 
     icon:  
     screenshots: 
-    objectfile: KalmanFilterModule.so 
+    objectfile: build/KalmanFilterModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 
