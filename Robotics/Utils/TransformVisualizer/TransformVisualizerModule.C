@@ -1,0 +1,118 @@
+#include "TransformVisualizerModule.H"
+
+using namespace nrt;
+using namespace transformvisualizer;
+
+// ######################################################################
+static gboolean 
+transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer data)
+{
+  TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(data);
+  Transform3D transform = visualizer->getTransform();
+
+  // Get a cairo_t
+  cairo_t * cr = gdk_cairo_create(canvas->window);
+
+  /* set a clip region for the expose event */
+  cairo_rectangle (cr,
+      event->area.x, event->area.y,
+      event->area.width, event->area.height);
+  cairo_clip (cr);
+
+  cairo_set_source_rgb (cr, 0, 0, 0);
+  cairo_rectangle (cr,
+      event->area.x, event->area.y,
+      event->area.width, event->area.height);
+  cairo_fill(cr);
+
+  double center_x = canvas->allocation.x + canvas->allocation.width / 2;
+  double center_y = canvas->allocation.y + canvas->allocation.height / 2;
+
+  // Dot in the center
+  double radius = 5;
+  cairo_move_to(cr, center_x, center_y);
+  cairo_set_source_rgb (cr, 0.5, 0, 0);
+  cairo_arc(cr, center_x, center_y, radius, 0, 2 * M_PI);
+  cairo_fill(cr);
+
+  // Line pointing up
+  cairo_move_to(cr, center_x, center_y);
+  cairo_set_source_rgb (cr, 0.5, 0, 0.0);
+  cairo_line_to(cr, center_x, center_y+radius*3);
+  cairo_stroke (cr);
+
+  cairo_destroy(cr);
+
+  return FALSE;
+}
+
+// ######################################################################
+TransformVisualizerModule::TransformVisualizerModule(std::string const & instanceName) :
+  Module(instanceName),
+  itsFromParam(FromParamDef, this),
+  itsToParam(ToParamDef, this)
+{ }
+
+// ######################################################################
+void TransformVisualizerModule::gtkThreadMethod()
+{
+  g_thread_init(NULL);
+  gdk_threads_init();
+  gdk_threads_enter();
+  int fakeargs = 0;
+  gtk_init(&fakeargs, NULL);
+  itsWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  itsCanvas = gtk_drawing_area_new();
+  gtk_container_add(GTK_CONTAINER(itsWindow), itsCanvas);
+  g_signal_connect(itsCanvas, "expose-event", G_CALLBACK(transform_canvas_expose), this);
+  gtk_window_set_title(GTK_WINDOW(itsWindow), "Transform Visualizer");
+  gtk_widget_show_all(itsWindow);
+  gtk_main();
+  gdk_threads_leave();
+}
+
+// ######################################################################
+Transform3D TransformVisualizerModule::getTransform()
+{
+  std::lock_guard<std::mutex> _(itsMtx);
+  return itsTransform;
+}
+
+// ######################################################################
+void TransformVisualizerModule::run()
+{
+  itsGtkThread = std::thread(std::bind(&TransformVisualizerModule::gtkThreadMethod, this));
+
+  while(running())
+  {
+    usleep(10000);
+
+    try
+    {
+      // Lookup the specified transform
+      auto lookupMessage = nrt::make_unique( new TransformLookupMessage( nrt::now(), itsFromParam.getVal(), itsToParam.getVal() ) );
+      MessagePosterResults<TransformLookup> results = post<TransformLookup>(lookupMessage);
+      if(results.size() == 0) { NRT_WARNING("No TransformManagers detected");        sleep(1); continue;}
+      if(results.size() > 1)  { NRT_WARNING("Multiple TransformManagers detected!"); sleep(1); continue;}
+      TransformMessage::const_ptr transform = results.get();
+      {
+        std::lock_guard<std::mutex> _(itsMtx);
+        itsTransform = transform->transform;
+      }
+    }
+    catch(...)
+    {
+      NRT_WARNING("Error looking up transform from [" << itsFromParam.getVal() << "] to [" << itsToParam.getVal() << "]");
+      sleep(1);
+    }
+  }
+  
+  gdk_threads_enter();
+  gtk_widget_destroy(itsCanvas);
+  gtk_widget_destroy(itsWindow);
+  gtk_main_quit();
+  gdk_threads_leave();
+  itsGtkThread.join();
+}
+
+NRT_REGISTER_MODULE(TransformVisualizerModule);

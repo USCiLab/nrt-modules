@@ -23,7 +23,7 @@ void setup()
   gyro.reset();
   gyro.init(ITG3200_ADDR_AD0_LOW);
   // gyro.zeroCalibrate(2500,2); // samples,seconds
-
+    
   Serial.begin(BAUDRATE);
   Wire.begin();
 
@@ -37,5 +37,5 @@ void loop()
     dispatch(Serial.read());
   }
   
-  sensorUpdate();  
+  sensorUpdate();
 }

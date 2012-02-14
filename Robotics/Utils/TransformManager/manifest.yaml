@@ -1,0 +1,69 @@
+Module: 
+  general: 
+    displayname: nrt Transform Manager 
+    classname: nrt::TransformManagerModule 
+    category: /Robotics/Utils
+    synopsis: This author is too lazy to write a synopsis! 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+      - name: TransformUpdatePort
+        inmsg: nrt::TransformMessage
+        retmsg: void
+        description: "Incoming transforms to cache"
+      - name: TransformLookupPort
+        inmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "Result of a transform lookup"
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/TransformManagerModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
