@@ -13,4 +13,10 @@ union gyroPacket {
   float xyz[3];
 };
 
+#define SEN_BATTERY 101
+union batteryPacket {
+  unsigned char raw[4];
+  float voltage;
+};
+
 #endif // SENSORDATA_H
