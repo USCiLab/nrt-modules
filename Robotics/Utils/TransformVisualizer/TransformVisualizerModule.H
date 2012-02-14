@@ -25,12 +25,18 @@ class TransformVisualizerModule : public nrt::Module,
 
     void run(); 
 
+    nrt::Transform3D getTransform();
+
   private:
+
+    std::mutex itsMtx;
     void gtkThreadMethod();
     std::thread itsGtkThread;
 
     GtkWidget * itsWindow;
     GtkWidget * itsCanvas;
+
+    nrt::Transform3D itsTransform;
 
     nrt::Parameter<std::string> itsFromParam;
     nrt::Parameter<std::string> itsToParam;
