@@ -1,7 +1,7 @@
 Module: 
   general: 
-    displayname: nrt Transform Manager 
-    classname: nrt::TransformManagerModule 
+    displayname: Transform Manager 
+    classname: TransformManagerModule 
     category: /Robotics/Utils
     synopsis: This author is too lazy to write a synopsis! 
     description: > 
