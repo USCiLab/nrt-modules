@@ -1,7 +1,7 @@
-#include <nrt/Robotics/Modules/PIDModule.H>
+#include "PIDModule.H"
 
 // ######################################################################
-nrt::PIDModule::PIDModule( std::string const & instanceName ) :
+PIDModule::PIDModule( std::string const & instanceName ) :
   nrt::Module( instanceName ),
   itsPidComponent( instanceName )
 {
@@ -9,7 +9,7 @@ nrt::PIDModule::PIDModule( std::string const & instanceName ) :
 }
 
 // ######################################################################
-void nrt::PIDModule::onMessage( DesiredValuePort port )
+void PIDModule::onMessage( DesiredValuePort port )
 {
   itsPidComponent.setDesiredValue( port->value );
 
@@ -18,10 +18,12 @@ void nrt::PIDModule::onMessage( DesiredValuePort port )
 }
 
 // ######################################################################
-void nrt::PIDModule::onMessage( ObservedValuePort port )
+void PIDModule::onMessage( ObservedValuePort port )
 {
   itsPidComponent.setObservedValue( port->value );
 
   auto output_msg = nrt::make_unique( new nrt::Message<double>( itsPidComponent.update() ) );
   post<OutputValuePort>( output_msg );
 }
+
+NRT_REGISTER_MODULE(PIDModule);
