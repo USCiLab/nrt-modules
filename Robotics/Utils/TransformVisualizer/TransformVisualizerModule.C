@@ -39,11 +39,14 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
   // Draw the 'to' frame
   TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(visualizerPtr);
   Transform3D transform = visualizer->getTransform();
-  Eigen::Vector3d translation = transform.translation();
-  cairo_move_to(cr, translation.x(), translation.y());
-  cairo_set_source_rgb (cr, 0.0, 0.8, 0.0);
-  cairo_arc(cr, center_x, center_y, radius, 0, 2 * M_PI);
+  Eigen::Vector3d robotCenter = transform * Eigen::Vector3d(0,0,0);
+  Eigen::Vector3d robotArrow  = transform * Eigen::Vector3d(0,1,0);
+  cairo_set_source_rgb (cr, 0.0, 0.0, 0.8);
+  cairo_arc(cr, robotCenter.x(), robotCenter.y(), radius, 0, 2 * M_PI);
   cairo_fill(cr);
+  cairo_move_to(cr, robotCenter.x(),robotCenter.y());
+  cairo_line_to(cr, robotArrow.x(), robotArrow.y());
+  cairo_stroke (cr);
 
   cairo_destroy(cr);
 
@@ -102,7 +105,11 @@ void TransformVisualizerModule::run()
       {
         std::lock_guard<std::mutex> _(itsMtx);
         itsTransform = transform->transform;
+
       }
+      gdk_threads_enter();
+      gtk_widget_draw(GTK_WIDGET(itsWindow), NULL);
+      gdk_threads_leave();
     }
     catch(...)
     {
