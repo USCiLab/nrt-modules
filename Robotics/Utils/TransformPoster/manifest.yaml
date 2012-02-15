@@ -1,0 +1,65 @@
+Module: 
+  general: 
+    displayname: Transform Poster 
+    classname: TransformPosterModule 
+    category: /Robotics/Utils
+    synopsis: This author is too lazy to write a synopsis! 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: TransformUpdate
+        outmsg: nrt::TransformMessage
+        retmsg: void
+        description: "The transform port"
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/TransformPosterModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

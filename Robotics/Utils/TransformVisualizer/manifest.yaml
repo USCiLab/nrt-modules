@@ -1,0 +1,65 @@
+Module: 
+  general: 
+    displayname: Transform Visualizer 
+    classname: TransformVisualizerModule 
+    category: /Robotics/Utils
+    synopsis: This author is too lazy to write a synopsis! 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: TransformLookup
+        outmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "The transform port"
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/TransformVisualizerModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
