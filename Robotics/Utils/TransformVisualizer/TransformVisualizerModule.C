@@ -5,11 +5,8 @@ using namespace transformvisualizer;
 
 // ######################################################################
 static gboolean 
-transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer data)
+transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer visualizerPtr)
 {
-  TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(data);
-  Transform3D transform = visualizer->getTransform();
-
   // Get a cairo_t
   cairo_t * cr = gdk_cairo_create(canvas->window);
 
@@ -28,18 +25,25 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer dat
   double center_x = canvas->allocation.x + canvas->allocation.width / 2;
   double center_y = canvas->allocation.y + canvas->allocation.height / 2;
 
-  // Dot in the center
+  // Draw the 'from' frame in the center of the screen
   double radius = 5;
   cairo_move_to(cr, center_x, center_y);
   cairo_set_source_rgb (cr, 0.5, 0, 0);
   cairo_arc(cr, center_x, center_y, radius, 0, 2 * M_PI);
   cairo_fill(cr);
-
-  // Line pointing up
   cairo_move_to(cr, center_x, center_y);
   cairo_set_source_rgb (cr, 0.5, 0, 0.0);
   cairo_line_to(cr, center_x, center_y+radius*3);
   cairo_stroke (cr);
+
+  // Draw the 'to' frame
+  TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(visualizerPtr);
+  Transform3D transform = visualizer->getTransform();
+  Eigen::Vector3d translation = transform.translation();
+  cairo_move_to(cr, translation.x(), translation.y());
+  cairo_set_source_rgb (cr, 0.0, 0.8, 0.0);
+  cairo_arc(cr, center_x, center_y, radius, 0, 2 * M_PI);
+  cairo_fill(cr);
 
   cairo_destroy(cr);
 

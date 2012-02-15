@@ -13,7 +13,7 @@ namespace transformvisualizer
 
   nrt::ParameterCategory ParamCateg("Transform Visualizer Related Options");
   nrt::ParameterDef<std::string> FromParamDef("from", "The base transform", "world", ParamCateg);
-  nrt::ParameterDef<std::string> ToParamDef("to",     "The end transform", "world", ParamCateg);
+  nrt::ParameterDef<std::string> ToParamDef("to",     "The end transform",  "robot", ParamCateg);
 }
 
 
