@@ -13,6 +13,7 @@ namespace transformposter
   nrt::ParameterDef<std::string> ToParamDef("to", "The end transform", "robot", ParamCateg);
   nrt::ParameterDef<std::string> TransformParamDef("transform", "The transform as a comma separated list (tx,ty,tz,rx,ry,rz)",
       "0,0,0,0,0,0", ParamCateg);
+  nrt::ParameterDef<double> RateParamDef("rate", "The rate (in Hz) at which to repost the transform.", 0, ParamCateg);
 }
 
 
@@ -25,12 +26,14 @@ class TransformPosterModule : public nrt::Module,
     void run(); 
 
     void transformCallback(std::string const & str);
+
   private:
     std::mutex itsMtx;
     nrt::Transform3D itsTransform;
     nrt::Parameter<std::string> itsFromParam;
     nrt::Parameter<std::string> itsToParam;
     nrt::Parameter<std::string> itsTransformParam;
+    nrt::Parameter<double> itsRateParam;
 };
 
 #endif // TRANFORMVISUALIZERMODULE_H 

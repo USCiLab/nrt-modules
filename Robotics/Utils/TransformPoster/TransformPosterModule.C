@@ -10,7 +10,8 @@ TransformPosterModule::TransformPosterModule(std::string const & instanceName) :
   Module(instanceName),
   itsFromParam(FromParamDef, this),
   itsToParam(ToParamDef, this),
-  itsTransformParam(TransformParamDef, this, &TransformPosterModule::transformCallback)
+  itsTransformParam(TransformParamDef, this, &TransformPosterModule::transformCallback),
+  itsRateParam(RateParamDef, this)
 { }
 
 // ######################################################################
@@ -31,16 +32,41 @@ void TransformPosterModule::transformCallback(std::string const & str)
     Eigen::AngleAxisd(boost::lexical_cast<double>(split[3]), Eigen::Vector3d::UnitX()) * 
     Eigen::AngleAxisd(boost::lexical_cast<double>(split[4]), Eigen::Vector3d::UnitY()) * 
     Eigen::AngleAxisd(boost::lexical_cast<double>(split[5]), Eigen::Vector3d::UnitZ()); 
+
+  // Post the newly changed transform
+  std::unique_ptr<nrt::TransformMessage> msg(
+      new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
+  post<TransformUpdate>(msg);
 }
 
 // ######################################################################
 void TransformPosterModule::run()
 {
+
+  nrt::Timer timer;
+
+  // Always post a transform as soon as we're started
+  std::unique_ptr<nrt::TransformMessage> msg(
+      new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
+  post<TransformUpdate>(msg);
+
   while(running())
   {
+    timer.start();
+    int const ratetime_us = 1000000.0 / itsRateParam.getVal();
+    if(itsRateParam.getVal() == 0)
+    {
+      sleep(1); 
+      continue;
+    }
+
     std::unique_ptr<nrt::TransformMessage> msg(
         new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
     post<TransformUpdate>(msg);
+
+    // Obey our rate
+    int const time_us = timer.getDuration() * 1000000.0;
+    if(ratetime_us - time_us > 0) usleep(ratetime_us - time_us);
   }
 }
 
