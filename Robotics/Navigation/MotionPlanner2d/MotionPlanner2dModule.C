@@ -10,8 +10,8 @@ MotionPlanner2dModule::MotionPlanner2dModule(std::string const& instanceName) :
   itsTargetFrameParam(TargetFrameParam, this),
   itsDistanceThresholdParam(DistanceThresholdParam, this),
   itsRotationThresholdParam(RotationThresholdParam, this),
-  itsAngularPidComponent(new PIDComponent),
-  itsTranslationalPidComponent(new PIDComponent)
+  itsAngularPidComponent(new PIDComponent("angular")),
+  itsTranslationalPidComponent(new PIDComponent("translation"))
 {
   NRT_INFO(__LINE__); 
   addSubComponent(itsAngularPidComponent);
