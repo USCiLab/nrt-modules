@@ -28,6 +28,7 @@ class TransformVisualizerModule : public nrt::Module,
     nrt::Transform3D getTransform();
 
   private:
+    friend gboolean transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer visualizerPtr);
 
     std::mutex itsMtx;
     void gtkThreadMethod();

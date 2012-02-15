@@ -4,7 +4,34 @@ using namespace nrt;
 using namespace transformvisualizer;
 
 // ######################################################################
-static gboolean 
+void drawFrame(GtkWidget * canvas, cairo_t * cr, nrt::Transform3D const & transform, std::string name)
+{
+  double const center_x = canvas->allocation.x + canvas->allocation.width / 2;
+  double const center_y = canvas->allocation.y + canvas->allocation.height / 2;
+
+  double const radius = 5;
+
+  // Set the transform into window coordinates [(0,0) at the center of the screen]
+  nrt::Transform3D windowTransform = Eigen::Translation3d(center_x, center_y, 0) * transform;
+  Eigen::Vector3d frameCenter = windowTransform * Eigen::Vector3d(0, 0, 0);
+  Eigen::Vector3d frameArrow  = windowTransform * Eigen::Vector3d(0, radius*2, 0);
+
+  // Draw the target frame
+  cairo_set_source_rgba (cr, 0.0, 0.9, 0.0, 0.9);
+  cairo_arc(cr, frameCenter.x(), frameCenter.y(), radius, 0, 2 * M_PI);
+  cairo_fill(cr);
+  cairo_move_to(cr, frameCenter.x(),frameCenter.y());
+  cairo_line_to(cr, frameArrow.x(), frameArrow.y());
+  cairo_stroke (cr);
+
+  // Write the frame's name
+  cairo_set_source_rgba(cr, 1, 1, 1, 0.3); 
+  cairo_move_to(cr, frameCenter.x() + radius*1.5, frameCenter.y());
+  cairo_show_text(cr, name.c_str());
+}
+
+// ######################################################################
+gboolean 
 transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer visualizerPtr)
 {
   // Get a cairo_t
@@ -22,31 +49,25 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
       event->area.width, event->area.height);
   cairo_fill(cr);
 
-  double center_x = canvas->allocation.x + canvas->allocation.width / 2;
-  double center_y = canvas->allocation.y + canvas->allocation.height / 2;
+  double const center_x = canvas->allocation.x + canvas->allocation.width / 2;
+  double const center_y = canvas->allocation.y + canvas->allocation.height / 2;
+  double const left     = canvas->allocation.x;
+  double const right    = canvas->allocation.x + canvas->allocation.width;
+  double const top      = canvas->allocation.y;
+  double const bottom   = canvas->allocation.y + canvas->allocation.height;
 
-  // Draw the 'from' frame in the center of the screen
-  double radius = 5;
-  cairo_move_to(cr, center_x, center_y);
-  cairo_set_source_rgb (cr, 0.5, 0, 0);
-  cairo_arc(cr, center_x, center_y, radius, 0, 2 * M_PI);
-  cairo_fill(cr);
-  cairo_move_to(cr, center_x, center_y);
-  cairo_set_source_rgba (cr, 1.0, 0, 0.0, 0.5);
-  cairo_line_to(cr, center_x, center_y+radius*3);
-  cairo_stroke (cr);
+  // Draw the axes
+  cairo_set_source_rgba(cr, 1, 1, 1, 0.3);
+  cairo_move_to(cr, center_x, top);
+  cairo_line_to(cr, center_x, bottom);
+  cairo_stroke(cr);
+  cairo_move_to(cr, left, center_y);
+  cairo_line_to(cr, right, center_y);
+  cairo_stroke(cr);
 
   // Draw the 'to' frame
   TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(visualizerPtr);
-  Transform3D transform = Eigen::Translation3d(center_x, center_y, 0) * visualizer->getTransform();
-  Eigen::Vector3d robotCenter = transform * Eigen::Vector3d(0, 0, 0);
-  Eigen::Vector3d robotArrow  = transform * Eigen::Vector3d(0, 10, 0);
-  cairo_set_source_rgba (cr, 0.0, 0.9, 0.0, 0.9);
-  cairo_arc(cr, robotCenter.x(), robotCenter.y(), radius, 0, 2 * M_PI);
-  cairo_fill(cr);
-  cairo_move_to(cr, robotCenter.x(),robotCenter.y());
-  cairo_line_to(cr, robotArrow.x(), robotArrow.y());
-  cairo_stroke (cr);
+  drawFrame(canvas, cr, visualizer->getTransform(), visualizer->itsToParam.getVal());
 
   cairo_destroy(cr);
 
