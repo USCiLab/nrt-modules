@@ -4,7 +4,7 @@ using namespace nrt;
 using namespace transformvisualizer;
 
 // ######################################################################
-void drawFrame(GtkWidget * canvas, cairo_t * cr, nrt::Transform3D const & transform, std::string name)
+void drawFrame(GtkWidget * canvas, cairo_t * cr, nrt::Transform3D const & transform, double const scale, std::string name)
 {
   double const center_x = canvas->allocation.x + canvas->allocation.width / 2;
   double const center_y = canvas->allocation.y + canvas->allocation.height / 2;
@@ -12,9 +12,12 @@ void drawFrame(GtkWidget * canvas, cairo_t * cr, nrt::Transform3D const & transf
   double const radius = 5;
 
   // Set the transform into window coordinates [(0,0) at the center of the screen]
-  nrt::Transform3D windowTransform = Eigen::Translation3d(center_x, center_y, 0) * transform;
+  nrt::Transform3D scaledTransform = transform; scaledTransform.prescale(scale);
+  nrt::Transform3D windowTransform = Eigen::Translation3d(center_x, center_y, 0) * scaledTransform;
+
+  // Transform the origin, and a little direction arrow into the robot/window coordinate frame
   Eigen::Vector3d frameCenter = windowTransform * Eigen::Vector3d(0, 0, 0);
-  Eigen::Vector3d frameArrow  = windowTransform * Eigen::Vector3d(0, radius*2, 0);
+  Eigen::Vector3d frameArrow  = windowTransform * Eigen::Vector3d(radius*2/scale, 0, 0);
 
   // Draw the target frame
   cairo_set_source_rgba (cr, 0.0, 0.9, 0.0, 0.9);
@@ -65,9 +68,12 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
   cairo_line_to(cr, right, center_y);
   cairo_stroke(cr);
 
-  // Draw the 'to' frame
+
   TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(visualizerPtr);
-  drawFrame(canvas, cr, visualizer->getTransform(), visualizer->itsToParam.getVal());
+  double const scale = visualizer->itsScaleParam.getVal();
+
+  // Draw the 'to' frame
+  drawFrame(canvas, cr, visualizer->getTransform(), scale, visualizer->itsToParam.getVal());
 
   cairo_destroy(cr);
 
@@ -78,8 +84,15 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
 TransformVisualizerModule::TransformVisualizerModule(std::string const & instanceName) :
   Module(instanceName),
   itsFromParam(FromParamDef, this),
-  itsToParam(ToParamDef, this)
+  itsToParam(ToParamDef, this),
+  itsScaleParam(ScaleParamDef, this, &TransformVisualizerModule::scaleChangedCallback)
 { }
+
+// ######################################################################
+void TransformVisualizerModule::scaleChangedCallback(double const & scale)
+{
+  if(scale <= 0) throw nrt::exception::BadParameter("Scale must be > 0");
+}
 
 // ######################################################################
 void TransformVisualizerModule::gtkThreadMethod()

@@ -14,6 +14,7 @@ namespace transformvisualizer
   nrt::ParameterCategory ParamCateg("Transform Visualizer Related Options");
   nrt::ParameterDef<std::string> FromParamDef("from", "The base transform", "world", ParamCateg);
   nrt::ParameterDef<std::string> ToParamDef("to",     "The end transform",  "robot", ParamCateg);
+  nrt::ParameterDef<double> ScaleParamDef("scale", "The display scale (in pixels/meter)",  10, ParamCateg);
 }
 
 
@@ -26,6 +27,8 @@ class TransformVisualizerModule : public nrt::Module,
     void run(); 
 
     nrt::Transform3D getTransform();
+
+    void scaleChangedCallback(double const & scale);
 
   private:
     friend gboolean transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer visualizerPtr);
@@ -41,6 +44,7 @@ class TransformVisualizerModule : public nrt::Module,
 
     nrt::Parameter<std::string> itsFromParam;
     nrt::Parameter<std::string> itsToParam;
+    nrt::Parameter<double> itsScaleParam;
 };
 
 #endif // TRANFORMVISUALIZERMODULE_H 
