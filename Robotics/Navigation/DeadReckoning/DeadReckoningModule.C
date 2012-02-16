@@ -9,7 +9,8 @@ using namespace deadreckoning;
 DeadReckoningModule::DeadReckoningModule(std::string const& instanceName) :
   Module(instanceName),
   itsBaseFrameParam(BaseFrameParamDef, this),
-  itsDeadReckoningFrameParam(OutputFrameParamDef, this)
+  itsDeadReckoningFrameParam(OutputFrameParamDef, this),
+  itsTransform(Eigen::Translation3d::Identity())
 { }
 
 
@@ -28,10 +29,13 @@ void DeadReckoningModule::onMessage(VelocityCommand msg)
     // Get the time since last update in seconds
     double deltaTime = nrt::Duration(nrt::now() - itsLastUpdateTime).count();
 
-    Eigen::Vector3d translation;
-    Eigen::AngleAxisd rotation;
-    if(msg->angular.z() == 0)
+    if(itsLastVelocity.angular.z() == 0)
     {
+      itsTransform = itsTransform * Eigen::Translation3d(itsLastVelocity.linear.x() * deltaTime, 0, 0);
+    }
+    else if(itsLastVelocity.linear.x() == 0)
+    {
+      itsTransform = itsTransform * Eigen::AngleAxisd(itsLastVelocity.angular.z() * deltaTime, Eigen::Vector3d::UnitZ());
     }
     else
     {
@@ -45,24 +49,36 @@ void DeadReckoningModule::onMessage(VelocityCommand msg)
       double radius = itsLastVelocity.linear.x() / itsLastVelocity.angular.z();
 
       // The length of the chord from our last position to our current one
-      double chordLength = (sin(dtheta) / radius) * 2;
+      double chordLength = sin(dtheta/2.0) * radius * 2.0;
 
       // The angle made between the radius, and the chord
-      double oldTheta = 0; // <<<<<<<<<<< How do we get oldTheta??
-      double theta2 = (NRT_D_PI / 2.0 - dtheta/2.0) + oldTheta;
+      double theta2 = NRT_D_PI/2.0 - dtheta/2.0;
 
       // The actual displacement from our current position
-      translation =  Eigen::Vector3d(
-          cos(theta2) * chordLength,
-          sin(theta2) * chordLength,
-          1);
+      Eigen::Translation3d translation(
+            sin(theta2) * chordLength,
+            cos(theta2) * chordLength,
+            1);
 
-      rotation = Eigen::AngleAxisd(dtheta, Eigen::Vector3d::UnitZ());
+      itsTransform = itsTransform * nrt::Transform3D(translation);  
+      itsTransform = itsTransform * Eigen::AngleAxisd(dtheta, Eigen::Vector3d::UnitZ());
     }
+
+    std::unique_ptr<TransformMessage> outmsg(new TransformMessage(
+          nrt::now(), itsBaseFrameParam.getVal(), itsDeadReckoningFrameParam.getVal(), itsTransform));
+    post<DeadReckoningOutput>(outmsg);
   }
 
   itsLastVelocity   = *msg;
   itsLastUpdateTime = nrt::now();
+}
+
+// ######################################################################
+void DeadReckoningModule::run()
+{
+  std::lock_guard<std::mutex> _(itsMtx);
+  // Reset our transform
+  itsTransform = Eigen::Translation3d::Identity();
 }
 
 NRT_REGISTER_MODULE(DeadReckoningModule);

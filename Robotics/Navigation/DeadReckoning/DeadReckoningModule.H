@@ -29,6 +29,8 @@ class DeadReckoningModule : public nrt::Module,
 
     void onMessage(deadreckoning::VelocityCommand msg);
 
+    void run();
+
   private:
     std::mutex itsMtx;
     nrt::Parameter<std::string> itsBaseFrameParam;
