@@ -22,6 +22,8 @@ JoystickModule::JoystickModule(std::string const & instanceName) :
 // ######################################################################
 void JoystickModule::joystickDevCallback(std::string const & dev)
 {
+  if(!initialized()) return;
+
   std::lock_guard<std::mutex> _(itsMtx);
   itsJoystickOpen = false;
 
@@ -52,11 +54,14 @@ void JoystickModule::joystickDevCallback(std::string const & dev)
   fcntl(joy_fd, F_SETFL, O_NONBLOCK);
   itsJoystickOpen = true;
 }
-!s!@
+
 // ######################################################################
 void JoystickModule::run()
 {
   NRT_INFO("Running : " << axes.size() << " [" << num_axes << "] , " << buttons.size() << " [" << num_buttons << "]");
+
+  // Force the callback
+  itsJoystickDev.setVal(itsJoystickDev.getVal());
 
   while(running())
   {
@@ -99,7 +104,6 @@ void JoystickModule::run()
           break;
       }
     }
-    y
 
     Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
     for (int i = 0; i < axes.size(); i++)

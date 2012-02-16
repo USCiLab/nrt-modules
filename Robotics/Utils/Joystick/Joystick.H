@@ -5,7 +5,7 @@
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
 #include <nrt/Core/Blackboard/Module.H>
-#include <nrt/Robotics/Messages/JoystickMessage.H>
+#include <Messages/Controllers/JoystickMessage.H>
 
 namespace nrt { class DisplayImageSink; }
 

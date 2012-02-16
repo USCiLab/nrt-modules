@@ -28,6 +28,8 @@ class TransformPosterModule : public nrt::Module,
     void transformCallback(std::string const & str);
 
   private:
+    void postTransform();
+
     std::mutex itsMtx;
     nrt::Transform3D itsTransform;
     nrt::Parameter<std::string> itsFromParam;

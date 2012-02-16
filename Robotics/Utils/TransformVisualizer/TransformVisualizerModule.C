@@ -72,8 +72,9 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
   TransformVisualizerModule * visualizer = static_cast<TransformVisualizerModule*>(visualizerPtr);
   double const scale = visualizer->itsScaleParam.getVal();
 
-  // Draw the 'to' frame
-  drawFrame(canvas, cr, visualizer->getTransform(), scale, visualizer->itsToParam.getVal());
+  // Draw each of the target frames
+  for(std::pair<std::string, nrt::Transform3D> const & transform : visualizer->getTransforms())
+    drawFrame(canvas, cr, transform.second, scale, transform.first);
 
   cairo_destroy(cr);
 
@@ -83,8 +84,8 @@ transform_canvas_expose(GtkWidget * canvas, GdkEventExpose * event, gpointer vis
 // ######################################################################
 TransformVisualizerModule::TransformVisualizerModule(std::string const & instanceName) :
   Module(instanceName),
-  itsFromParam(FromParamDef, this),
-  itsToParam(ToParamDef, this),
+  itsWorldParam(WorldParamDef, this),
+  itsTransformsParam(TransformsParamDef, this),
   itsScaleParam(ScaleParamDef, this, &TransformVisualizerModule::scaleChangedCallback)
 { }
 
@@ -113,10 +114,10 @@ void TransformVisualizerModule::gtkThreadMethod()
 }
 
 // ######################################################################
-Transform3D TransformVisualizerModule::getTransform()
+std::map<std::string, Transform3D> TransformVisualizerModule::getTransforms()
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  return itsTransform;
+  return itsTransforms;
 }
 
 // ######################################################################
@@ -128,30 +129,36 @@ void TransformVisualizerModule::run()
   {
     usleep(10000);
 
-    try
-    {
-      // Lookup the specified transform
-      auto lookupMessage = nrt::make_unique( new TransformLookupMessage( nrt::now(), itsFromParam.getVal(), itsToParam.getVal() ) );
-      MessagePosterResults<TransformLookup> results = post<TransformLookup>(lookupMessage);
-      if(results.size() == 0) { NRT_WARNING("No TransformManagers detected");        sleep(1); continue;}
-      if(results.size() > 1)  { NRT_WARNING("Multiple TransformManagers detected!"); sleep(1); continue;}
-      TransformMessage::const_ptr transform = results.get();
-      {
-        std::lock_guard<std::mutex> _(itsMtx);
-        itsTransform = transform->transform;
+    itsTransforms.clear();
 
-      }
-      gdk_threads_enter();
-      gtk_widget_draw(GTK_WIDGET(itsWindow), NULL);
-      gdk_threads_leave();
-    }
-    catch(...)
+    for(std::string const& transformName : nrt::splitString(itsTransformsParam.getVal(), ','))
     {
-      NRT_WARNING("Error looking up transform from [" << itsFromParam.getVal() << "] to [" << itsToParam.getVal() << "]");
-      sleep(1);
+      try
+      {
+        // Lookup the specified transform
+        auto lookupMessage = nrt::make_unique( new TransformLookupMessage( nrt::now(), itsWorldParam.getVal(), transformName ) );
+        MessagePosterResults<TransformLookup> results = post<TransformLookup>(lookupMessage);
+        if(results.size() == 0) { NRT_WARNING("No TransformManagers detected");        sleep(1); break;}
+        if(results.size() > 1)  { NRT_WARNING("Multiple TransformManagers detected!"); sleep(1); break;}
+        TransformMessage::const_ptr transform = results.get();
+        {
+          std::lock_guard<std::mutex> _(itsMtx);
+          itsTransforms[transformName] = transform->transform;
+        }
+      }
+      catch(...)
+      {
+        NRT_WARNING("Error looking up transform from [" << itsWorldParam.getVal() << "] to [" << transformName << "]");
+        sleep(1);
+      }
+
     }
+
+    gdk_threads_enter();
+    gtk_widget_draw(GTK_WIDGET(itsWindow), NULL);
+    gdk_threads_leave();
   }
-  
+
   gdk_threads_enter();
   gtk_widget_destroy(itsCanvas);
   gtk_widget_destroy(itsWindow);
@@ -161,3 +168,4 @@ void TransformVisualizerModule::run()
 }
 
 NRT_REGISTER_MODULE(TransformVisualizerModule);
+
