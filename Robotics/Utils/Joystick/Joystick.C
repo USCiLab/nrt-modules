@@ -52,7 +52,7 @@ void JoystickModule::joystickDevCallback(std::string const & dev)
   fcntl(joy_fd, F_SETFL, O_NONBLOCK);
   itsJoystickOpen = true;
 }
-!s!@
+
 // ######################################################################
 void JoystickModule::run()
 {
@@ -99,7 +99,6 @@ void JoystickModule::run()
           break;
       }
     }
-    y
 
     Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
     for (int i = 0; i < axes.size(); i++)
