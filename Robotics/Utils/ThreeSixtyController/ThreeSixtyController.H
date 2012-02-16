@@ -3,7 +3,7 @@
 
 #include <nrt/Core/Blackboard/Module.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
-#include <nrt/Robotics/Messages/JoystickMessage.H>
+#include <Messages/Controllers/JoystickMessage.H>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
