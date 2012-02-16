@@ -17,6 +17,8 @@ TransformPosterModule::TransformPosterModule(std::string const & instanceName) :
 // ######################################################################
 void TransformPosterModule::transformCallback(std::string const & str)
 {
+  if(!initialized()) return;
+
   std::lock_guard<std::mutex> _(itsMtx);
 
   std::vector<std::string> split = nrt::splitString(str, ',');
@@ -41,6 +43,12 @@ void TransformPosterModule::transformCallback(std::string const & str)
   // Post the newly changed transform
   if(!initialized()) return;
 
+  postTransform();
+}
+
+// ######################################################################
+void TransformPosterModule::postTransform()
+{
   std::unique_ptr<nrt::TransformMessage> msg(
       new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
   post<TransformUpdate>(msg);
@@ -53,17 +61,10 @@ void TransformPosterModule::run()
   nrt::Timer timer;
 
   // Always post a transform as soon as we're started
-  {
-    std::lock_guard<std::mutex> _(itsMtx);
-    std::unique_ptr<nrt::TransformMessage> msg(
-        new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
-    post<TransformUpdate>(msg);
-  }
+  { std::lock_guard<std::mutex> _(itsMtx); postTransform(); }
 
   while(running())
   {
-    sleep(1);
-
     timer.start();
     int const ratetime_us = 1000000.0 / itsRateParam.getVal();
     if(itsRateParam.getVal() == 0)
@@ -72,12 +73,8 @@ void TransformPosterModule::run()
       continue;
     }
 
-    {
-      std::lock_guard<std::mutex> _(itsMtx);
-      std::unique_ptr<nrt::TransformMessage> msg(
-          new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsToParam.getVal(), itsTransform));
-      post<TransformUpdate>(msg);
-    }
+    // Post the transform
+    { std::lock_guard<std::mutex> _(itsMtx); postTransform(); }
 
     // Obey our rate
     int const time_us = timer.getDuration() * 1000000.0;

@@ -2,6 +2,7 @@
 #define TRANFORMVISUALIZERMODULE_H 
 
 #include <nrt/Core/Blackboard/Module.H>
+#include <nrt/Core/Util/VectorUtils.H>
 #include <nrt/Robotics/Messages/TransformLookupMessage.H>
 #include <nrt/Robotics/Messages/TransformMessage.H>
 #include <cairo.h>
@@ -12,8 +13,8 @@ namespace transformvisualizer
   NRT_DECLARE_MESSAGEPOSTER_PORT(TransformLookup, nrt::TransformLookupMessage, nrt::TransformMessage, "The transform port");
 
   nrt::ParameterCategory ParamCateg("Transform Visualizer Related Options");
-  nrt::ParameterDef<std::string> FromParamDef("from", "The base transform", "world", ParamCateg);
-  nrt::ParameterDef<std::string> ToParamDef("to",     "The end transform",  "robot", ParamCateg);
+  nrt::ParameterDef<std::string> WorldParamDef("world", "The base transform to use as an origin", "world", ParamCateg);
+  nrt::ParameterDef<std::string> TransformsParamDef("transforms", "A comma-separated list of transforms to display",  "robot", ParamCateg);
   nrt::ParameterDef<double> ScaleParamDef("scale", "The display scale (in pixels/meter)",  10, ParamCateg);
 }
 
@@ -26,7 +27,7 @@ class TransformVisualizerModule : public nrt::Module,
 
     void run(); 
 
-    nrt::Transform3D getTransform();
+    std::map<std::string, nrt::Transform3D> getTransforms();
 
     void scaleChangedCallback(double const & scale);
 
@@ -40,10 +41,10 @@ class TransformVisualizerModule : public nrt::Module,
     GtkWidget * itsWindow;
     GtkWidget * itsCanvas;
 
-    nrt::Transform3D itsTransform;
+    std::map<std::string, nrt::Transform3D> itsTransforms;
 
-    nrt::Parameter<std::string> itsFromParam;
-    nrt::Parameter<std::string> itsToParam;
+    nrt::Parameter<std::string> itsWorldParam;
+    nrt::Parameter<std::string> itsTransformsParam;
     nrt::Parameter<double> itsScaleParam;
 };
 

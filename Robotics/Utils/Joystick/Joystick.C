@@ -22,6 +22,8 @@ JoystickModule::JoystickModule(std::string const & instanceName) :
 // ######################################################################
 void JoystickModule::joystickDevCallback(std::string const & dev)
 {
+  if(!initialized()) return;
+
   std::lock_guard<std::mutex> _(itsMtx);
   itsJoystickOpen = false;
 
@@ -57,6 +59,9 @@ void JoystickModule::joystickDevCallback(std::string const & dev)
 void JoystickModule::run()
 {
   NRT_INFO("Running : " << axes.size() << " [" << num_axes << "] , " << buttons.size() << " [" << num_buttons << "]");
+
+  // Force the callback
+  itsJoystickDev.setVal(itsJoystickDev.getVal());
 
   while(running())
   {
