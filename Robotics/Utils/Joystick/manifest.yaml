@@ -19,7 +19,7 @@ Module:
         outmsg: nrt::JoystickMessage
         retmsg: void
         description: "The joystick data"
- 
+      
   authorship: 
     author: 
     email: 
