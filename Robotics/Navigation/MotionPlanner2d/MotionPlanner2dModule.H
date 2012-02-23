@@ -35,11 +35,11 @@ class MotionPlanner2dModule : public nrt::Module,
     void run();
 
   private:
-    nrt::VelocityMessage RotateToFaceTarget(Eigen::Translation<double, 3> const & translation);
+     double RotateToFaceTarget(Eigen::Translation<double, 3> const & translation);
     
-    nrt::VelocityMessage TranslateToReachTarget(Eigen::Translation<double, 3> const & translation);
+     double TranslateToReachTarget(Eigen::Translation<double, 3> const & translation);
 
-    nrt::VelocityMessage RotateToTarget(nrt::Transform3D const & transform);
+     double RotateToTarget(nrt::Transform3D const & transform);
 
     double GetAngle(Eigen::Translation3d const & translation);
 
