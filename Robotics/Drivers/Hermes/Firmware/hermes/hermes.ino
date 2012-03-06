@@ -32,9 +32,10 @@ void setup()
 
 void loop()
 {
-  if (Serial.available() > 0)
-  {
+  if (Serial.available() > 0) {
     dispatch(Serial.read());
+  } else {
+    
   }
   
   sensorUpdate();

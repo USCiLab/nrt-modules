@@ -16,6 +16,10 @@
 Servo Left;
 Servo Right;
 
+// State
+typedef enum {IDLE,ACTIVE} state;
+state hermesState;
+
 // 
 // Debug 
 // 
@@ -28,5 +32,3 @@ Servo Right;
 #define LOG_RAW(message) ;
 #define LOG(message) ;
 #endif
-
-int timeRunning;
