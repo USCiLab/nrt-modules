@@ -40,11 +40,10 @@ void loop()
 		updatedTime = millis();
 		hermesState = ACTIVE;
     dispatch(Serial.read());
-  } else {
+  } 
+	else if (currentTime - updatedTime > WATCHDOG_THRESHOLD) {
 		hermesState = IDLE;
+		cmd_setSpeed(64,64);
   }
   sensorUpdate();
-	if (currentTime - updatedTime > WATCHDOG_THRESHOLD)	{
-		//etc.
-	}
 }
