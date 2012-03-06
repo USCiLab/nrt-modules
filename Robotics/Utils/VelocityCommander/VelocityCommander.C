@@ -9,7 +9,9 @@ using namespace velocitycommander;
 // ######################################################################
 VelocityCommanderModule::VelocityCommanderModule(std::string const & instanceName) :
   Module(instanceName),
-  itsDisplaySink(new DisplayImageSink)
+  itsDisplaySink(new DisplayImageSink),
+  itsAngularVel(0),
+  itsLinearVel(0)
 { 
   addSubComponent(itsDisplaySink);
   itsDisplaySink->setKeyCallback(std::bind(&VelocityCommanderModule::keyCallback, this, std::placeholders::_1));
@@ -66,8 +68,13 @@ void VelocityCommanderModule::run()
 
     VelocityMessage::unique_ptr msg(new VelocityMessage);
     msg->linear.x()  = linear;
+    msg->linear.y()  = 0;
+    msg->linear.z()  = 0;
+    msg->angular.x() = 0;
+    msg->angular.y() = 0;
     msg->angular.z() = angular;
-    post<VelocityCommand>(msg);
+    try { post<VelocityCommand>(msg); }
+    catch(...) {}
 
     usleep(100000);
   }

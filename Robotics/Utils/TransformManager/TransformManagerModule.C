@@ -1,31 +1,29 @@
-#include <nrt/Robotics/Modules/TransformManagerModule.H>
+#include "TransformManagerModule.H"
+
+using namespace transformmanager;
 
 // ######################################################################
-nrt::TransformManagerModule::TransformManagerModule( std::string const & instanceName ) :
-  nrt::Module( instanceName ), itsMaxCacheSize( transformmanager::MaxCacheSizeParamDef, this ), itsMaxCacheTime( transformmanager::MaxCacheTimeParamDef, this )
-{
-  //
-}
+TransformManagerModule::TransformManagerModule( std::string const & instanceName ) :
+  nrt::Module( instanceName ),
+  itsMaxCacheSize( transformmanager::MaxCacheSizeParamDef, this ),
+  itsMaxCacheTime( transformmanager::MaxCacheTimeParamDef, this )
+{ }
 
 // ######################################################################
-void
-  nrt::TransformManagerModule::run()
-{
-  //
-}
+void TransformManagerModule::run()
+{ }
 
 // ######################################################################
-void
-  nrt::TransformManagerModule::onMessage( transformmanager::TransformUpdatePort msg )
+void TransformManagerModule::onMessage( transformmanager::TransformUpdatePort msg )
 {
   itsTransformManager.updateTransform( msg );
 }
 
 // ######################################################################
-
-//nrt::transformmanager::TransformLookupPort::RetPtr nrt::Robotics::TransformManagerModule::onMessage( transformmanager::TransformLookupPort msg )
-
-NRT_IMPL_MESSAGE_CALLBACK( nrt, TransformManagerModule, transformmanager::TransformLookupPort )
+TransformLookupPort::RetPtr TransformManagerModule::onMessage(TransformLookupPort msg)
 {
   return itsTransformManager.lookupTransform( msg );
 }
+
+NRT_REGISTER_MODULE(TransformManagerModule);
+

@@ -1,11 +1,11 @@
 Module: 
   general: 
-    displayname: Joystick 
-    classname: JoystickModule 
-    category: /Robotics/Utils
-    synopsis: A simple module to allow joystick control of robots. 
+    displayname: Motion Planner2d 
+    classname: MotionPlanner2dModule 
+    category: /Robotics/Navigation
+    synopsis: This author is too lazy to write a synopsis! 
     description: > 
-      This module converts js_event data from linux/joystick.h to JoystickMessages.
+      This author is too lazy to write a description!
  
     keywords: 
 
@@ -15,11 +15,11 @@ Module:
     checkerports: 
 
     posterports: 
-      - name: JoystickCommand 
-        outmsg: nrt::JoystickMessage
+      - name: VelocityCommand
+        outmsg: nrt::VelocityMessage
         retmsg: void
-        description: "The joystick data"
-      
+        description: "The velocity to send"
+ 
   authorship: 
     author: 
     email: 
@@ -36,9 +36,9 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.png 
     screenshots: 
-    objectfile: build/Joystick.so 
+    objectfile: build/MotionPlanner2dModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

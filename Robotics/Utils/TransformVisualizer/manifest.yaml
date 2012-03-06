@@ -1,11 +1,11 @@
 Module: 
   general: 
-    displayname: Joystick 
-    classname: JoystickModule 
+    displayname: Transform Visualizer 
+    classname: TransformVisualizerModule 
     category: /Robotics/Utils
-    synopsis: A simple module to allow joystick control of robots. 
+    synopsis: This author is too lazy to write a synopsis! 
     description: > 
-      This module converts js_event data from linux/joystick.h to JoystickMessages.
+      This author is too lazy to write a description!
  
     keywords: 
 
@@ -15,11 +15,11 @@ Module:
     checkerports: 
 
     posterports: 
-      - name: JoystickCommand 
-        outmsg: nrt::JoystickMessage
-        retmsg: void
-        description: "The joystick data"
-      
+      - name: TransformLookup
+        outmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "The transform port"
+ 
   authorship: 
     author: 
     email: 
@@ -38,7 +38,7 @@ Module:
   files: 
     icon:  
     screenshots: 
-    objectfile: build/Joystick.so 
+    objectfile: build/TransformVisualizerModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

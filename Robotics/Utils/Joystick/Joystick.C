@@ -22,6 +22,12 @@ JoystickModule::JoystickModule(std::string const & instanceName) :
 // ######################################################################
 void JoystickModule::joystickDevCallback(std::string const & dev)
 {
+  if(!initialized()) 
+  {
+    NRT_INFO("Aborting joystick callback because this module isn't initialized yet.");
+    return;
+  }
+
   std::lock_guard<std::mutex> _(itsMtx);
   itsJoystickOpen = false;
 
@@ -52,17 +58,20 @@ void JoystickModule::joystickDevCallback(std::string const & dev)
   fcntl(joy_fd, F_SETFL, O_NONBLOCK);
   itsJoystickOpen = true;
 }
-!s!@
+
 // ######################################################################
 void JoystickModule::run()
 {
+  // Force the callback
+  itsJoystickDev.setVal(itsJoystickDev.getVal());
+
   NRT_INFO("Running : " << axes.size() << " [" << num_axes << "] , " << buttons.size() << " [" << num_buttons << "]");
 
   while(running())
   {
     std::lock_guard<std::mutex> _(itsMtx);
 
-    auto waitTime = std::chrono::milliseconds(int(1000 / itsUpdateRate.getVal()));
+    auto waitTime = std::chrono::milliseconds(int(1000.0 / itsUpdateRate.getVal()));
     auto endTime = nrt::now() + waitTime;
 
     if(!itsJoystickOpen)
@@ -99,12 +108,14 @@ void JoystickModule::run()
           break;
       }
     }
-    y
+    NRT_INFO("Posting Joystick Message");
 
-    Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
+    Image<PixRGB<byte>> image(370, std::max(axes.size(), buttons.size())*20, ImageInitPolicy::Zeros);
     for (int i = 0; i < axes.size(); i++)
       nrt::drawText(image, Point2D<int32>(10, 20*i), nrt::sformat("axis %d: %d", i, axes[i])); 
-    itsDisplaySink->out(GenericImage(image), "Velocity Commander");
+    for (int i = 0; i < buttons.size(); i++)
+      nrt::drawText(image, Point2D<int32>(200, 20*i), nrt::sformat("button %d: %d", i, buttons[i])); 
+    itsDisplaySink->out(GenericImage(image), "Joystick axes info");
 
     JoystickMessage::unique_ptr msg(new JoystickMessage);
     msg->axes    = axes;
@@ -112,6 +123,12 @@ void JoystickModule::run()
 
     post<JoystickCommand>(msg);
   }
+
+  std::lock_guard<std::mutex> _(itsMtx);
+
+  // clean up
+  itsJoystickOpen = false;
+  close(joy_fd);
 }
 
 NRT_REGISTER_MODULE(JoystickModule);

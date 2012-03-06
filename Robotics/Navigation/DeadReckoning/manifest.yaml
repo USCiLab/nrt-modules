@@ -2,7 +2,7 @@ Module:
   general: 
     displayname: Dead Reckoning 
     classname: DeadReckoningModule 
-    category: 
+    category: /Robotics/Navigation
     synopsis: This author is too lazy to write a synopsis! 
     description: > 
       This author is too lazy to write a description!
