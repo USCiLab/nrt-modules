@@ -4,6 +4,8 @@
 
 #define BAUDRATE  115200
 
+#define WATCHDOG_THRESHOLD	200
+
 // Pins
 #define LEFT_SERVO 9
 #define RIGHT_SERVO 10
