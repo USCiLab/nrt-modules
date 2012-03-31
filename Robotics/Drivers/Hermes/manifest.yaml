@@ -1,6 +1,6 @@
 Module: 
   general: 
-    displayname: Hermes
+    displayname: Hermes 
     classname: HermesModule 
     category: /Robotics/Drivers
     synopsis: This author is too lazy to write a synopsis! 
@@ -11,10 +11,22 @@ Module:
 
  
     subscriberports: 
+      - name: VelocityCommand
+        inmsg: nrt::VelocityMessage
+        retmsg: void
+        description: "The requested velocity of the robot"
 
     checkerports: 
 
     posterports: 
+      - name: CompassZ
+        outmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "The Z component of Hermes' compass"
+      - name: GyroZ
+        outmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "The Z component of Hermes' gyroscope"
  
   authorship: 
     author: 
