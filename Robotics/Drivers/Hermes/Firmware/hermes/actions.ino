@@ -9,21 +9,22 @@
 */
 bool waitForBytes(int aBytes)
 {
-  int now = millis();
-  while(Serial.available() < aBytes && now + 200 > millis())
+  int start = millis();
+  while(Serial.available() < aBytes)
   {
-    //Serial.write("Waiting...\n");
+    // LOG(millis() - start);
+    ;
   }
-  int count = Serial.available();
-  if(count < aBytes)
-  {
-    // Clear the buffer of fragmented data
-    for(int i=0; i<count; i++) {
-      Serial.read();
-    }
-    LOG("Bytes not recieved");
-    return false;
-  }
+  // int count = Serial.available();
+  // if(count < aBytes)
+  // {
+  //   // Clear the buffer of fragmented data
+  //   for(int i=0; i<count; i++) {
+  //     Serial.read();
+  //   }
+  //   LOG("Bytes not recieved, cleared data fragment.");
+  //   return false;
+  // }
   
   return true;
 }
@@ -41,16 +42,6 @@ unsigned int microsFromByte(byte speed)
 
 void cmd_setSpeed(int leftSpeed, int rightSpeed)
 {
-  //if(!waitForBytes(2)) return;
-  
-  //char leftSpeed, rightSpeed;
-
-  //leftSpeed = Serial.read();
-  //rightSpeed = Serial.read();
-
-  //LOG((byte)leftSpeed);
-  //LOG((byte)rightSpeed);
-
   if(leftSpeed < 0 || rightSpeed < 0)
     return;
     
@@ -64,15 +55,14 @@ void dispatch(char cmd)
   switch(cmd)
   {
     case(CMD_RESET):
-      now = millis();
-      LOG(now - timeRunning);
+      ;
     break;
 
     case(CMD_SETSPEED):
       if (!waitForBytes(2))
         break;
       cmd_setSpeed(Serial.read(), Serial.read());
-      //LOG(timeRunning);
+      LOG("Speed set");
     break;
 
     default:
