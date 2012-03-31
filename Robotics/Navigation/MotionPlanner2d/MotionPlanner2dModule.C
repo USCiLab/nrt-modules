@@ -73,7 +73,7 @@ void MotionPlanner2dModule::run()
      * else:
      *    rotateToTarget()
      */
-    
+
     TransformLookupMessage::unique_ptr transformLookupMsg(new TransformLookupMessage( nrt::now(), itsFromFrameParam.getVal(), itsTargetFrameParam.getVal() ));
     nrt::MessagePosterResults<TransformLookupPort> results = post<TransformLookupPort>(transformLookupMsg);
     if(results.size() == 0)
@@ -94,13 +94,10 @@ void MotionPlanner2dModule::run()
     msg->angular.y() = 0.0;
     msg->angular.z() = 0.0;
 
-    if (translation.x() > itsDistanceThresholdParam.getVal() && fabs(GetAngle(translation)) > itsRotationThresholdParam.getVal())
+    msg->linear.x() = TranslateToReachTarget(translation);
+
+    if (translation.x() > itsDistanceThresholdParam.getVal())
       msg->angular.z() = RotateToFaceTarget(translation);
-    else if (translation.x() > itsDistanceThresholdParam.getVal())
-    {
-      msg->linear.x() = TranslateToReachTarget(translation);
-      msg->angular.z() = RotateToFaceTarget(translation);
-    }
     else
       msg->angular.z() = RotateToTarget(transform);
 
