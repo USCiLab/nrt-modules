@@ -1,8 +1,8 @@
 Module: 
   general: 
-    displayname: Hermes 
-    classname: HermesModule 
-    category: /Robotics/Drivers
+    displayname: GPS 
+    classname: GPSModule 
+    category: /Robotics/Sensing
     synopsis: This author is too lazy to write a synopsis! 
     description: > 
       This author is too lazy to write a description!
@@ -11,22 +11,14 @@ Module:
 
  
     subscriberports: 
-      - name: VelocityCommand
-        inmsg: nrt::VelocityMessage
-        retmsg: void
-        description: "The requested velocity of the robot"
 
     checkerports: 
 
     posterports: 
-      - name: CompassZ
-        outmsg: nrt::Message< nrt::real >
+      - name: GpsMessage
+        outmsg: nrt::GPSMessage
         retmsg: void
-        description: "The Z component of Hermes' compass"
-      - name: GyroZ
-        outmsg: nrt::Message< nrt::real >
-        retmsg: void
-        description: "The Z component of Hermes' gyroscope"
+        description: "The GPS data"
  
   authorship: 
     author: 
@@ -46,7 +38,7 @@ Module:
   files: 
     icon:  
     screenshots: 
-    objectfile: build/Hermes.so 
+    objectfile: build/GPSModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

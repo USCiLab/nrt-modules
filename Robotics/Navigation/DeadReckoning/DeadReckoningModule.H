@@ -9,6 +9,7 @@ namespace deadreckoning
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( DeadReckoningOutput );
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
+  NRT_DECLARE_MESSAGESUBSCRIBER_PORT( CompassData, nrt::Message<nrt::real>, void, "Optional compass data" );
 
   static const nrt::ParameterCategory ParamCat("Dead Reckoning Related Options");
 
@@ -21,13 +22,15 @@ namespace deadreckoning
 }
 
 class DeadReckoningModule : public nrt::Module,
-  public nrt::MessageSubscriber<deadreckoning::VelocityCommand>,
+  public nrt::MessageSubscriber<deadreckoning::VelocityCommand, deadreckoning::CompassData>,
   public nrt::MessagePoster<deadreckoning::DeadReckoningOutput>
 {
   public:
     DeadReckoningModule(std::string const& instanceName="");
 
     void onMessage(deadreckoning::VelocityCommand msg);
+
+    void onMessage(deadreckoning::CompassData msg);
 
     void run();
 
@@ -38,7 +41,9 @@ class DeadReckoningModule : public nrt::Module,
     nrt::Parameter<std::string> itsBaseFrameParam;
     nrt::Parameter<std::string> itsDeadReckoningFrameParam;
     nrt::Time itsLastUpdateTime;
+    nrt::Time itsLastCompassTime;
     nrt::VelocityMessage itsLastVelocity;
+    nrt::Message<nrt::real> itsLastCompassData;
     nrt::Transform3D itsTransform;
 };
 

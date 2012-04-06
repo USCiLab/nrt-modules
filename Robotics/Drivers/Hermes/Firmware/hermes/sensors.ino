@@ -1,12 +1,12 @@
 void sensorUpdate()
 {
-  /*if(millis()%100 == 0)
-  {
-    batteryPacket battery;
-    battery.voltage = 0.011614*analogRead(A0);
-    Serial.println(battery.voltage);
-  }*/
-
+  // if(millis()%100 == 0)
+  // {
+  //   batteryPacket battery;
+  //   battery.voltage = 0.020793*analogRead(A0);
+  //   Serial.println(battery.voltage);
+  // }
+  return;
   MagnetometerRaw raw = magnetometer.ReadRawAxis();
   compassPacket packet;
   packet.heading = atan2(raw.YAxis, raw.XAxis);

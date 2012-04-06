@@ -19,24 +19,33 @@ void DeadReckoningModule::extrapolatePosition()
   // Get the time since last update in seconds
   double deltaTime = nrt::Duration(nrt::now() - itsLastUpdateTime).count();
 
-  if(itsLastVelocity.angular.z() == 0)
+  // the angle we care about is the one in the last velocity message, by default
+  double angular = itsLastVelocity.angular.z();
+
+  // unless we got a compass message in the last time step, then use it for angle data instead
+  if (nrt::Duration(nrt::now() - itsLastCompassTime).count() <= deltaTime)
+  {
+    angular = itsLastCompassData.value;
+  }
+
+  if(angular == 0)
   {
     itsTransform = itsTransform * Eigen::Translation3d(itsLastVelocity.linear.x() * deltaTime, 0, 0);
   }
   else if(itsLastVelocity.linear.x() == 0)
   {
-    itsTransform = itsTransform * Eigen::AngleAxisd(itsLastVelocity.angular.z() * deltaTime, Eigen::Vector3d::UnitZ());
+    itsTransform = itsTransform * Eigen::AngleAxisd(angular * deltaTime, Eigen::Vector3d::UnitZ());
   }
   else
   {
     // The amount we have turned (theta displacement) 
-    double dtheta = itsLastVelocity.angular.z() * deltaTime;
+    double dtheta = angular * deltaTime;
 
     // The radius of the circle we have been following
     // This is calculated by solving: (angularVelocity * time)   (linearVelocity * time)  
     //                                ------------------------ = -----------------------
     //                                          (2*pi)                (2*pi*radius)
-    double radius = itsLastVelocity.linear.x() / itsLastVelocity.angular.z();
+    double radius = itsLastVelocity.linear.x() / angular;
 
     // The length of the chord from our last position to our current one
     double chordLength = sin(dtheta/2.0) * radius * 2.0;
@@ -73,6 +82,16 @@ void DeadReckoningModule::onMessage(VelocityCommand msg)
   if(itsLastUpdateTime != nrt::Time()) extrapolatePosition();
 
   itsLastVelocity   = *msg;
+}
+
+// ######################################################################
+void DeadReckoningModule::onMessage(CompassData msg)
+{
+  std::lock_guard<std::mutex> _(itsMtx);
+
+  itsLastCompassTime = nrt::Time();
+  itsLastCompassData = *msg;
+  extrapolatePosition();
 }
 
 // ######################################################################

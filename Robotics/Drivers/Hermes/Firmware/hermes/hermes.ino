@@ -23,6 +23,9 @@ void setup()
   gyro.reset();
   gyro.init(ITG3200_ADDR_AD0_LOW);
   // gyro.zeroCalibrate(2500,2); // samples,seconds
+	
+	long currentTime = 0;
+	long updatedTime = 0;
     
   Serial.begin(BAUDRATE);
   Wire.begin();
@@ -32,10 +35,15 @@ void setup()
 
 void loop()
 {
-  if (Serial.available() > 0)
-  {
+	currentTime = millis();
+  if (Serial.available() > 0) {
+		updatedTime = millis();
+		hermesState = ACTIVE;
     dispatch(Serial.read());
+  } 
+	else if (currentTime - updatedTime > WATCHDOG_THRESHOLD) {
+		hermesState = IDLE;
+		cmd_setSpeed(64,64);
   }
-  
   sensorUpdate();
 }

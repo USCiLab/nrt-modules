@@ -4,6 +4,8 @@
 
 #define BAUDRATE  115200
 
+#define WATCHDOG_THRESHOLD	200
+
 // Pins
 #define LEFT_SERVO 9
 #define RIGHT_SERVO 10
@@ -15,6 +17,10 @@
 // Globals
 Servo Left;
 Servo Right;
+
+// State
+typedef enum {IDLE,ACTIVE} state;
+state hermesState;
 
 // 
 // Debug 
@@ -28,5 +34,3 @@ Servo Right;
 #define LOG_RAW(message) ;
 #define LOG(message) ;
 #endif
-
-int timeRunning;

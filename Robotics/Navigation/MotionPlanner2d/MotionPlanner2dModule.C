@@ -13,51 +13,30 @@ MotionPlanner2dModule::MotionPlanner2dModule(std::string const& instanceName) :
   itsAngularPidComponent(new PIDComponent("angular")),
   itsTranslationalPidComponent(new PIDComponent("translation"))
 {
-  NRT_INFO(__LINE__); 
   addSubComponent(itsAngularPidComponent);
   addSubComponent(itsTranslationalPidComponent);
 }
 
 // ######################################################################
-nrt::VelocityMessage MotionPlanner2dModule::RotateToFaceTarget(Eigen::Translation3d const & translation)
+double MotionPlanner2dModule::RotateToFaceTarget(Eigen::Translation3d const & translation)
 {
-  // get the translation component from transform
-  // find the angle to the translation component
-  // construct a VelocityMessage
-  // set the message->angular to minimize the angle
-  // return the message
   double angle = atan2(translation.y(), translation.x());
 
-  itsAngularPidComponent->setObservedValue(angle);
+  itsAngularPidComponent->setObservedValue(-angle);
   itsAngularPidComponent->setDesiredValue(0.0);
-  double result = itsAngularPidComponent->update();
-  
-  VelocityMessage velocity;
-  velocity.angular.z() = result;
-  return velocity;
+  return itsAngularPidComponent->update();
 }
 // ######################################################################
-nrt::VelocityMessage MotionPlanner2dModule::TranslateToReachTarget(Eigen::Translation3d const & translation)
+double MotionPlanner2dModule::TranslateToReachTarget(Eigen::Translation3d const & translation)
 {
-  // get the translation component from transform
-  // construct a VelocityMessage
-  // set the message->linear to minimize the distance
-  // return the message
-  itsTranslationalPidComponent->setObservedValue(translation.x());
+  itsTranslationalPidComponent->setObservedValue(-translation.x());
   itsTranslationalPidComponent->setDesiredValue(0.0);
-  double result = itsTranslationalPidComponent->update();
-
-  VelocityMessage velocity;
-  velocity.linear.x() = result;
-  return velocity;
+  return itsTranslationalPidComponent->update();
 }
 
 // ######################################################################
-nrt::VelocityMessage MotionPlanner2dModule::RotateToTarget(nrt::Transform3D const & transform)
+double MotionPlanner2dModule::RotateToTarget(nrt::Transform3D const & transform)
 {
-  // get the translation component from transform
-  // construct a new Transform3d object displaced by 1 from transform along the x-axis
-  // return RotateToFaceTarget(this new transform)
   nrt::Transform3D displaced(transform);
   displaced.translate(Eigen::Vector3d(1.0, 0.0, 0.0));
 
@@ -90,11 +69,11 @@ void MotionPlanner2dModule::run()
      * if T is farther away than some threshold and T.rotation is not close to zero:
      *    rotateToFaceTarget()
      * else if T is farther away than some threshold:
-     *    translateToReachTarget()
+     *    translateToReachTarget(
      * else:
      *    rotateToTarget()
      */
-    
+
     TransformLookupMessage::unique_ptr transformLookupMsg(new TransformLookupMessage( nrt::now(), itsFromFrameParam.getVal(), itsTargetFrameParam.getVal() ));
     nrt::MessagePosterResults<TransformLookupPort> results = post<TransformLookupPort>(transformLookupMsg);
     if(results.size() == 0)
@@ -106,15 +85,23 @@ void MotionPlanner2dModule::run()
 
     nrt::Transform3D transform = transformMessage->transform;
     Eigen::Translation3d translation = (Eigen::Translation3d)transform.translation();
-    std::unique_ptr<VelocityMessage> msg;
 
-    if (translation.x() > itsDistanceThresholdParam.getVal() && abs(GetAngle(translation)) > itsRotationThresholdParam.getVal())
-      msg.reset(new VelocityMessage(RotateToFaceTarget(translation)));
-    else if (translation.x() > itsDistanceThresholdParam.getVal())
-      msg.reset(new VelocityMessage(TranslateToReachTarget(translation)));
+    VelocityMessage::unique_ptr msg(new VelocityMessage);
+    msg->linear.x() = 0.0;
+    msg->linear.y() = 0.0;
+    msg->linear.z() = 0.0;
+    msg->angular.x() = 0.0;
+    msg->angular.y() = 0.0;
+    msg->angular.z() = 0.0;
+
+    msg->linear.x() = TranslateToReachTarget(translation);
+
+    if (translation.x() > itsDistanceThresholdParam.getVal())
+      msg->angular.z() = RotateToFaceTarget(translation);
     else
-      msg.reset(new VelocityMessage(RotateToTarget(transform)));
+      msg->angular.z() = RotateToTarget(transform);
 
+    NRT_INFO("Posting velocity message with angular component " << msg->angular.z() << " and linear component " << msg->linear.x());
     post<VelocityCommand>(msg);
   }
 }
