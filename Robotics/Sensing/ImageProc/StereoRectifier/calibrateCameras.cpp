@@ -52,14 +52,9 @@ int main(int const argc, char const ** argv)
 
   cv::Size const checkDims(checkDimsParam.getVal().width(), checkDimsParam.getVal().height());
 
-  // Create the "object points" vector
-  float const checkSize = checkSizeParam.getVal();
-  std::vector<cv::Point3f> objectPoints;
-  for(int x = 0; x<checkDimsParam.getVal().width(); ++x)
-    for(int y = 0; y<checkDimsParam.getVal().height(); ++y)
-      objectPoints.push_back(cv::Point3f(x*checkSize, y*checkSize, 0));
-
-  int num = 0;
+  std::vector<std::vector<cv::Point2f>> leftDetectedPoints;
+  std::vector<std::vector<cv::Point2f>> rightDetectedPoints;
+  cv::Size imageSize;
   while(leftCam->ok())
   {
     if(timeToQuit) break;
@@ -70,6 +65,7 @@ int main(int const argc, char const ** argv)
     // Convert the images to grayscale cv::Mat
     cv::Mat leftmat  = copyImage2CvMat(Image<PixGray<byte>>(leftimg));
     cv::Mat rightmat = copyImage2CvMat(Image<PixGray<byte>>(rightimg));
+    imageSize = leftmat.size();
 
     // Find the corners in the left image
     std::vector<cv::Point2f> leftCorners;
@@ -100,12 +96,12 @@ int main(int const argc, char const ** argv)
       // If we have found all of the corners
       if(leftCorners.size() == 48 && rightCorners.size() == 48)
       {
+        leftDetectedPoints.push_back(leftCorners);
+        rightDetectedPoints.push_back(rightCorners);
         NRT_INFO("Click");
       }
-      else
-      {
-        NRT_WARNING("The checkerboard is not fully visible in both frames!");
-      }
+      else NRT_WARNING("The checkerboard is not fully visible in both frames!");
+
       takeAPicture = false;
     }
 
@@ -116,10 +112,27 @@ int main(int const argc, char const ** argv)
     paste(displayImage, combinedimg, Point2D<int>(0,0));
     drawText(displayImage, Point2D<int>(5, combinedimg.height()+00), "<space> : Take a picture");
     drawText(displayImage, Point2D<int>(5, combinedimg.height()+20), "   q    : Quit (and process all pictures)");
+    drawText(displayImage, Point2D<int>(5, combinedimg.height()+60), sformat("%d Pictures Taken", leftDetectedPoints.size()));
     sink->out(GenericImage(displayImage), "Left/Right Images");
   }
 
-  NRT_INFO("Quitting");
+  NRT_INFO("Calibrating, Please Wait...");
+
+  // Create the "object points" vector
+  float const checkSize = checkSizeParam.getVal();
+  std::vector<cv::Point3f> objectPoints;
+  for(int x = 0; x<checkDimsParam.getVal().width(); ++x)
+    for(int y = 0; y<checkDimsParam.getVal().height(); ++y)
+      objectPoints.push_back(cv::Point3f(x*checkSize, y*checkSize, 0));
+
+  // Let's do the calibration
+  cv::Mat cameraMatrix1, cameraMatrix2;
+  cv::Mat distCoeffs1, distCoeffs2;
+  cv::Mat R, T, E, F;
+  double error = cv::stereoCalibrate(std::vector<std::vector<cv::Point3f>>(leftDetectedPoints.size(), objectPoints),
+      leftDetectedPoints, rightDetectedPoints, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, imageSize, R, T, E, F);
+
+  NRT_INFO("Calibrated with an error of " << error);
 }
 
 
