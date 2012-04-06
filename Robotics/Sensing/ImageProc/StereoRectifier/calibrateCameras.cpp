@@ -8,20 +8,6 @@
 
 using namespace nrt;
 
-void keyCallback(int key)
-{
-  NRT_INFO("Key Pressed: " << char(key));
-  switch(key)
-  {
-    case ' ':
-      break;
-    case 'p':
-      break;
-    case 'q':
-      break;
-  }
-}
-
 int main(int const argc, char const ** argv)
 {
   Manager mgr(argc, argv);
@@ -44,9 +30,23 @@ int main(int const argc, char const ** argv)
   rightCam->setParamVal("autofocus", false);
   rightCam->setParamVal("focus", 0);
 
+  bool timeToQuit   = false;
+  bool takeAPicture = false;
   auto sink = std::make_shared<DisplayImageSink>("display");
   mgr.addSubComponent(sink);
-  sink->setKeyCallback(keyCallback);
+  sink->setKeyCallback([&timeToQuit, &takeAPicture](int key)
+      {
+        switch(key)
+        {
+          case ' ': // Take a picture
+            takeAPicture = true;
+            break;
+          case 'q': // Quit
+            timeToQuit = true;
+            break;
+        }
+      });
+
 
   mgr.launch();
 
@@ -62,6 +62,7 @@ int main(int const argc, char const ** argv)
   int num = 0;
   while(leftCam->ok())
   {
+    if(timeToQuit) break;
     // Grab the newest camera images
     auto leftimg  = leftCam->in().convertTo<PixRGB<byte>>();
     auto rightimg = rightCam->in().convertTo<PixRGB<byte>>();
@@ -94,9 +95,18 @@ int main(int const argc, char const ** argv)
     cv::drawChessboardCorners(rightcolor,  checkDims, rightCorners,  rightCorners.size()  == 48);
     rightimg = copyCvMat2Image<PixRGB<byte>>(rightcolor);
 
-    // If we have found all of the corners
-    if(leftCorners.size() == 48 && rightCorners.size() == 48)
+    if(takeAPicture)
     {
+      // If we have found all of the corners
+      if(leftCorners.size() == 48 && rightCorners.size() == 48)
+      {
+        NRT_INFO("Click");
+      }
+      else
+      {
+        NRT_WARNING("The checkerboard is not fully visible in both frames!");
+      }
+      takeAPicture = false;
     }
 
 
@@ -104,10 +114,12 @@ int main(int const argc, char const ** argv)
     auto combinedimg = concatX(leftimg, rightimg);
     Image<PixRGB<byte>> displayImage(combinedimg.width(), combinedimg.height()+100, nrt::ImageInitPolicy::Zeros);
     paste(displayImage, combinedimg, Point2D<int>(0,0));
-    drawText(displayImage, Point2D<int>(5, combinedimg.height()+20), "<space> : Take a picture");
-    drawText(displayImage, Point2D<int>(5, combinedimg.height()+60), "q       : Quit (and process all pictures)");
+    drawText(displayImage, Point2D<int>(5, combinedimg.height()+00), "<space> : Take a picture");
+    drawText(displayImage, Point2D<int>(5, combinedimg.height()+20), "   q    : Quit (and process all pictures)");
     sink->out(GenericImage(displayImage), "Left/Right Images");
   }
+
+  NRT_INFO("Quitting");
 }
 
 
