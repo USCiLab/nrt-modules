@@ -52,12 +52,15 @@ int main(int const argc, char const ** argv)
 
   cv::Size const checkDims(checkDimsParam.getVal().width(), checkDimsParam.getVal().height());
 
+  /////////////////////////////////////////////////////////////////////////
+  // GRAB IMAGES
+  /////////////////////////////////////////////////////////////////////////
+
   std::vector<std::vector<cv::Point2f>> leftDetectedPoints;
   std::vector<std::vector<cv::Point2f>> rightDetectedPoints;
   cv::Size imageSize;
-  while(leftCam->ok())
+  while(leftCam->ok() && rightCam->ok() && !timeToQuit)
   {
-    if(timeToQuit) break;
     // Grab the newest camera images
     auto leftimg  = leftCam->in().convertTo<PixRGB<byte>>();
     auto rightimg = rightCam->in().convertTo<PixRGB<byte>>();
@@ -118,21 +121,70 @@ int main(int const argc, char const ** argv)
 
   NRT_INFO("Calibrating, Please Wait...");
 
+  /////////////////////////////////////////////////////////////////////////
+  // PERFORM CALIBRATION
+  /////////////////////////////////////////////////////////////////////////
+
   // Create the "object points" vector
   float const checkSize = checkSizeParam.getVal();
   std::vector<cv::Point3f> objectPoints;
-  for(int x = 0; x<checkDimsParam.getVal().width(); ++x)
-    for(int y = 0; y<checkDimsParam.getVal().height(); ++y)
-      objectPoints.push_back(cv::Point3f(x*checkSize, y*checkSize, 0));
+  for(int y = 0; y<checkDimsParam.getVal().height(); ++y)
+    for(int x = 0; x<checkDimsParam.getVal().width(); ++x)
+      objectPoints.push_back(cv::Point3f(y*checkSize, x*checkSize, 0));
 
-  // Let's do the calibration
-  cv::Mat cameraMatrix1, cameraMatrix2;
-  cv::Mat distCoeffs1, distCoeffs2;
+  // Compute the intrinsic parameters
+  cv::Mat leftCameraMatrix  = cv::Mat::eye(3, 3, CV_64F);
+  cv::Mat rightCameraMatrix = cv::Mat::eye(3, 3, CV_64F);
+  cv::Mat leftDistCoeffs;
+  cv::Mat rightDistCoeffs;
   cv::Mat R, T, E, F;
   double error = cv::stereoCalibrate(std::vector<std::vector<cv::Point3f>>(leftDetectedPoints.size(), objectPoints),
-      leftDetectedPoints, rightDetectedPoints, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, imageSize, R, T, E, F);
+      leftDetectedPoints, rightDetectedPoints, 
+      leftCameraMatrix, leftDistCoeffs,
+      rightCameraMatrix, rightDistCoeffs,
+      imageSize, R, T, E, F);
 
   NRT_INFO("Calibrated with an error of " << error);
+
+  // Compute the extrinsic parameters
+  cv::Mat R1, R2, P1, P2, Q;
+  cv::stereoRectify(leftCameraMatrix, leftDistCoeffs, rightCameraMatrix, rightDistCoeffs,
+      imageSize, R, T, R1, R2, P1, P2, Q);
+
+  cv::Mat rmap[2][2];
+  cv::initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R1, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+  cv::initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R2, P2, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+
+
+  /////////////////////////////////////////////////////////////////////////
+  // DISPLAY CALIBRATED IMAGES
+  /////////////////////////////////////////////////////////////////////////
+  initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+  initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+
+  timeToQuit = false;
+  while(leftCam->ok() && rightCam->ok() && !timeToQuit)
+  {
+    // Grab the newest camera images
+    auto leftimg  = leftCam->in().convertTo<PixRGB<byte>>();
+    auto rightimg = rightCam->in().convertTo<PixRGB<byte>>();
+
+    // Convert the images to cv::Mat
+    cv::Mat leftmat  = copyImage2CvMat(Image<PixRGB<byte>>(leftimg));
+    cv::Mat rightmat = copyImage2CvMat(Image<PixRGB<byte>>(rightimg));
+
+    // Remap the images
+    cv::Mat remappedLeft, remappedRight;
+    cv::remap(leftmat, remappedLeft, rmap[0][0], rmap[0][1], CV_INTER_LINEAR);
+    cv::remap(rightmat, remappedRight, rmap[1][0], rmap[1][1], CV_INTER_LINEAR);
+
+    auto combinedimg = concatX(copyCvMat2Image<PixRGB<byte>>(remappedLeft), copyCvMat2Image<PixRGB<byte>>(remappedRight));
+    Image<PixRGB<byte>> displayImage(combinedimg.width(), combinedimg.height()+50, nrt::ImageInitPolicy::Zeros);
+    paste(displayImage, combinedimg, Point2D<int>(0,0));
+    drawText(displayImage, Point2D<int>(5, combinedimg.height()+0), "q    : Quit (and process all pictures)");
+    sink->out(GenericImage(displayImage), "Left/Right Images");
+  }
+
 }
 
 
