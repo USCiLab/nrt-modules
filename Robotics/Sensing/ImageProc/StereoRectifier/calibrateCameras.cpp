@@ -166,13 +166,14 @@ int main(int const argc, char const ** argv)
   cv::StereoSGBM sgbm;
   sgbm.P1 = 8*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
   sgbm.P2 = 32*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+  sgbm.disp12MaxDiff = 1;
   sgbm.minDisparity = 0;
   sgbm.numberOfDisparities = ((imageSize.width/8) + 15) & -16;
-  sgbm.uniquenessRatio = 10;
-  sgbm.speckleWindowSize = 100;
+  sgbm.uniquenessRatio = 15;
+  sgbm.speckleWindowSize = 200;
   sgbm.speckleRange = 32;
-  sgbm.disp12MaxDiff = 1;
-  sgbm.fullDP = false;
+  sgbm.fullDP = true;
+  sgbm.SADWindowSize = 11;
 
   timeToQuit = false;
   while(leftCam->ok() && rightCam->ok() && !timeToQuit)
