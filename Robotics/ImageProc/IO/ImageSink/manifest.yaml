@@ -1,0 +1,75 @@
+Module: 
+  general: 
+    displayname: Image Sink 
+    classname: ImageSinkModule 
+    category: /Robotics/ImageProc/IO
+    synopsis: Sends Images to a selected destination. 
+    description: > 
+      The Image Sink is a configurable, general purpose destination for Images.
+      By selecting the correct setting for the out parameter, you can
+      choose to send incoming Images to a display window, or write them to
+      a video file, or a stream of images, etc.
+ 
+    keywords: 
+      - display
+      - video
+      - images
+      - mpg
+      - mpeg
+      - jpg
+      - jpeg
+      - png
+ 
+    subscriberports: 
+      - name: Image
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "Input Frames"
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/ImageSinkModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

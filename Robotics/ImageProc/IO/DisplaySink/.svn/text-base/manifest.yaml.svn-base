@@ -1,0 +1,86 @@
+Module: 
+  general: 
+    displayname: Display Sink 
+    classname: DisplaySinkModule 
+    category: /ImageProc/IO
+    synopsis: Displays incoming images in a GTK window. 
+    description: > 
+      The Display Sink Module subscribes to GenericImageMessages, and will
+      display incoming images in a GTK window. The module also posts
+      messages when a user clicks on a displayed Image, or presses a
+      keyboard button when the display window is in focus. If there is a
+      message available on the modules Label checker port, then the string
+      contained in that message will be pasted on the top-left hand corner
+      of the Image.
+ 
+    keywords: 
+      - display
+      - GUI
+      - GTK
+      - mouse
+      - keyboard
+ 
+    subscriberports: 
+      - name: Image
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "Incoming Image"
+
+    checkerports: 
+      - name: Label
+        msg: nrt::Message< std::string >
+        description: "Label to display on the image"
+
+    posterports: 
+      - name: MouseClick
+        outmsg: nrt::Message< nrt::Point2D< nrt::int32 >>
+        retmsg: void
+        description: "Mouse Click"
+      - name: KeyboardPress
+        outmsg: nrt::Message< nrt::int32 >
+        retmsg: void
+        description: "Keyboard Press"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: DisplaySinkModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

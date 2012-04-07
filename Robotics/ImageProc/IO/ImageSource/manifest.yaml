@@ -1,0 +1,94 @@
+Module: 
+  general: 
+    displayname: Image Source 
+    classname: ImageSourceModule 
+    category: /Robotics/ImageProc/IO
+    synopsis: Produces Images from a selected source. 
+    description: > 
+      The Image Source is a configurable, general purpose source for Images. By
+      selecting the correct setting for the in parameter, you can choose to
+      grab Images from video files, sequences of image files, cameras, etc.
+ 
+    keywords: 
+      - camera
+      - video
+      - images
+      - mpg
+      - mpeg
+      - jpg
+      - jpeg
+      - png
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: Image
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "Output Frames"
+      - name: Dims
+        outmsg: nrt::Message< nrt::GenericImage::DimsType >
+        retmsg: void
+        description: "Frame Dimensions"
+      - name: FrameCount
+        outmsg: nrt::Message< int >
+        retmsg: void
+        description: "Frame Count"
+      - name: Tick
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "Frame Tick"
+      - name: Tock
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "Frame Tock"
+      - name: Done
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "No more input"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/ImageSourceModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
