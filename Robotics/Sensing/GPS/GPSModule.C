@@ -9,10 +9,10 @@ GPSModule::GPSModule(std::string const & instanceName) :
   Module(instanceName),
   itsSerialPort(nullptr),
   itsGpsDev(gps::GPSDevParam, this, &GPSModule::gpsDevCallback),
-   itsOriginLat(gps::GPSOriginLatParam, this, nullptr),
-   itsOriginLng(gps::GPSOriginLngParam, this, nullptr),
-   itsFromParam(gps::GpsFrameParam, this, nullptr),
-  itsFrameParam(gps::FromFrameParam, this, nullptr)
+  itsOriginLat(gps::GPSOriginLatParam, this, nullptr),
+  itsOriginLng(gps::GPSOriginLngParam, this, nullptr),
+  itsGpsFrameParam(gps::GpsFrameParam, this, nullptr),
+  itsBaseFrameParam(gps::BaseFrameParam, this, nullptr)
 {
   //
 }
@@ -140,13 +140,18 @@ void GPSModule::run()
           double y = gpsDistance(itsOriginLat.getVal(), itsOriginLng.getVal(), itsOriginLat.getVal(), lon);
           double z = 0;
 
+          // correct for negative quadrants
+          if (lat < itsOriginLat.getVal()) x *= -1;
+          if (lon < itsOriginLng.getVal()) y *= -1;
+
           std::cout << std::setprecision(16);
 
           // post the transform
           NRT_INFO("Posting transform with distance from (" << itsOriginLat.getVal() << ", " << itsOriginLng.getVal() <<
                    ") to (" << lat << ", " << lon << ") = (" << x << ", " << y << ") = " << sqrt(x*x+y*y) << " meters");
+
           itsTransform = Eigen::Translation3d(x, y, z);
-          std::unique_ptr<nrt::TransformMessage> transformMsg(new nrt::TransformMessage(nrt::now(), itsFromParam.getVal(), itsFrameParam.getVal(), itsTransform));
+          std::unique_ptr<nrt::TransformMessage> transformMsg(new nrt::TransformMessage(nrt::now(), itsBaseFrameParam.getVal(), itsGpsFrameParam.getVal(), itsTransform));
           post<gps::GpsTransform>(transformMsg);
 
           // post the GPS message
