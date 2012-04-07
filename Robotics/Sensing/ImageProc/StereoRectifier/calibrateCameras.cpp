@@ -157,10 +157,22 @@ int main(int const argc, char const ** argv)
 
 
   /////////////////////////////////////////////////////////////////////////
-  // DISPLAY CALIBRATED IMAGES
+  // DISPLAY CALIBRATED IMAGES AND STEREO
   /////////////////////////////////////////////////////////////////////////
   initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
   initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+
+  int cn = 3;
+  cv::StereoSGBM sgbm;
+  sgbm.P1 = 8*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+  sgbm.P2 = 32*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
+  sgbm.minDisparity = 0;
+  sgbm.numberOfDisparities = ((imageSize.width/8) + 15) & -16;
+  sgbm.uniquenessRatio = 10;
+  sgbm.speckleWindowSize = 100;
+  sgbm.speckleRange = 32;
+  sgbm.disp12MaxDiff = 1;
+  sgbm.fullDP = false;
 
   timeToQuit = false;
   while(leftCam->ok() && rightCam->ok() && !timeToQuit)
@@ -174,11 +186,19 @@ int main(int const argc, char const ** argv)
     cv::Mat rightmat = copyImage2CvMat(Image<PixRGB<byte>>(rightimg));
 
     // Remap the images
-    cv::Mat remappedLeft, remappedRight;
-    cv::remap(leftmat, remappedLeft, rmap[0][0], rmap[0][1], CV_INTER_LINEAR);
-    cv::remap(rightmat, remappedRight, rmap[1][0], rmap[1][1], CV_INTER_LINEAR);
+    cv::Mat leftRemapped, rightRemapped;
+    cv::remap(leftmat, leftRemapped, rmap[0][0], rmap[0][1], CV_INTER_LINEAR);
+    cv::remap(rightmat, rightRemapped, rmap[1][0], rmap[1][1], CV_INTER_LINEAR);
 
-    auto combinedimg = concatX(copyCvMat2Image<PixRGB<byte>>(remappedLeft), copyCvMat2Image<PixRGB<byte>>(remappedRight));
+    cv::Mat disparity;
+    sgbm(leftRemapped, rightRemapped, disparity); 
+
+    cv::Mat floatDisparity;
+    disparity.convertTo(floatDisparity, CV_32F, 255.0 / (sgbm.numberOfDisparities*16.0));
+    Image<PixGray<float>> disparityImg = copyCvMat2Image<PixGray<float>>(floatDisparity);
+    sink->out(GenericImage(disparityImg), "Disparity");
+
+    auto combinedimg = concatX(copyCvMat2Image<PixRGB<byte>>(leftRemapped), copyCvMat2Image<PixRGB<byte>>(rightRemapped));
     Image<PixRGB<byte>> displayImage(combinedimg.width(), combinedimg.height()+50, nrt::ImageInitPolicy::Zeros);
     paste(displayImage, combinedimg, Point2D<int>(0,0));
     drawText(displayImage, Point2D<int>(5, combinedimg.height()+0), "q    : Quit (and process all pictures)");
