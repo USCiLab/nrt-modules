@@ -1,0 +1,80 @@
+Module: 
+  general: 
+    displayname: Point Cloud Transform 
+    classname: PointCloudTransformModule 
+    category: /Robotics/PointCloud
+    synopsis: Applies a transformation to a point cloud. 
+    description: > 
+      Processes a point cloud by applying a projective transformation to all
+      points in the cloud subject to the optional subset specified by the
+      indices. Though we only accept a projective matrix (4x4), in general
+      the actual transformation will be affine. 
+ 
+    keywords: 
+      - point
+      - cloud
+      - transform
+      - affine
+      - projective
+ 
+    subscriberports: 
+      - name: Input
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "The input cloud to be transformed"
+
+    checkerports: 
+
+    posterports: 
+      - name: Output
+        outmsg: GenericCloudMessage
+        retmsg: void
+        description: "The output transformed point cloud"
+      - name: TransformLookup
+        outmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "The transform port"
+ 
+  authorship: 
+    author: Shane Grant
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/PointCloudTransformModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

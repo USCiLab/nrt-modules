@@ -1,0 +1,81 @@
+Module: 
+  general: 
+    displayname: Stereo Rectifier 
+    classname: StereoRectifierModule 
+    category: /Robotics/ImageProc
+    synopsis: Rectify a left and right stereo pair, combining them into a single StereoPairMessage. 
+    description: > 
+      This module provides rectifies and calibrates two independent camera images
+      so that they may be used, e.g. to measure distance. To operate, this
+      module requires a calibration file created by the calibrateCameras
+      application included with this module.
+ 
+    keywords: 
+      - stereo
+      - calibration
+      - image
+      - image processing
+      - depth
+      - distance
+ 
+    subscriberports: 
+      - name: LeftImage
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "The left image"
+      - name: RightImage
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "The right image"
+
+    checkerports: 
+
+    posterports: 
+      - name: StereoPair
+        outmsg: StereoPairMessage
+        retmsg: void
+        description: "The left and right rectified images"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/StereoRectifierModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

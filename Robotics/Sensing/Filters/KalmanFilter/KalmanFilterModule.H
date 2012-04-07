@@ -1,5 +1,5 @@
-#ifndef HERMES_H
-#define HERMES_H 
+#ifndef NRT_MODULES_ROBOTICS_SENSING_FILTERS_KALMANFILTERMODULE_H
+#define NRT_MODULES_ROBOTICS_SENSING_FILTERS_KALMANFILTERMODULE_H 
 
 #include <nrt/Core/Blackboard/Module.H>
 
@@ -43,4 +43,4 @@ class KalmanFilterModule : public nrt::Module,
     nrt::Time itsLastTime;
 };
 
-#endif // HERMES_H 
+#endif // NRT_MODULES_ROBOTICS_SENSING_FILTERS_KALMANFILTERMODULE_H 
