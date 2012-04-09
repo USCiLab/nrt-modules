@@ -17,6 +17,12 @@ namespace stereorectifier
   static const nrt::ParameterDef<std::string> calibrationFileParamDef("calibrationfile", "The calibration file location", "", ParamCat);
 }
 
+//! Rectify a left and right stereo pair, combining them into a single StereoPairMessage
+/*! This module provides rectifies and calibrates two independent camera images so that they may be used, e.g. to measure distance.
+    To operate, this module requires a calibration file created by the calibrateCameras application included with this module.
+
+    \author Randolph Voorhies
+    \keywords stereo, calibration, image, image processing, depth, distance */
 class StereoRectifierModule : public nrt::Module,
                                      nrt::MessageSubscriber<stereorectifier::LeftImage,
                                                             stereorectifier::RightImage>,
