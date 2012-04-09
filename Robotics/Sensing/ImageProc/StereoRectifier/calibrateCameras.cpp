@@ -5,6 +5,7 @@
 #include <nrt/ImageProc/Drawing/Text.H>
 #include <nrt/ImageProc/IO/ImageSink/ImageWriters/ImageWriters.H>
 #include <nrt/ImageProc/LibraryConversions/OpenCV.H>
+#include "StereoCalibrationData.H"
 
 using namespace nrt;
 
@@ -134,40 +135,34 @@ int main(int const argc, char const ** argv)
     for(int x = 0; x<checkDimsParam.getVal().width(); ++x)
       objectPoints.push_back(cv::Point3f(y*checkSize, x*checkSize, 0));
 
+  StereoCalibrationData calibdata;
+
   // Compute the intrinsic parameters
-  cv::Mat leftCameraMatrix  = cv::Mat::eye(3, 3, CV_64F);
-  cv::Mat rightCameraMatrix = cv::Mat::eye(3, 3, CV_64F);
-  cv::Mat leftDistCoeffs;
-  cv::Mat rightDistCoeffs;
-  cv::Mat R, T, E, F;
   double error = cv::stereoCalibrate(std::vector<std::vector<cv::Point3f>>(leftDetectedPoints.size(), objectPoints),
       leftDetectedPoints, rightDetectedPoints, 
-      leftCameraMatrix, leftDistCoeffs,
-      rightCameraMatrix, rightDistCoeffs,
-      imageSize, R, T, E, F, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 1e-6), 0);
+      calibdata.leftIntrinsics, calibdata.leftDistortion,
+      calibdata.rightIntrinsics, calibdata.rightDistortion,
+      imageSize, calibdata.R, calibdata.T, calibdata.E, calibdata.F,
+      cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 1e-6), 0);
 
   NRT_INFO("Calibrated with an error of " << error);
 
   // Compute the extrinsic parameters
-  cv::Mat R1, R2, P1, P2, Q;
-  cv::stereoRectify(leftCameraMatrix, leftDistCoeffs, rightCameraMatrix, rightDistCoeffs,
-      imageSize, R, T, R1, R2, P1, P2, Q);
+  cv::stereoRectify(calibdata.leftIntrinsics, calibdata.leftDistortion, calibdata.rightIntrinsics, calibdata.rightDistortion,
+      imageSize, calibdata.R, calibdata.T, calibdata.R1, calibdata.R2, calibdata.P1, calibdata.P2, calibdata.Q);
 
   // Save the calibration file
-  cv::FileStorage fs(calibrationFileParam.getVal(), CV_STORAGE_WRITE);
-  if(!fs.isOpened()) NRT_FATAL("Could not open calibration file: " << calibrationFileParam.getVal());
-  fs << "LeftIntrinsics" << leftCameraMatrix << "LeftDistortion" << leftDistCoeffs <<
-        "RightIntrinsics" << rightCameraMatrix << "RightDistortion" << rightDistCoeffs;
-  fs << "R" << R << "T" << T << "R1" << R1 << "R2" << R2 << "P1" << P1 << "P2" << P2 << "Q" << Q;
-  fs.release();
+  calibdata.save(calibrationFileParam.getVal());
 
 
   /////////////////////////////////////////////////////////////////////////
   // DISPLAY CALIBRATED IMAGES AND STEREO
   /////////////////////////////////////////////////////////////////////////
   cv::Mat rmap[2][2];
-  initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
-  initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+  initUndistortRectifyMap(calibdata.leftIntrinsics, calibdata.leftDistortion,
+      calibdata.R, calibdata.P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
+  initUndistortRectifyMap(calibdata.rightIntrinsics, calibdata.rightDistortion,
+      calibdata.R, calibdata.P1, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
 
   int cn = 3;
   cv::StereoSGBM sgbm;
