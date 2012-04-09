@@ -118,7 +118,7 @@ int main(int const argc, char const ** argv)
     paste(displayImage, combinedimg, Point2D<int>(0,0));
     drawText(displayImage, Point2D<int>(5, combinedimg.height()+00), "<space> : Take a picture");
     drawText(displayImage, Point2D<int>(5, combinedimg.height()+20), "   q    : Quit (and process all pictures)");
-    drawText(displayImage, Point2D<int>(5, combinedimg.height()+60), sformat("%d Pictures Taken", leftDetectedPoints.size()));
+    drawText(displayImage, Point2D<int>(5, combinedimg.height()+60), sformat("%Zu Pictures Taken", leftDetectedPoints.size()));
     sink->out(GenericImage(displayImage), "Left/Right Images");
   }
 
