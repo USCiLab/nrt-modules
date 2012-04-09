@@ -18,6 +18,9 @@ int main(int const argc, char const ** argv)
   nrt::Parameter<Dims<int>> checkDimsParam(
       nrt::ParameterDef<Dims<int>>("checkdims", "The number of inner corners in the checkerboard", Dims<int>(8, 6)), &mgr);
 
+  nrt::Parameter<std::string> calibrationFileParam(
+      nrt::ParameterDef<std::string>("calibrationfile", "The calibration file filename", "calibration.yml"), &mgr);
+
   auto leftCam = std::make_shared<V4L2ImageSource>("leftcamera");
   mgr.addSubComponent(leftCam);
   leftCam->setParamVal("device", std::string("/dev/video1"));
@@ -108,7 +111,6 @@ int main(int const argc, char const ** argv)
       takeAPicture = false;
     }
 
-
     // Display the two images side-by-side
     auto combinedimg = concatX(leftimg, rightimg);
     Image<PixRGB<byte>> displayImage(combinedimg.width(), combinedimg.height()+100, nrt::ImageInitPolicy::Zeros);
@@ -119,11 +121,11 @@ int main(int const argc, char const ** argv)
     sink->out(GenericImage(displayImage), "Left/Right Images");
   }
 
-  NRT_INFO("Calibrating, Please Wait...");
-
   /////////////////////////////////////////////////////////////////////////
   // PERFORM CALIBRATION
   /////////////////////////////////////////////////////////////////////////
+
+  NRT_INFO("Calibrating, Please Wait...");
 
   // Create the "object points" vector
   float const checkSize = checkSizeParam.getVal();
@@ -142,7 +144,7 @@ int main(int const argc, char const ** argv)
       leftDetectedPoints, rightDetectedPoints, 
       leftCameraMatrix, leftDistCoeffs,
       rightCameraMatrix, rightDistCoeffs,
-      imageSize, R, T, E, F);
+      imageSize, R, T, E, F, cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 1e-6), 0);
 
   NRT_INFO("Calibrated with an error of " << error);
 
@@ -151,14 +153,19 @@ int main(int const argc, char const ** argv)
   cv::stereoRectify(leftCameraMatrix, leftDistCoeffs, rightCameraMatrix, rightDistCoeffs,
       imageSize, R, T, R1, R2, P1, P2, Q);
 
-  cv::Mat rmap[2][2];
-  cv::initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R1, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
-  cv::initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R2, P2, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
+  // Save the calibration file
+  cv::FileStorage fs(calibrationFileParam.getVal(), CV_STORAGE_WRITE);
+  if(!fs.isOpened()) NRT_FATAL("Could not open calibration file: " << calibrationFileParam.getVal());
+  fs << "LeftIntrinsics" << leftCameraMatrix << "LeftDistortion" << leftDistCoeffs <<
+        "RightIntrinsics" << rightCameraMatrix << "RightDistortion" << rightDistCoeffs;
+  fs << "R" << R << "T" << T << "R1" << R1 << "R2" << R2 << "P1" << P1 << "P2" << P2 << "Q" << Q;
+  fs.release();
 
 
   /////////////////////////////////////////////////////////////////////////
   // DISPLAY CALIBRATED IMAGES AND STEREO
   /////////////////////////////////////////////////////////////////////////
+  cv::Mat rmap[2][2];
   initUndistortRectifyMap(leftCameraMatrix, leftDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[0][0], rmap[0][1]);
   initUndistortRectifyMap(rightCameraMatrix, rightDistCoeffs, R, P1, imageSize, CV_16SC2, rmap[1][0], rmap[1][1]);
 
