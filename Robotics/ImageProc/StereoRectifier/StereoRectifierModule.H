@@ -30,10 +30,12 @@ class StereoRectifierModule : public nrt::Module,
   private:
     void process();
 
-    GenericImage itsLeftImage;
-    GenericImage itsRightImage;
+    nrt::GenericImage itsLeftImage;
+    nrt::GenericImage itsRightImage;
 
+    class RMaps;
     std::shared_ptr<StereoCalibrationData> itsCalibrationData;
+    std::shared_ptr<RMaps> itsRMaps;
 
     void calibrationFileCallback(std::string const& filename);
     std::mutex itsMtx;

@@ -154,7 +154,6 @@ int main(int const argc, char const ** argv)
   // Save the calibration file
   calibdata.save(calibrationFileParam.getVal());
 
-
   /////////////////////////////////////////////////////////////////////////
   // DISPLAY CALIBRATED IMAGES AND STEREO
   /////////////////////////////////////////////////////////////////////////
@@ -166,6 +165,7 @@ int main(int const argc, char const ** argv)
 
   int cn = 3;
   cv::StereoSGBM sgbm;
+  sgbm.SADWindowSize = 11;
   sgbm.P1 = 8*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
   sgbm.P2 = 32*cn*sgbm.SADWindowSize*sgbm.SADWindowSize;
   sgbm.disp12MaxDiff = 1;
@@ -175,7 +175,6 @@ int main(int const argc, char const ** argv)
   sgbm.speckleWindowSize = 200;
   sgbm.speckleRange = 32;
   sgbm.fullDP = true;
-  sgbm.SADWindowSize = 11;
 
   timeToQuit = false;
   while(leftCam->ok() && rightCam->ok() && !timeToQuit)
