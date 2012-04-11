@@ -1,6 +1,7 @@
 #include "StereoRectifierModule.H"
 #include <nrt/ImageProc/LibraryConversions/OpenCV.H>
 #include "StereoCalibrationData.H"
+//#include <opencv2/core/eigen.hpp>
 
 using namespace nrt;
 using namespace stereorectifier;
@@ -68,6 +69,7 @@ void StereoRectifierModule::process()
   StereoPairMessage::unique_ptr stereomsg(new StereoPairMessage);
   stereomsg->left  = GenericImage(copyCvMat2Image<PixRGB<byte>>(leftRemapped));
   stereomsg->right = GenericImage(copyCvMat2Image<PixRGB<byte>>(rightRemapped));
+  cv::cv2eigen(itsCalibrationData->Q, stereomsg->Q);
   post<StereoPair>(stereomsg);
 
   // Clear out the old images

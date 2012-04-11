@@ -1,0 +1,74 @@
+Module: 
+  general: 
+    displayname: Point Cloud Sink 
+    classname: PointCloudSinkModule 
+    category: /Robotics/PointCloud
+    synopsis: Sends Point Clouds to a selected destination. 
+    description: > 
+      The Point Cloud Sink is a configurable, general purpose destination for
+      Point Clouds. By selecting the correct setting for the out parameter,
+      you can choose to send incoming Point Clouds to a display window, or
+      write them to a single or sequence (stream) of files.
+ 
+    keywords: 
+      - display
+      - point
+      - cloud
+      - 3d
+      - ply
+      - ascii
+      - txt
+ 
+    subscriberports: 
+      - name: Cloud
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "Input Cloud"
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: Shane Grant
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/PointCloudSinkModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

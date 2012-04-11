@@ -1,0 +1,96 @@
+Module: 
+  general: 
+    displayname: Open NI Source 
+    classname: OpenNISourceModule 
+    category: /Robotics/PointCloud
+    synopsis: Gets data from an OpenNI compatible piece of hardware. 
+    description: > 
+      This data source is capable of grabbing data from an OpenNI compatible
+      piece of hardware such as the Kinect. It can be used to get various
+      types of images as well as hardware metadata such as focal length
+      information.
+ 
+    keywords: 
+      - depth
+      - sensor
+      - kinect
+      - image
+      - source
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: Image
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "Output Image"
+      - name: FocalLength
+        outmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "Sensor Focal Length"
+      - name: Dims
+        outmsg: nrt::Message< nrt::GenericImage::DimsType >
+        retmsg: void
+        description: "Frame Dimensions"
+      - name: FrameCount
+        outmsg: nrt::Message< nrt::int32 >
+        retmsg: void
+        description: "Frame Count"
+      - name: Tick
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "Data Tick"
+      - name: Tock
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "Data Tock"
+      - name: Done
+        outmsg: nrt::TriggerMessage
+        retmsg: void
+        description: "No more input"
+ 
+  authorship: 
+    author: Shane Grant
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/OpenNISourceModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
