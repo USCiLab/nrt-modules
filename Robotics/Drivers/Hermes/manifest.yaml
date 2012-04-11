@@ -19,7 +19,7 @@ Module:
     checkerports: 
 
     posterports: 
-      - name: CompassZ
+      - name: CompassZ 
         outmsg: nrt::Message< nrt::real >
         retmsg: void
         description: "The Z component of Hermes' compass"
