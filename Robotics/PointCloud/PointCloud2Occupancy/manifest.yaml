@@ -1,0 +1,78 @@
+Module: 
+  general: 
+    displayname: Point Cloud2 Occupancy 
+    classname: PointCloud2OccupancyModule 
+    category: /Robotics/PointCloud
+    synopsis: Turns a point cloud into an occupancy grid. 
+    description: > 
+      Useful for 2D path planning, this module simply projects all points in a
+      cloud between two thresholds onto the X/Y plane, and quatizes them
+      into a grid
+ 
+    keywords: 
+      - point
+      - cloud
+      - voxel
+      - grid
+      - occupancy grid
+      - occupancy
+      - path planning
+      - traversability
+ 
+    subscriberports: 
+      - name: PointCloudInput
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "The input cloud"
+
+    checkerports: 
+
+    posterports: 
+      - name: OccupancyGridOutput
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "The occupancy grid"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/PointCloud2OccupancyModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
