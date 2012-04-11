@@ -56,6 +56,9 @@ void PointCloud2OccupancyModule::onMessage(PointCloudInput cloud)
   float const ppm           = itsPixelsPerMeterParam.getVal();
   Dims<float> const mapDims = itsMapDimsParam.getVal();
 
+  Message<nrt::real>::unique_ptr ppmMsg(new Message<nrt::real>(ppm));
+  post<PixelsPerMeter>(ppmMsg);
+
   Image<PixGray<byte>, UniqueAccess> grid(mapDims.width()*ppm, mapDims.height()*ppm, ImageInitPolicy::Zeros);
 
   OccupancyVisitor visitor(grid);

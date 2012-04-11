@@ -40,6 +40,7 @@ namespace pointcloud2occupancy
 {
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT( PointCloudInput, GenericCloudMessage, void, "The input cloud" );
   NRT_DECLARE_MESSAGEPOSTER_PORT( OccupancyGridOutput, GenericImageMessage, void, "The occupancy grid" );
+  NRT_DECLARE_MESSAGEPOSTER_PORT( PixelsPerMeter, nrt::Message<nrt::real>, void, "The pixel / meter scale of the computed grid" );
 
   nrt::ParameterCategory paramCat("Point Cloud -> Occupancy Grid Related Options");
 
@@ -64,8 +65,9 @@ namespace pointcloud2occupancy
 
     \keywords point, cloud, voxel, grid, occupancy grid, occupancy, path planning, traversability */
 class PointCloud2OccupancyModule: public nrt::Module,
-  public nrt::MessageSubscriber<pointcloud2occupancy::PointCloudInput>,
-  public nrt::MessagePoster<pointcloud2occupancy::OccupancyGridOutput>
+                                  public nrt::MessageSubscriber<pointcloud2occupancy::PointCloudInput>,
+                                  public nrt::MessagePoster<pointcloud2occupancy::OccupancyGridOutput,
+                                                            pointcloud2occupancy::PixelsPerMeter>
 {
   public:
     PointCloud2OccupancyModule( std::string const & instanceId = "" );
