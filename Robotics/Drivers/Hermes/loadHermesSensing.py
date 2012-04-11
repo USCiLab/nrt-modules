@@ -2,6 +2,21 @@
 import nrtlib
 
 nrtlib.loadModule(
+  logicalpath  = '/Robotics/Utils/TransformPosterModule',
+  bbnick       = 'ilab21.1',
+  parameters = {
+    'from' : 'robot',
+    'rate' : '1',
+    'to' : 'kinect',
+    'transform' : '-0.2,0,.3,0,1.67,1.57079633',
+  },
+  postertopics = {
+    'TransformUpdate' : 'Auto000004',
+  },
+  position = (-807, 323),
+)
+
+nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/PointCloudTransformModule',
   bbnick       = 'ilab21.1',
   parameters = {
@@ -16,6 +31,21 @@ nrtlib.loadModule(
     'TransformLookup' : 'Auto000006',
   },
   position = (-480, -237),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/PointCloud/PointCloudSinkModule',
+  bbnick       = 'ilab21.1',
+  parameters = {
+    'name' : '',
+    'point size' : '1',
+    'use color' : 'true',
+    'out' : 'display',
+  },
+  subscribertopicfilters = {
+    'Cloud' : 'Auto000008|Auto000005',
+  },
+  position = (128, -331),
 )
 
 nrtlib.loadModule(
@@ -34,20 +64,6 @@ nrtlib.loadModule(
 )
 
 nrtlib.loadModule(
-  logicalpath  = '/Robotics/Utils/TransformManagerModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'maxCacheSize' : '1000',
-    'maxCacheTime' : '30',
-  },
-  subscribertopicfilters = {
-    'TransformUpdatePort' : 'Auto000003|Auto000004',
-    'TransformLookupPort' : 'Auto000006',
-  },
-  position = (101, 67),
-)
-
-nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/DepthImageToPointCloudModule',
   bbnick       = 'ilab21.1',
   subscribertopicfilters = {
@@ -60,6 +76,20 @@ nrtlib.loadModule(
     'Output' : 'Auto000002',
   },
   position = (-793, -443),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/Utils/TransformManagerModule',
+  bbnick       = 'ilab21.1',
+  parameters = {
+    'maxCacheSize' : '1000',
+    'maxCacheTime' : '30',
+  },
+  subscribertopicfilters = {
+    'TransformUpdatePort' : 'Auto000003|Auto000004',
+    'TransformLookupPort' : 'Auto000006',
+  },
+  position = (101, 67),
 )
 
 nrtlib.loadModule(
@@ -81,35 +111,5 @@ nrtlib.loadModule(
     'Done' : '',
   },
   position = (-1088, -339),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/Utils/TransformPosterModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'from' : 'robot',
-    'rate' : '1',
-    'to' : 'kinect',
-    'transform' : '-0.127,0,-.3,3.14,1.65,1.57079633',
-  },
-  postertopics = {
-    'TransformUpdate' : 'Auto000004',
-  },
-  position = (-810, 318),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/PointCloud/PointCloudSinkModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'name' : '',
-    'point size' : '0.100000001',
-    'use color' : 'true',
-    'out' : 'display',
-  },
-  subscribertopicfilters = {
-    'Cloud' : 'Auto000005',
-  },
-  position = (-182, -317),
 )
 
