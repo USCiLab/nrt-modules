@@ -4,6 +4,7 @@ import nrtlib
 nrtlib.loadModule(
   logicalpath  = '/Robotics/Utils/TransformPosterModule',
   bbnick       = 'ilab21.1',
+  instancename = 'Robot2KinectTransformer',
   parameters = {
     'from' : 'robot',
     'rate' : '1',
@@ -11,24 +12,25 @@ nrtlib.loadModule(
     'transform' : '-0.2,0,.3,0,1.67,1.57079633',
   },
   postertopics = {
-    'TransformUpdate' : 'Auto000004',
+    'TransformUpdate' : 'Robot2KinectTransform',
   },
   position = (-807, 323),
 )
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/PointCloudTransformModule',
+  instancename = 'Kinect2WorldTransformer',
   bbnick       = 'ilab21.1',
   parameters = {
     'from' : 'world',
     'to' : 'kinect',
   },
   subscribertopicfilters = {
-    'Input' : 'Auto000002',
+    'Input' : 'RawPointCloud',
   },
   postertopics = {
-    'Output' : 'Auto000005',
-    'TransformLookup' : 'Auto000006',
+    'Output' : 'WorldPointCloud',
+    'TransformLookup' : 'World2KinectLookup',
   },
   position = (-480, -237),
 )
@@ -43,13 +45,14 @@ nrtlib.loadModule(
     'out' : 'display',
   },
   subscribertopicfilters = {
-    'Cloud' : 'Auto000008|Auto000005',
+    'Cloud' : 'WorldPointCloud',
   },
   position = (128, -331),
 )
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/Utils/TransformPosterModule',
+  instancename = 'World2RobotTransformer',
   bbnick       = 'ilab21.1',
   parameters = {
     'from' : 'world',
@@ -58,7 +61,7 @@ nrtlib.loadModule(
     'transform' : '0,0,0,0,0,0',
   },
   postertopics = {
-    'TransformUpdate' : 'Auto000003',
+    'TransformUpdate' : 'World2RobotTransform',
   },
   position = (-809, 106),
 )
@@ -67,13 +70,13 @@ nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/DepthImageToPointCloudModule',
   bbnick       = 'ilab21.1',
   subscribertopicfilters = {
-    'Input' : 'Auto000000',
+    'Input' : 'KinectImage',
   },
   checkertopicfilters = {
-    'FocalLength' : 'Auto000001',
+    'FocalLength' : 'KinectFocalLength',
   },
   postertopics = {
-    'Output' : 'Auto000002',
+    'Output' : 'RawPointCloud',
   },
   position = (-793, -443),
 )
@@ -86,8 +89,8 @@ nrtlib.loadModule(
     'maxCacheTime' : '30',
   },
   subscribertopicfilters = {
-    'TransformUpdatePort' : 'Auto000003|Auto000004',
-    'TransformLookupPort' : 'Auto000006',
+    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
+    'TransformLookupPort' : 'World2KinectLookup',
   },
   position = (101, 67),
 )
@@ -102,8 +105,8 @@ nrtlib.loadModule(
     'xml' : '',
   },
   postertopics = {
-    'Image' : 'Auto000000',
-    'FocalLength' : 'Auto000001',
+    'Image' : 'KinectImage',
+    'FocalLength' : 'KinectFocalLength',
     'Dims' : '',
     'FrameCount' : '',
     'Tick' : '',
