@@ -1,0 +1,86 @@
+Module: 
+  general: 
+    displayname: Point Cloud Filter 
+    classname: PointCloudFilterModule 
+    category: /Robotics/PointCloud
+    synopsis: Filters a point cloud. 
+    description: > 
+      Processes a point cloud by filtering it in varying manners such as outlier
+      removal, region removal, or voxelization.
+      
+      Many filters use a specific field in a point cloud to perform
+      filtering, such as the geometry, point normals, or color information.
+      Though only this field will determine which points are filtered, all
+      attributes related to a point will be affected.
+ 
+    keywords: 
+      - point
+      - cloud
+      - voxel
+      - radius
+      - statistical
+      - outlier
+      - pass
+      - through
+      - random
+ 
+    subscriberports: 
+      - name: Input
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "The input cloud to be filtered"
+
+    checkerports: 
+      - name: Indices
+        msg: IndicesMessage
+        description: "The optional indices describing a subset of the cloud to filter"
+
+    posterports: 
+      - name: Output
+        outmsg: GenericCloudMessage
+        retmsg: void
+        description: "The output filtered point cloud"
+ 
+  authorship: 
+    author: Shane Grant
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/PointCloudFilterModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
