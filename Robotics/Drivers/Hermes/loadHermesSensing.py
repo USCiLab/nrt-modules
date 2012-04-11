@@ -2,25 +2,58 @@
 import nrtlib
 
 nrtlib.loadModule(
+  logicalpath  = '/Robotics/ImageProc/IO/DisplaySinkModule',
+  bbnick       = 'ilab21.1',
+  subscribertopicfilters = {
+    'Image' : 'grid|Auto000000',
+  },
+  checkertopicfilters = {
+    'Label' : '',
+  },
+  postertopics = {
+    'MouseClick' : '',
+    'KeyboardPress' : '',
+  },
+  position = (215, -633),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/PointCloud/PointCloudSinkModule',
+  bbnick       = 'ilab21.1',
+  parameters = {
+    'name' : '',
+    'point size' : '1',
+    'use color' : 'true',
+    'out' : 'display',
+  },
+  subscribertopicfilters = {
+    'Cloud' : 'WorldPointCloud',
+  },
+  position = (89, -277),
+)
+
+nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/PointCloudTransformModule',
   bbnick       = 'ilab21.1',
+  instancename = 'Kinect2WorldTransformer',
   parameters = {
     'from' : 'world',
     'to' : 'kinect',
   },
   subscribertopicfilters = {
-    'Input' : 'Auto000002',
+    'Input' : 'RawPointCloud',
   },
   postertopics = {
-    'Output' : 'Auto000005',
-    'TransformLookup' : 'Auto000006',
+    'Output' : 'WorldPointCloud',
+    'TransformLookup' : 'World2KinectLookup',
   },
-  position = (-480, -237),
+  position = (-480, -267),
 )
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/Utils/TransformPosterModule',
   bbnick       = 'ilab21.1',
+  instancename = 'World2RobotTransformer',
   parameters = {
     'from' : 'world',
     'rate' : '1',
@@ -28,9 +61,25 @@ nrtlib.loadModule(
     'transform' : '0,0,0,0,0,0',
   },
   postertopics = {
-    'TransformUpdate' : 'Auto000003',
+    'TransformUpdate' : 'World2RobotTransform',
   },
   position = (-809, 106),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/ImageProc/IO/DisplaySinkModule',
+  bbnick       = 'ilab21.1',
+  subscribertopicfilters = {
+    'Image' : 'KinectImage',
+  },
+  checkertopicfilters = {
+    'Label' : '',
+  },
+  postertopics = {
+    'MouseClick' : '',
+    'KeyboardPress' : '',
+  },
+  position = (-716, -756),
 )
 
 nrtlib.loadModule(
@@ -41,25 +90,41 @@ nrtlib.loadModule(
     'maxCacheTime' : '30',
   },
   subscribertopicfilters = {
-    'TransformUpdatePort' : 'Auto000003|Auto000004',
-    'TransformLookupPort' : 'Auto000006',
+    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
+    'TransformLookupPort' : 'World2KinectLookup',
   },
   position = (101, 67),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/Utils/TransformPosterModule',
+  bbnick       = 'ilab21.1',
+  instancename = 'Robot2KinectTransformer',
+  parameters = {
+    'from' : 'robot',
+    'rate' : '1',
+    'to' : 'kinect',
+    'transform' : '-0.2,0,.32,0,1.67,1.6',
+  },
+  postertopics = {
+    'TransformUpdate' : 'Robot2KinectTransform',
+  },
+  position = (-807, 323),
 )
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/DepthImageToPointCloudModule',
   bbnick       = 'ilab21.1',
   subscribertopicfilters = {
-    'Input' : 'Auto000000',
+    'Input' : 'KinectImage',
   },
   checkertopicfilters = {
-    'FocalLength' : 'Auto000001',
+    'FocalLength' : 'KinectFocalLength',
   },
   postertopics = {
-    'Output' : 'Auto000002',
+    'Output' : 'RawPointCloud',
   },
-  position = (-793, -443),
+  position = (-795, -457),
 )
 
 nrtlib.loadModule(
@@ -72,8 +137,8 @@ nrtlib.loadModule(
     'xml' : '',
   },
   postertopics = {
-    'Image' : 'Auto000000',
-    'FocalLength' : 'Auto000001',
+    'Image' : 'KinectImage',
+    'FocalLength' : 'KinectFocalLength',
     'Dims' : '',
     'FrameCount' : '',
     'Tick' : '',
@@ -84,32 +149,20 @@ nrtlib.loadModule(
 )
 
 nrtlib.loadModule(
-  logicalpath  = '/Robotics/Utils/TransformPosterModule',
+  logicalpath  = '/Robotics/PointCloud/PointCloud2OccupancyModule',
   bbnick       = 'ilab21.1',
   parameters = {
-    'from' : 'robot',
-    'rate' : '1',
-    'to' : 'kinect',
-    'transform' : '-0.127,0,-.3,3.14,1.65,1.57079633',
-  },
-  postertopics = {
-    'TransformUpdate' : 'Auto000004',
-  },
-  position = (-810, 318),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/PointCloud/PointCloudSinkModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'name' : '',
-    'point size' : '0.100000001',
-    'use color' : 'true',
-    'out' : 'display',
+    'lowerthreshold' : '.1',
+    'mapdims'        : '3x3',
+    'pixelspermeter' : '50',
+    'upperthreshold' : '3',
   },
   subscribertopicfilters = {
-    'Cloud' : 'Auto000005',
+    'PointCloudInput' : 'WorldPointCloud',
   },
-  position = (-182, -317),
+  postertopics = {
+    'OccupancyGridOutput' : 'grid',
+  },
+  position = (-223, -592),
 )
 

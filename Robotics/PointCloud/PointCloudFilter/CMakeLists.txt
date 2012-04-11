@@ -6,4 +6,3 @@ include(NRTHelpers)
 FILE(GLOB Filters "Filters/*.C")
 nrt_build_module(PointCloudFilterModule
   SOURCES PointCloudFilterModule.C ${Filters})
-

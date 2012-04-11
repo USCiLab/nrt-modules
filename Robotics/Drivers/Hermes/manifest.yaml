@@ -13,7 +13,7 @@ Module:
     subscriberports: 
       - name: VelocityCommand
         inmsg: nrt::VelocityMessage
-        retmsg: void
+        retmsg: void 
         description: "The requested velocity of the robot"
 
     checkerports: 
