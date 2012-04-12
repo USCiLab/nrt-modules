@@ -1,0 +1,75 @@
+Module: 
+  general: 
+    displayname: World Display 
+    classname: WorldDisplayModule 
+    category: /Robotics/PointCloud
+    synopsis: Displays point clouds and transforms in a single opengl window. 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+      - display
+      - point
+      - cloud
+      - 3d
+      - world
+      - transform
+      - transformation
+ 
+    subscriberports: 
+      - name: Cloud
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "Input Cloud"
+
+    checkerports: 
+
+    posterports: 
+      - name: TransformLookup
+        outmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "The transform lookup port"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/WorldDisplayModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

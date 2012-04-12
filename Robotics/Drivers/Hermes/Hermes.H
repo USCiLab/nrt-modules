@@ -33,6 +33,7 @@ class HermesModule : public nrt::Module,
 {
   public:
     HermesModule(std::string const& instanceName="");
+    ~HermesModule();
 
     void run();
 
@@ -41,11 +42,19 @@ class HermesModule : public nrt::Module,
     void onMessage(hermes::VelocityCommand msg);
 
   private:
+
+    void readThreadMethod();
+    void writeThreadMethod();
+    std::thread itsReadThread;
+    std::thread itsWriteThread;
+    
     std::mutex itsMtx;
     std::shared_ptr<SerialPort> itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;
+    std::string itsVelocityCommand;
+    nrt::Time itsLastCommandTime;
 };
 
 #endif // HERMES_H 

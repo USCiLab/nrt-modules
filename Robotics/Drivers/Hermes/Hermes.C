@@ -16,6 +16,13 @@ HermesModule::HermesModule(std::string const& instanceName) :
 { }
 
 // ######################################################################
+HermesModule::~HermesModule()
+{
+  if(itsReadThread.joinable())  itsReadThread.join();
+  if(itsWriteThread.joinable()) itsWriteThread.join();
+}
+
+// ######################################################################
 void HermesModule::serialDevCallback(std::string const & dev)
 {
   std::lock_guard<std::mutex> lock(itsMtx);
@@ -73,68 +80,94 @@ void HermesModule::onMessage(VelocityCommand msg)
   nrt::byte const leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
   nrt::byte const rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
 
-  std::string command = 
+  //NRT_INFO("Got Velocity Message [" << leftspeed << " , " << rightspeed << "]");
+  std::lock_guard<std::mutex> _(itsMtx);
+  itsVelocityCommand = 
   {
     byte(98),
     leftspeed,
     rightspeed,
   };
+  //NRT_INFO("Set Velocity Command [" << itsVelocityCommand << "]");
+}
 
+// ######################################################################
+void HermesModule::readThreadMethod()
+{
+  NRT_INFO("Read Thread Started");
+  while(running())
   {
-    std::lock_guard<std::mutex> lock(itsMtx);
-    if(!itsSerialPort) return;
+    std::lock_guard<std::mutex> _(itsMtx);
+    if(!itsSerialPort) 
+    { 
+      sleep(1);
+      continue;
+    }
 
-    NRT_INFO("Sending Serial Port Command");
-    itsSerialPort->Write(command);
+    while(itsSerialPort->IsDataAvailable())
+    {
+      NRT_INFO("Data Available - Reading Byte");
+      unsigned char dataIn = itsSerialPort->ReadByte();
+      if(dataIn == SEN_COMPASS)
+      {
+        //NRT_INFO("Compass: " << dataIn);
+        compassPacket packet;
+        for(int i=0; i<sizeof(compassPacket); i++)
+        {
+          packet.raw[i] = itsSerialPort->ReadByte();
+        }
+        //NRT_INFO("Data: " << packet.heading);         
+        Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
+        msg->value = packet.heading;
+        post<CompassZ>(msg);
+      }
+      else if(dataIn == SEN_GYRO) 
+      {
+        //NRT_INFO("Gyro: " << dataIn);
+        gyroPacket packet;
+        for(int i=0; i<sizeof(gyroPacket); i++)
+        {
+          packet.raw[i] = itsSerialPort->ReadByte();
+        }
+        //NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
+        Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
+        msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
+        post<GyroZ>(msg);
+      }
+      else NRT_INFO("Unrecognized: " << dataIn);
+    }
   }
-  NRT_INFO("Sent Velocity [" << leftspeed << "," << rightspeed << "]");
+}
+
+// ######################################################################
+void HermesModule::writeThreadMethod()
+{
+  NRT_INFO("Write Thread Started");
+  while(running())
+  {
+    NRT_INFO("Locking");
+    std::lock_guard<std::mutex> _(itsMtx);
+    if(!itsSerialPort) 
+    { 
+      NRT_WARNING("Hermes link not opened...");
+      sleep(1);
+      continue;
+    }
+
+    NRT_INFO("Sending Velocity Command: [" << itsVelocityCommand << "]");
+    itsSerialPort->Write(itsVelocityCommand);
+    usleep(10000);
+  }
 }
 
 // ######################################################################
 void HermesModule::run()
 {
-  while(running())
-   {
-     std::lock_guard<std::mutex> lock(itsMtx);
-     if(!itsSerialPort) return;
-     
-     while(itsSerialPort->IsDataAvailable())
-     {
-       unsigned char dataIn = itsSerialPort->ReadByte();
-       if(dataIn == SEN_COMPASS)
-       {
-         //NRT_INFO("Compass: " << dataIn);
-         compassPacket packet;
-         for(int i=0; i<sizeof(compassPacket); i++)
-         {
-           packet.raw[i] = itsSerialPort->ReadByte();
-         }
-         //NRT_INFO("Data: " << packet.heading);         
-         Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-         msg->value = packet.heading;
-         post<CompassZ>(msg);
-       } else if(dataIn == SEN_GYRO) {
-         //NRT_INFO("Gyro: " << dataIn);
-         gyroPacket packet;
-         for(int i=0; i<sizeof(gyroPacket); i++)
-         {
-           packet.raw[i] = itsSerialPort->ReadByte();
-         }
-         //NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
-         Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-         msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
-         post<GyroZ>(msg);
-       } else if(dataIn == SEN_BATTERY) {
-         batteryPacket packet;
-         for(int i=0; i<sizeof(batteryPacket); i++)
-         {
-           packet.raw[i] = itsSerialPort->ReadByte();
-         }
-         NRT_INFO("Battery Level: " << packet.voltage << " Volts");
-       } else
-         NRT_INFO("Unrecognized: " << dataIn);
-     }
-   }
+  if(itsReadThread.joinable())  itsReadThread.join();
+  if(itsWriteThread.joinable()) itsWriteThread.join();
+
+  itsReadThread  = std::thread(std::bind(&HermesModule::readThreadMethod, this));
+  itsWriteThread = std::thread(std::bind(&HermesModule::writeThreadMethod, this));
 }
 
 NRT_REGISTER_MODULE(HermesModule);

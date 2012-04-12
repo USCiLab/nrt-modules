@@ -1,0 +1,83 @@
+Module: 
+  general: 
+    displayname: Depth Image To Point Cloud 
+    classname: DepthImageToPointCloudModule 
+    category: /Robotics/PointCloud
+    synopsis: Creates a point cloud from a depth image. 
+    description: > 
+      A point cloud can be generated from either a depth image with color
+      information (PixRGBD) or without (PixGray) as long as the focal
+      length (in pixels) of the camera that generated the image is
+      available. Depth information should be in meters.
+      
+      If color information is present in the input image, it will
+      automatically be included in the output cloud.
+ 
+    keywords: 
+      - point
+      - cloud
+      - depth
+      - convert
+      - image
+      - rgbd
+ 
+    subscriberports: 
+      - name: Input
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "The input RGB-D or grayscale depth image"
+
+    checkerports: 
+      - name: FocalLength
+        msg: nrt::Message< nrt::real >
+        description: "The focal length (in pixels) of the input source"
+
+    posterports: 
+      - name: Output
+        outmsg: GenericCloudMessage
+        retmsg: void
+        description: "The output point cloud generated from the depth image"
+ 
+  authorship: 
+    author: Shane Grant
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/DepthImageToPointCloudModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

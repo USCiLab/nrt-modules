@@ -36,7 +36,7 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.gif 
     screenshots: 
     objectfile: build/TransformPosterModule.so 
     docfiles: 
