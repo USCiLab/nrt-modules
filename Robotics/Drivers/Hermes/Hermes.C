@@ -124,6 +124,13 @@ void HermesModule::run()
          Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
          msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
          post<GyroZ>(msg);
+       } else if(dataIn == SEN_BATTERY) {
+         batteryPacket packet;
+         for(int i=0; i<sizeof(batteryPacket); i++)
+         {
+           packet.raw[i] = itsSerialPort->ReadByte();
+         }
+         NRT_INFO("Battery Level: " << packet.voltage << " Volts");
        } else
          NRT_INFO("Unrecognized: " << dataIn);
      }
