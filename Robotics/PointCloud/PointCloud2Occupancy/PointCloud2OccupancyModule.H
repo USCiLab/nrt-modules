@@ -55,6 +55,9 @@ namespace pointcloud2occupancy
 
   nrt::ParameterDef<nrt::Dims<float>> mapDimsParamDef("mapdims",
       "The dimensions of the occupancy grid (in meters)", nrt::Dims<float>(8, 8), paramCat);
+
+  nrt::ParameterDef<int> shadowsParamDef("shadows",
+      "The value to draw shadows in the image", 128, paramCat);
 }
 
 //! Turns a point cloud into an occupancy grid
@@ -80,6 +83,7 @@ class PointCloud2OccupancyModule: public nrt::Module,
     nrt::Parameter<nrt::real> itsUpperThreshParam;
     nrt::Parameter<nrt::real> itsPixelsPerMeterParam;
     nrt::Parameter<nrt::Dims<float>> itsMapDimsParam;
+    nrt::Parameter<int> itsShadowsParam;
 };
 
 #endif // MODULES_POINTCLOUD_POINTCLOUD2OCCUPANCY_POINTCLOUD2OCCUPANCYMODULE_H
