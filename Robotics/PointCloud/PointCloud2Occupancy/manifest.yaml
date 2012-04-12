@@ -53,7 +53,7 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.gif 
     screenshots: 
     objectfile: build/PointCloud2OccupancyModule.so 
     docfiles: 
