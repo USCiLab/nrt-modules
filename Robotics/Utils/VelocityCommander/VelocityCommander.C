@@ -27,21 +27,21 @@ void VelocityCommanderModule::keyCallback(nrt::int32 key)
 #define KEY_LEFT  65361
 #define KEY_RIGHT 65363
 #define KEY_SPACE 32
-  switch(key)
+  switch(char(key))
   {
-    case KEY_UP:
+    case 'w':
       itsLinearVel += .01;
       break;
-    case KEY_DOWN:
+    case 'a':
       itsLinearVel -= .01;
       break;
-    case KEY_LEFT:
+    case 's':
       itsAngularVel -= .01;
       break;
-    case KEY_RIGHT:
+    case 'd':
       itsAngularVel += .01;
       break;
-    case KEY_SPACE:
+    default:
       itsLinearVel = 0;
       itsAngularVel = 0;
       break;
@@ -59,7 +59,6 @@ void VelocityCommanderModule::run()
       linear = itsLinearVel;
       angular = itsAngularVel;
     }
-
 
     Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
     nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
