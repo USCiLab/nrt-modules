@@ -2,6 +2,7 @@
 #include <nrt/ImageProc/IO/ImageSink/DisplayImageSink.H>
 #include <nrt/ImageProc/Drawing/Text.H>
 #include <nrt/Core/Util/StringUtil.H>
+#include <nrt/Core/Util/MathUtils.H>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -22,6 +23,8 @@ iNRTJoystickModule::iNRTJoystickModule(std::string const & instanceName) :
   Module(instanceName),
   itsDisplaySink(new DisplayImageSink),
   itsPort(PortParam, this, &iNRTJoystickModule::PortChangeCallback),
+  itsMaxLinearVelParam(MaxLinearVel, this),
+  itsMaxAngularVelParam(MaxAngularVel, this),
   itsWebviewURL(WebviewURLParam, this, &iNRTJoystickModule::WebviewURLChangeCallback)
 { 
   addSubComponent(itsDisplaySink);
@@ -43,6 +46,7 @@ void iNRTJoystickModule::WebviewURLChangeCallback(std::string const & webviewurl
 void iNRTJoystickModule::PortChangeCallback(int const & port)
 {
   std::lock_guard<std::mutex> lock(itsMtx);
+  NRT_INFO("Setting port to " << port);
 
   if (port == 0)
     return;
@@ -72,6 +76,7 @@ void iNRTJoystickModule::PortChangeCallback(int const & port)
     throw exception::BadParameter(nrt::sformat("Cannot bind to port: %d", port)); 
 
   itsRunning = true;
+  NRT_INFO("Listening...");
 }
 
 // ######################################################################
@@ -104,7 +109,8 @@ void iNRTJoystickModule::run()
       tv.tv_sec = 5;
       tv.tv_usec = 0;
 
-      retval = select(itsSocket+1, &rfds, NULL, NULL, &tv);
+      NRT_INFO("Selecting...");
+      retval = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
 
       if (retval == -1)
         NRT_FATAL("Error setting up select(): errno=" << errno);
@@ -126,10 +132,18 @@ void iNRTJoystickModule::run()
           {
             if ( doc[i].IsObject() )
             {
+              // Left joystick (linear velocity)
               if ( doc[i]["joystick"].GetInt() == 0 )
               {
-                linear = (doc[i]["y"].GetInt() - 128) / 12; // the "up-down" axis moves it forward (0=full backwards, 127=stopped, 255=full forwards)
-                angular = (doc[i]["x"].GetInt() - 128) / 6; // the "left-right" axis turns it (0=fully turning left, 127=stopped, 255=fully turning right)
+                // joystick position varies from -100.0 to 100.0
+                linear = doc[i]["y"].GetDouble() * (itsMaxLinearVelParam.getVal()/100.0);
+              }
+
+              // Right joystick (angular velocity)
+              if ( doc[i]["joystick"].GetInt() == 1)
+              {
+                // joystick position varies from -100.0 to 100.0
+                angular = doc[i]["x"].GetDouble() * (itsMaxAngularVelParam.getVal()/100.0);
               }
             }
             else {
@@ -141,6 +155,11 @@ void iNRTJoystickModule::run()
           NRT_INFO("Unexpected JSON data (top level object must be an array!)");
         }
       }
+      else // select timed out
+      {
+        linear = 0.0;
+        angular = 0.0;
+      }
     }
   
     Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
@@ -148,7 +167,7 @@ void iNRTJoystickModule::run()
     nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
     itsDisplaySink->out(GenericImage(image), "Velocity Commander");
 
-    if ( !(itsLinearVel == linear && itsAngularVel == angular) )
+    //if ( !(itsLinearVel == linear && itsAngularVel == angular) )
     {
       VelocityMessage::unique_ptr msg(new VelocityMessage);
       msg->linear.x()  = linear;

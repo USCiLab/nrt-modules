@@ -14,6 +14,10 @@ namespace inrtjoystick
 
   static const nrt::ParameterDef<int> PortParam("port", "The port to listen on", 61557, ParamCat);
 
+  static const nrt::ParameterDef<int> MaxLinearVel("maxlinear", "Maximum linear velocity in m/s", 1, ParamCat);
+
+  static const nrt::ParameterDef<int> MaxAngularVel("maxangular", "Maximum angular velocity in rad/s", 1, ParamCat);
+
   static const nrt::ParameterDef<std::string> WebviewURLParam("webview", "A URL that the phone should display in its web view", "http://google.com/", ParamCat);
 }
 
@@ -35,9 +39,11 @@ class iNRTJoystickModule: public nrt::Module,
     void run();
 
   private:
-    nrt::Parameter<int> itsPort;
-    nrt::Parameter<std::string> itsWebviewURL;
     std::mutex itsMtx;
+    nrt::Parameter<int> itsPort;
+    nrt::Parameter<int> itsMaxLinearVelParam;
+    nrt::Parameter<int> itsMaxAngularVelParam;
+    nrt::Parameter<std::string> itsWebviewURL;
     std::shared_ptr<nrt::DisplayImageSink> itsDisplaySink;
     int itsLinearVel;
     int itsAngularVel;

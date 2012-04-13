@@ -1,12 +1,12 @@
 Module: 
   general: 
-    displayname: iNRTJoystick 
+    displayname: i NRT Joystick 
     classname: iNRTJoystickModule 
     category: /Robotics/Utils
-    synopsis: A simple module to allow joystick control of robots. 
+    synopsis: A simple module to allow joystick control of robots with the iNRTJoystick iOS app. 
     description: > 
       This module simply opens a new GTK window, and allows users to use the
-      joystick to send out velocity command messages.
+      iNRTJoystick controller to send out velocity command messages.
  
     keywords: 
 
