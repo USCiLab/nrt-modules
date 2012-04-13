@@ -1,27 +1,37 @@
 Module: 
   general: 
-    displayname: Transform Poster 
-    classname: TransformPosterModule 
-    category: /Robotics/Utils
-    synopsis: This author is too lazy to write a synopsis! 
+    displayname: World Display 
+    classname: WorldDisplayModule 
+    category: /Robotics/PointCloud
+    synopsis: Displays point clouds and transforms in a single opengl window. 
     description: > 
       This author is too lazy to write a description!
  
     keywords: 
-
+      - display
+      - point
+      - cloud
+      - 3d
+      - world
+      - transform
+      - transformation
  
     subscriberports: 
+      - name: Cloud
+        inmsg: GenericCloudMessage
+        retmsg: void
+        description: "Input Cloud"
 
     checkerports: 
 
     posterports: 
-      - name: TransformUpdate
-        outmsg: nrt::TransformMessage
-        retmsg: void
-        description: "The transform port"
+      - name: TransformLookup
+        outmsg: nrt::TransformLookupMessage
+        retmsg: nrt::TransformMessage
+        description: "The transform lookup port"
  
   authorship: 
-    author: 
+    author: Randolph Voorhies
     email: 
     mainurl: 
     supporturl: 
@@ -36,9 +46,9 @@ Module:
     restrictions: 
  
   files: 
-    icon: icon.gif 
+    icon: icon.png 
     screenshots: 
-    objectfile: build/TransformPosterModule.so 
+    objectfile: build/WorldDisplayModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

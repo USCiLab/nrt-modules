@@ -32,6 +32,10 @@ Module:
         outmsg: GenericImageMessage
         retmsg: void
         description: "The occupancy grid"
+      - name: PixelsPerMeter
+        outmsg: nrt::Message< nrt::real >
+        retmsg: void
+        description: "The pixel / meter scale of the computed grid"
  
   authorship: 
     author: Randolph Voorhies
@@ -49,7 +53,7 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.gif 
     screenshots: 
     objectfile: build/PointCloud2OccupancyModule.so 
     docfiles: 
