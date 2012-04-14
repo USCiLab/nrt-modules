@@ -145,13 +145,35 @@ void iNRTJoystickModule::run()
                 // joystick position varies from -100.0 to 100.0
                 angular = doc[i]["x"].GetDouble() * (itsMaxAngularVelParam.getVal()/100.0);
               }
+              /*
+               *else if ( doc[i]["joystick"].GetInt() == 1 )
+               *{
+               *  // process another joystick
+               *}
+              */
             }
-            else {
+            else if ( doc[i].IsString() )
+            {
+              // ["refresh"]
+              if ( doc[i].GetString() == "refresh" )
+              {
+                // send the URL
+                // prepare the string: [{"url": "http://www.google.com/"}]
+                std::string urljson("[{\"url\": \"" + itsWebviewURL.getVal() + "\"}]");
+                if ( sendto(itsSocket, urljson.c_str(), urljson.length(), 0, (struct sockaddr*)&other, olen) == -1 )
+                {
+                  NRT_FATAL("Error sending URL back to iNRTJoystick: " << errno);
+                }
+              }
+            }
+            else
+            {
               NRT_INFO("Unexpected JSON data (data wasn't a map!)");
             }
           }
         }
-        else {
+        else
+        {
           NRT_INFO("Unexpected JSON data (top level object must be an array!)");
         }
       }
