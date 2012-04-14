@@ -40,7 +40,6 @@ int joystickRadius = 30;
 - (id)init	
 {
     // screen is 320x640
-    NSLog(@"initializing joysticks");
     self = [super init];
     if (self) {        
         // ask director the the window size
@@ -77,13 +76,9 @@ int joystickRadius = 30;
         NSError *error = nil;
         id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
 
-        NSLog(@"Doing request: %s\n", [data bytes]);
         SUDP_SendMsg([data bytes], [data length]);
-        
-        NSLog(@"Waiting for reply...");
         char buf[512];
         SUDP_RecvMsg(buf, 512);
-        NSLog(@"Got reply: %s\n", buf);
     }
     return self;
 }
