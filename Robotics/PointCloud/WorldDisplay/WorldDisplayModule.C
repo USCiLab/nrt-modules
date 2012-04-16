@@ -43,7 +43,7 @@ WorldDisplayModule::WorldDisplayModule(std::string const & instanceid) :
     itsBaseParam(baseParamDef, this),
     itsTransformsParam(transformsParamDef, this, &WorldDisplayModule::transformParamCallback)
 { 
-  itsWindow.setUserDrawMethod(std::bind(&WorldDisplayModule::drawFrames, this));
+  itsWindow.setUserDraw(std::bind(&WorldDisplayModule::drawFrames, this));
 }
 
 // ######################################################################
@@ -89,12 +89,16 @@ void WorldDisplayModule::drawFrames()
     glEnd();
     glPopAttrib();
     glPopAttrib();
+
+    GLfloat textColor[] = {1, 1, 1};
+    itsWindow.drawText(tran.first, textColor, axesZ);
   }
 }
 
 // ######################################################################
 void WorldDisplayModule::run()
 {
+  itsWindow.show();
   while(running())
   {
     auto waitTime = now() + std::chrono::milliseconds(33);
