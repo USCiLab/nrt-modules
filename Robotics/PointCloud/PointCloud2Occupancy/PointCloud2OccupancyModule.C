@@ -51,7 +51,7 @@ struct OccupancyVisitor
   if(x < 0 || x >= w || y < 0 || y >= h) return; \
   byte val = img(x,y).val(); \
   if(val == 255) foundWall = true; \
-  else if(foundWall) img(x,y) = PixGray<byte>(val);
+  else if(foundWall) img(x,y) = PixGray<byte>(128);
 void rasterLine(Image<PixGray<byte>, UniqueAccess> & img, int x2, int y2, byte val)
 {
   NRT_INFO("  " << x2 << "," << y2);
@@ -140,20 +140,17 @@ void PointCloud2OccupancyModule::onMessage(PointCloudInput cloud)
   
   cloud->cloud.applyInplaceVisitor(visitor);
 
-  int val = itsShadowsParam.getVal();
-  if(val < 0) val = 0;
-  if(val > 255) val = 255;
-  if(val > 0)
+  //int val = itsShadowsParam.getVal();
+  //if(val < 0) val = 0;
+  //if(val > 255) val = 255;
+  //if(val > 0)
+  int val = 255;
   {
     for(int i=0; i<360; i++)
       rasterLine(grid, grid.width()/2.0 + cos(i*M_PI/180.0)*grid.width(), grid.height()/2.0 + sin(i*M_PI/180.0)*grid.height(), val);
   }
 
-
-
   GenericImage genericGrid(Image<PixGray<byte>>(grid));
-
-
 
   // Post the pixels per meter message
   Message<nrt::real>::unique_ptr ppmMsg(new Message<nrt::real>(ppm));
