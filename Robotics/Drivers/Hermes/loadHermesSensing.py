@@ -2,43 +2,13 @@
 import nrtlib
 
 nrtlib.loadModule(
-  logicalpath  = '/Robotics/ImageProc/IO/DisplaySinkModule',
-  bbnick       = 'ilab21.1',
-  subscribertopicfilters = {
-    'Image' : 'grid|Auto000000',
-  },
-  checkertopicfilters = {
-    'Label' : '',
-  },
-  postertopics = {
-    'MouseClick' : '',
-    'KeyboardPress' : '',
-  },
-  position = (215, -633),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/Utils/TransformManagerModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'maxCacheSize' : '1000',
-    'maxCacheTime' : '30',
-  },
-  subscribertopicfilters = {
-    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
-    'TransformLookupPort' : 'World2KinectLookup|Auto000000',
-  },
-  position = (101, 67),
-)
-
-nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/DepthImageToPointCloudModule',
-  bbnick       = 'ilab21.1',
+  bbnick       = 'hermes',
   subscribertopicfilters = {
-    'Input' : 'KinectImage',
+    'Input' : 'KinectImage|Auto000001',
   },
   checkertopicfilters = {
-    'FocalLength' : 'KinectFocalLength',
+    'FocalLength' : 'KinectFocalLength|Auto000002',
   },
   postertopics = {
     'Output' : 'RawPointCloud',
@@ -48,7 +18,7 @@ nrtlib.loadModule(
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/Utils/TransformPosterModule',
-  bbnick       = 'ilab21.1',
+  bbnick       = 'hermes',
   instancename = 'World2RobotTransformer',
   parameters = {
     'from' : 'world',
@@ -63,40 +33,8 @@ nrtlib.loadModule(
 )
 
 nrtlib.loadModule(
-  logicalpath  = '/Robotics/ImageProc/IO/DisplaySinkModule',
-  bbnick       = 'ilab21.1',
-  subscribertopicfilters = {
-    'Image' : 'KinectImage',
-  },
-  checkertopicfilters = {
-    'Label' : '',
-  },
-  postertopics = {
-    'MouseClick' : '',
-    'KeyboardPress' : '',
-  },
-  position = (-716, -756),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/PointCloud/WorldDisplayModule',
-  bbnick       = 'ilab21.1',
-  parameters = {
-    'base' : 'world',
-    'transforms' : 'kinect',
-  },
-  subscribertopicfilters = {
-    'Cloud' : 'WorldPointCloud',
-  },
-  postertopics = {
-    'TransformLookup' : 'Auto000000',
-  },
-  position = (-126, -267),
-)
-
-nrtlib.loadModule(
   logicalpath  = '/Robotics/Utils/TransformPosterModule',
-  bbnick       = 'ilab21.1',
+  bbnick       = 'hermes',
   instancename = 'Robot2KinectTransformer',
   parameters = {
     'from' : 'robot',
@@ -112,7 +50,7 @@ nrtlib.loadModule(
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/PointCloudTransformModule',
-  bbnick       = 'ilab21.1',
+  bbnick       = 'hermes',
   instancename = 'Kinect2WorldTransformer',
   parameters = {
     'from' : 'world',
@@ -130,7 +68,7 @@ nrtlib.loadModule(
 
 nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/OpenNISourceModule',
-  bbnick       = 'ilab21.1',
+  bbnick       = 'hermes',
   parameters = {
     'framerate' : '-1',
     'data' : 'Image+Depth',
@@ -138,33 +76,44 @@ nrtlib.loadModule(
     'xml' : '',
   },
   postertopics = {
-    'Image' : 'KinectImage',
-    'FocalLength' : 'KinectFocalLength',
+    'Image' : 'Auto000001',
+    'FocalLength' : 'Auto000002',
     'Dims' : '',
     'FrameCount' : '',
     'Tick' : '',
     'Tock' : '',
     'Done' : '',
   },
-  position = (-1088, -339),
+  position = (-1034, -379),
 )
 
 nrtlib.loadModule(
-  logicalpath  = '/Robotics/PointCloud/PointCloud2OccupancyModule',
-  bbnick       = 'ilab21.1',
+  logicalpath  = '/Robotics/Utils/TransformManagerModule',
+  bbnick       = 'hermes',
   parameters = {
-    'lowerthreshold' : '0.10000000000000001',
-    'mapdims' : '3x3',
-    'pixelspermeter' : '50',
-    'upperthreshold' : '3',
+    'maxCacheSize' : '1000',
+    'maxCacheTime' : '30',
   },
   subscribertopicfilters = {
-    'PointCloudInput' : 'WorldPointCloud',
+    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
+    'TransformLookupPort' : 'World2KinectLookup|Auto000000',
+  },
+  position = (101, 67),
+)
+
+nrtlib.loadModule(
+  logicalpath  = '/Robotics/PointCloud/WorldDisplayModule',
+  bbnick       = 'hermes',
+  parameters = {
+    'base' : 'world',
+    'transforms' : 'kinect',
+  },
+  subscribertopicfilters = {
+    'Cloud' : 'WorldPointCloud',
   },
   postertopics = {
-    'OccupancyGridOutput' : 'grid',
-    'PixelsPerMeter' : '',
+    'TransformLookup' : 'Auto000000',
   },
-  position = (-223, -592),
+  position = (-126, -267),
 )
 

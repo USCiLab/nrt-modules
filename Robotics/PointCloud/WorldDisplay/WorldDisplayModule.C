@@ -44,6 +44,8 @@ WorldDisplayModule::WorldDisplayModule(std::string const & instanceid) :
     itsTransformsParam(transformsParamDef, this, &WorldDisplayModule::transformParamCallback)
 { 
   itsWindow.setUserDraw(std::bind(&WorldDisplayModule::drawFrames, this));
+  itsWindow.setDrawAxes(true);
+  itsWindow.setDrawPlane(GLWindowPointCloud::Plane::xy_xz_yz);
 }
 
 // ######################################################################
