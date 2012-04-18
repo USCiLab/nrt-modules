@@ -17,12 +17,11 @@ Module:
       - transformation
  
     subscriberports: 
-      - name: Cloud
-        inmsg: GenericCloudMessage
-        retmsg: void
-        description: "Input Cloud"
 
     checkerports: 
+      - name: Cloud
+        msg: GenericCloudMessage
+        description: "Input Cloud"
 
     posterports: 
       - name: TransformLookup

@@ -54,7 +54,6 @@ struct OccupancyVisitor
   else if(foundWall) img(x,y) = PixGray<byte>(128);
 void rasterLine(Image<PixGray<byte>, UniqueAccess> & img, int x2, int y2, byte val)
 {
-  NRT_INFO("  " << x2 << "," << y2);
   int w = img.width();
   int h = img.height();
   int x1 = w/2;

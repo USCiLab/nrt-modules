@@ -5,10 +5,10 @@ nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/DepthImageToPointCloudModule',
   bbnick       = 'hermes',
   subscribertopicfilters = {
-    'Input' : 'KinectImage|Auto000001',
+    'Input' : 'KinectImage|Auto000001|Auto000001',
   },
   checkertopicfilters = {
-    'FocalLength' : 'KinectFocalLength|Auto000002',
+    'FocalLength' : 'KinectFocalLength|Auto000002|Auto000002',
   },
   postertopics = {
     'Output' : 'RawPointCloud',
@@ -49,6 +49,20 @@ nrtlib.loadModule(
 )
 
 nrtlib.loadModule(
+  logicalpath  = '/Robotics/Utils/TransformManagerModule',
+  bbnick       = 'hermes',
+  parameters = {
+    'maxCacheSize' : '1000',
+    'maxCacheTime' : '30',
+  },
+  subscribertopicfilters = {
+    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
+    'TransformLookupPort' : 'World2KinectLookup|Auto000000',
+  },
+  position = (101, 67),
+)
+
+nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/PointCloudTransformModule',
   bbnick       = 'hermes',
   instancename = 'Kinect2WorldTransformer',
@@ -67,12 +81,30 @@ nrtlib.loadModule(
 )
 
 nrtlib.loadModule(
+  logicalpath  = '/Robotics/PointCloud/WorldDisplayModule',
+  bbnick       = 'hermes',
+  parameters = {
+    'base' : 'world',
+    'framerate' : '10',
+    'transforms' : 'kinect,robot',
+  },
+  checkertopicfilters = {
+    'Cloud' : 'WorldPointCloud',
+  },
+  postertopics = {
+    'TransformLookup' : 'Auto000000',
+  },
+  position = (-231, -423),
+)
+
+nrtlib.loadModule(
   logicalpath  = '/Robotics/PointCloud/OpenNISourceModule',
   bbnick       = 'hermes',
   parameters = {
+    'data' : 'None',
     'framerate' : '-1',
-    'data' : 'Image+Depth',
     'mirror' : 'false',
+    'data' : 'Image+Depth',
     'xml' : '',
   },
   postertopics = {
@@ -84,36 +116,6 @@ nrtlib.loadModule(
     'Tock' : '',
     'Done' : '',
   },
-  position = (-1034, -379),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/Utils/TransformManagerModule',
-  bbnick       = 'hermes',
-  parameters = {
-    'maxCacheSize' : '1000',
-    'maxCacheTime' : '30',
-  },
-  subscribertopicfilters = {
-    'TransformUpdatePort' : 'World2RobotTransform|Robot2KinectTransform',
-    'TransformLookupPort' : 'World2KinectLookup|Auto000000',
-  },
-  position = (101, 67),
-)
-
-nrtlib.loadModule(
-  logicalpath  = '/Robotics/PointCloud/WorldDisplayModule',
-  bbnick       = 'hermes',
-  parameters = {
-    'base' : 'world',
-    'transforms' : 'kinect',
-  },
-  subscribertopicfilters = {
-    'Cloud' : 'WorldPointCloud',
-  },
-  postertopics = {
-    'TransformLookup' : 'Auto000000',
-  },
-  position = (-126, -267),
+  position = (-1226, -191),
 )
 
