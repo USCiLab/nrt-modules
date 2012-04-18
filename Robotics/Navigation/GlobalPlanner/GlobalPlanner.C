@@ -1,80 +1,158 @@
 #include "GlobalPlanner.H"
-#include <nrt/Core/Image/Image.H>
-#include <boost/unordered_map.hpp>
-#include <boost/unordered_set.hpp>
-#include <boost/graph/astar_search.hpp>
-#include <boost/graph/grid_graph.hpp>
-#include <boost/graph/filtered_graph.hpp>
-#include <boost/graph/random.hpp>
-#include <boost/random.hpp>
+#include <nrt/ImageProc/Drawing/Geometry.H>
 
 using namespace nrt;
 using namespace globalplanner;
 
 // ######################################################################
-// some typedefs for clarity
-typedef boost::adjacency_list<boost::vecS, boost::listS, boost::undirectedS, std::array<float,2>, float> Graph;
-typedef boost::grid_graph<2> GridGraph;
-typedef boost::graph_traits<Graph>::vertex_descriptor VertexDescriptor;
-typedef boost::graph_traits<Graph>::vertices_size_type VerticesSizeType;
-typedef typename Graph::edge_property_type Weight;
-
-
-struct vertex_hash : std::unary_function<VertexDescriptor, std::size_t>
-{
-  std::size_t operator()(VertexDescriptor const& u) const {
-    std::size_t seed = 0;
-    boost::hash_combine(seed, u[0]);
-    boost::hash_combine(seed, u[1]);
-    return seed;
-  }
-};
-
-typedef boost::unordered_set<VertexDescriptor, vertex_hash> VertexSet;
-typedef boost::vertex_subset_complement_filter<Graph, VertexSet>::type FilteredGraph;
-typedef boost::unordered_map<VertexDescriptor, VertexDescriptor, vertex_hash> PredMap;
-typedef boost::unordered_map<VertexDescriptor, float, vertex_hash> DistMap;
-
-
-class euclidean_heuristic:
-  public boost::astar_heuristic<Graph, float>
+class PriorityComparator
 {
   public:
-    euclidean_heuristic(VertexDescriptor goal):m_goal(goal) {};
+    PriorityComparator(std::vector<double> const & costs) : itsCosts(costs) { }
 
-    float operator()(VertexDescriptor v) {
-      return sqrt(pow(m_goal[0] - v[0], 2) + pow(m_goal[1] - v[1], 2));
+    bool operator() (int const & lhs, int const & rhs) const
+    {
+      return itsCosts[lhs] < itsCosts[rhs];
     }
 
   private:
-    VertexDescriptor m_goal;
+    std::vector<double> const & itsCosts;
 };
 
-struct found_goal {};
-
-struct astar_goal_visitor:public boost::default_astar_visitor
-{
-  astar_goal_visitor(VertexDescriptor goal):m_goal(goal) {};
-
-  void examine_vertex(VertexDescriptor u, const FilteredGraph&) {
-    if (u == m_goal)
-      throw found_goal();
-  }
-
-  private:
-  VertexDescriptor m_goal;
-};
-// ######################################################################
 // ######################################################################
 GlobalPlannerModule::GlobalPlannerModule(std::string const& instanceName) :
   Module(instanceName),
   itsNextTransformParam(NextTransformParam, this),
-  itsWorldTransformParam(WorldTransformParam, this),
-  itsRobotTransformParam(RobotTransformParam, this),
-  itsGoalTransformParam(GoalTransformParam, this),
-  itsIntervalParam(IntervalParam, this)
+  itsFromTransformParam(FromTransformParam, this),
+  itsToTransformParam(ToTransformParam, this),
+  itsSegmentLengthParam(SegmentLengthParam, this),
+  itsUpdateRateParam(UpdateRateParam, this),
+  itsShowDebugParam(ShowDebugParam, this, &GlobalPlannerModule::debugParamCallback)
 {
   //
+}
+
+// ######################################################################
+std::vector<Point2D<int>> GlobalPlannerModule::AStar(Image<PixGray<byte>> const mapInput, Point2D<int> start, Point2D<int> goal)
+{
+  Image<PixGray<byte>, UniqueAccess> map(mapInput);
+  int const w = map.width();
+  int const h = map.height();
+
+  bool lefWallOk = false;
+  bool rigWallOk = false;
+  bool topWallOk = false;
+  bool botWallOk = false;
+  if (goal.x() < 0 || goal.x() >= w ||
+      goal.y() < 0 || goal.y() >= h)
+  {
+    Line<int> startGoal = map.bounds().clip(Line<int>(start, goal));
+    Point2D<int> edgePoint = startGoal.p1() == start ? startGoal.p2() : startGoal.p1();
+
+    lefWallOk = edgePoint.x() == 0;
+    rigWallOk = edgePoint.x() == w-1;
+    topWallOk = edgePoint.y() == 0;
+    botWallOk = edgePoint.y() == h-1;
+  }
+
+  auto pos2ind = [&](Point2D<int> pos)
+  {
+    return pos.y() * w + pos.x();
+  };
+
+  auto ind2pos = [&](int ind)
+  {
+    int y = ind / w;
+    int x = ind - y*w;
+    return Point2D<int>(x, y);
+  };
+
+  auto heuristic = [&](Point2D<int> first, Point2D<int> second)
+  {
+    return first.distanceTo(second);
+  };
+
+  std::vector<Point2D<int>> neighbors = {
+    Point2D<int>( 0,  1),
+    Point2D<int>( 0, -1),
+    Point2D<int>( 1,  0),
+    Point2D<int>( 1,  1),
+    Point2D<int>( 1, -1),
+    Point2D<int>(-1,  0),
+    Point2D<int>(-1,  1),
+    Point2D<int>(-1, -1),
+  };
+
+  std::vector<int> camefrom(map.size()+1, -1);
+  std::vector<double> gscore(map.size()+1, -1);
+  std::vector<double> hscore(map.size()+1, -1);
+  std::vector<double> fscore(map.size()+1, -1);
+
+  gscore[pos2ind(start)] = 0;
+  hscore[pos2ind(start)] = heuristic(start, goal);
+  fscore[pos2ind(start)] = gscore[pos2ind(start)] + hscore[pos2ind(start)];
+
+  std::set<int> closedset;
+  std::set<int, PriorityComparator> openset( (PriorityComparator(fscore)) );
+  openset.insert(pos2ind(start));
+
+  while (!openset.empty())
+  {
+    int current = *openset.begin();
+    if (current == pos2ind(goal) || current == map.size())
+    {
+      std::vector<Point2D<int>> path;
+      while (current != pos2ind(start))
+      {
+        path.push_back(ind2pos(current));
+        current = camefrom[current];
+      }
+      std::reverse(path.begin(), path.end());
+      return path;
+    }
+
+    openset.erase(openset.begin());
+    closedset.insert(current);
+    for (Point2D<int> const & neighboroffset : neighbors)
+    {
+      Point2D<int> neighborPos = ind2pos(current) + neighboroffset;
+      int neighbor = pos2ind(neighborPos);
+
+      if (neighborPos.x() < 0 || neighborPos.x() >= w  || neighborPos.y() < 0 || neighborPos.y() >= h )
+      {
+        if (neighborPos.x() < 0  && lefWallOk || 
+            neighborPos.x() >= w && rigWallOk ||
+            neighborPos.y() < 0  && topWallOk ||
+            neighborPos.y() >= h && botWallOk) 
+          neighbor = map.size();
+        else continue;
+      }
+
+      if(map(neighbor).val() == 255)
+        continue;
+
+      if(closedset.count(neighbor))
+        continue;
+
+      double g = gscore[current] + neighborPos.distanceTo(goal);
+
+      if (!openset.count(neighbor))
+      {
+        camefrom[neighbor] = current;
+        gscore[neighbor] = g;
+        hscore[neighbor] = heuristic(neighborPos, goal);
+        fscore[neighbor] = g + hscore[neighbor];
+        openset.insert(neighbor);
+      }
+      else if (g < gscore[neighbor])
+      {
+        camefrom[neighbor] = current;
+        gscore[neighbor] = g;
+        fscore[neighbor] = g + hscore[neighbor];
+      }
+    }
+  }
+  return std::vector<Point2D<int>>();
 }
 
 // ######################################################################
@@ -97,116 +175,85 @@ nrt::Transform3D GlobalPlannerModule::lookupTransform(std::string from, std::str
 }
 
 // ######################################################################
-void GlobalPlannerModule::onMessage(globalplanner::OccupancyMap map)
+void GlobalPlannerModule::debugParamCallback(bool const & debug)
 {
-  auto image = map->img.convertTo<PixGray<byte>>();
-  try
+  std::lock_guard<std::mutex> _(itsMtx);
+  
+  if (debug && !itsDisplay)
   {
-    Eigen::Vector3d robot2bread = lookupTransform(itsRobotTransformParam.getVal(), itsNextTransformParam.getVal()) * Eigen::Vector3d(0, 0, 0);
-    if ( sqrt(robot2bread.x()*robot2bread.x() + robot2bread.y()*robot2bread.y() + robot2bread.z()*robot2bread.z()) > 0.10) 
+    itsDisplay.reset(new nrt::DisplayImageSink);
+    addSubComponent(itsDisplay);
+  }
+  else if (!debug && itsDisplay)
+  {
+    removeSubComponent(itsDisplay);
+    itsDisplay.reset();
+  }
+}
+
+// ######################################################################
+void GlobalPlannerModule::run()
+{
+  while (running())
+  {
+    auto endTime = nrt::now() + std::chrono::milliseconds((int)std::round(1000.0/itsUpdateRateParam.getVal()));
+    if (auto mapres = check<globalplanner::OccupancyMap>(nrt::MessageCheckerPolicy::Unseen))
     {
-      int pixelw = image.width();
-      int pixelh = image.height();
-      float mapw = pixelw * itsPixelsPerMeter;
-      float maph = pixelh * itsPixelsPerMeter;
-
-      boost::array<std::size_t, 2> lengths = {{pixelw, pixelh}};
-      GridGraph gridGraph(lengths);
-      Graph occupancyGraph;
-      boost::copy_graph(gridGraph, occupancyGraph);
-
-      // 1) Get robot->goal transform
-      nrt::Transform3D robot2goal = lookupTransform(itsRobotTransformParam.getVal(), itsNextTransformParam.getVal());
-      Eigen::Vector3d goal = robot2goal * Eigen::Vector3d(0,0,0);
-
-      Point2D<float> goal2D(goal.x(), goal.y());
-
-      if(goal.x() < -mapw/2 || goal.x() > mapw/2 || goal.y() < -maph/2 || goal.y() > maph/2)
+      nrt::real pixelsPerMeter;
+      if (auto ppmres = check<globalplanner::PixelsPerMeter>(nrt::MessageCheckerPolicy::Any))
       {
-        // The goal is inside our map
+        pixelsPerMeter = ppmres.get()->value;
+
+        Image<PixGray<byte>> map = mapres.get()->img.convertTo<PixGray<byte>>();
+        nrt::Transform3D goalTransform = lookupTransform(itsFromTransformParam.getVal(), itsToTransformParam.getVal());
+        Eigen::Vector3d goalVector = goalTransform * Eigen::Vector3d(0, 0, 0);
+
+        Point2D<int> start(map.width()/2, map.height()/2);
+        Point2D<int> goal(goalVector.x(), goalVector.y());
+
+        std::vector<Point2D<int>> path = AStar(map, start, goal);
+        if (path.size())
+        {
+          int n = pixelsPerMeter * itsSegmentLengthParam.getVal();
+          if (n >= path.size())
+            n = path.size()-1;
+
+          nrt::Transform3D transform(Eigen::Translation3d(path[n].x(), path[n].y(), 0.0));
+
+          std::unique_ptr<nrt::TransformMessage> msg(new nrt::TransformMessage(nrt::now(), itsFromTransformParam.getVal(), itsNextTransformParam.getVal(), transform));
+          post<NextTransform>(msg);
+
+          {
+            std::lock_guard<std::mutex> _(itsMtx);
+            if (itsDisplay)
+            {
+              Image<PixRGB<byte>> pathImage(map);
+              double i = 0;
+              for (Point2D<int> const & p : path)
+              {
+                drawDisk(pathImage, Circle<int>(p, 3), PixHSV<double>(255*i/path.size(), 255, 128));
+                i++;
+              }
+              itsDisplay->out(GenericImage(pathImage));
+            }
+          }
+        }
       }
       else
       {
-        // The goal is outside of our map
-        VertexDescriptor goal = boost::add_vertex(occupancyGraph);
-        for(int x = 0; x<pixelw; x++)
-        {
-          float dist1 = Point2D<float>(x*itsPixelsPerMeter, 0).manhattanDistanceTo(goal2D);
-          float dist2 = Point2D<float>(x*itsPixelsPerMeter, maph).manhattanDistanceTo(goal2D);
-
-          add_edge( boost::vertex(x, occupancyGraph), goal, Weight(dist1), occupancyGraph);
-          add_edge( boost::vertex(pixelh*pixelw + x, occupancyGraph), goal, Weight(dist2), occupancyGraph);
-        }
-        for(int y = 0; y<pixelh; y++)
-        {
-          float dist1 = Point2D<float>(0,    y*itsPixelsPerMeter).manhattanDistanceTo(goal2D);
-          float dist2 = Point2D<float>(mapw, y*itsPixelsPerMeter).manhattanDistanceTo(goal2D);
-
-          add_edge( boost::vertex(y*pixelw, occupancyGraph), goal, Weight(dist1), occupancyGraph);
-          add_edge( boost::vertex(y*pixelw + pixelw, occupancyGraph), goal, Weight(dist2), occupancyGraph);
-        }
+        NRT_WARNING("No PixelsPerMeter conversion found!");
       }
-
-      VertexSet obstacles;
-      byte const * const imageBegin = image.pod_begin();
-      for (VerticesSizeType v_index = 0; v_index < boost::num_vertices(occupancyGraph); v_index++)
-      {
-        if (imageBegin[v_index] == 255)
-        {
-          obstacles.insert(boost::vertex(v_index, occupancyGraph));
-        }
-      }
-
-      FilteredGraph costMap = boost::make_vertex_subset_complement_filter(occupancyGraph, obstacles);
-      boost::property_map<GridGraph, boost::edge_weight_t>::type weightmap = get(edge_weight, occupancyGraph);
-
-      PredMap predecessor;
-      boost::associative_property_map<PredMap> pred_pmap(predecessor);
-
-      DistMap distance;
-      boost::associative_property_map<DistMap> dist_pmap(distance);
-
-      euclidean_heuristic heuristic(goal);
-      astar_goal_visitor visitor(goal);
-
-      VertexSet solution;
-      float solution_length;
-
-      bool solution_found = false;
-      try
-      {
-        boost::astar_search(costMap, start, heuristic,
-          boost::weight_map(weight).
-          predecessor_map(pred_pmap).
-          distance_map(dist_pmap).
-          visitor(visitor)
-        );
-      }
-      catch (found_goal fg)
-      {
-        solution_found = true;
-        solution_length = distance[goal];
-        for (VertexDescriptor u = goal; u != start; u = predecessor[u])
-        {
-          solution.insert(u);
-        }
-        solution.insert(start);
-      }
-
-      // post a trasnform at solution[itsIntervalParam.getVal()*itsPixelsPerMeter]
-      VertexDescriptor nextBreadcrumb = solution[itsIntervalParam.getVal() * itsPixelsPerMeter];
-      std::size_t index = get(boost::vertex_index, occupancyGraph, nextBreadcrumb);
-      int y = index / mapw;
-      int x = index - y*mapw;
-      itsLastBreadcrumb = Eigen::Translation<double, 3>(x, y, 0);
-      // post itsLastBreadCrumb on the NextTransform port
-      std::unique_ptr<nrt::TransformMessage> msg(
-          new nrt::TransformMessage(nrt::now(), itsRobotTransformParam.getVal(), itsNextTransformParam.getVal(), itsLastBreadcrumb));
-      post<NextTransform>(msg);
     }
-  }
-  catch (std::runtime_error e)
-  {
-    NRT_WARNING(e.what());
+    else
+    {
+      NRT_WARNING("No occupancy grid found!");
+    }
+    
+    if (nrt::now() > endTime)
+      NRT_WARNING("Cannot maintain update rate!");
+
+    std::this_thread::sleep_until(endTime);
   }
 }
+
+NRT_REGISTER_MODULE(GlobalPlannerModule);
