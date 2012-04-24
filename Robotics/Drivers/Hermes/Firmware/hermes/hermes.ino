@@ -51,6 +51,7 @@ public:
   
     int writeLeft = (leftSpeed == 64) ? 0 : microsFromByte(leftSpeed);
     int writeRight = (rightSpeed == 64) ? 0 : microsFromByte(rightSpeed);
+    LOG(leftSpeed);
     Left.writeMicroseconds(microsFromByte(leftSpeed-6));
     Right.writeMicroseconds(microsFromByte(rightSpeed-6));
   }
@@ -149,67 +150,66 @@ public:
 public:
   Hermes ()
   {
-    // setState(IDLE);
-    // lastUpdate = millis();
-    LOG("I'm all done");
+    setState(IDLE);
+    lastUpdate = millis();
   }
   
   void setState(State newState)
   {
-    // if(newState == IDLE)
-    // {
-    //   LOG("Deactivating");
-    //   motors.setSpeed(64,64);
-    //   motors.disable();
-    // }
-    // if(newState == ACTIVE)
-    // {
-    //   motors.enable();
-    //   LOG("Activating");
-    // }
-    // state = newState;
-  }
+    if(newState == IDLE)
+     {
+       LOG("Deactivating");
+       motors.setSpeed(64,64);
+       motors.disable();
+     }
+     if(newState == ACTIVE)
+     {
+       motors.enable();
+       LOG("Activating");
+     }
+     state = newState;
+   }
   
   void dispatch(char cmd)
   {
-    // switch(cmd)
-    // {
-    //   case(CMD_RESET):
-    //     setState(ACTIVE);
-    //   break;
-    // 
-    //   case(CMD_SETSPEED):
-    //     if(state == IDLE) 
-    //       waitForBytes(2); // Throw away 2 bytes
-    //     
-    //     if (!waitForBytes(2))
-    //       break;
-    //     motors.setSpeed(Serial.read(), Serial.read());
-    //     LOG("Speed set");
-    //   break;
-    // 
-    //   default:
-    //     LOG("Unrecognized cmd");
-    //   break;
-    // }
+    switch(cmd)
+    {
+      case(CMD_RESET):
+        motors.enable();
+        setState(ACTIVE);
+      break;
+    
+      case(CMD_SETSPEED):
+        if(state == IDLE) 
+          waitForBytes(2); // Throw away 2 bytes
+        
+        if (!waitForBytes(2))
+          break;
+        motors.setSpeed(Serial.read(), Serial.read());
+      break;
+    
+      default:
+        LOG("Unrecognized cmd");
+      break;
+    }
   }
   
   void tick()
   {
-    // if(state == ACTIVE)
-    // {
-    //   if(millis() > (lastUpdate + WATCHDOG_THRESHOLD))
-    //     setState(IDLE);
-    // }
-    // 
-    // if (Serial.available() > 0) {
-    //   dispatch(Serial.read());
-    //   lastUpdate = millis();
-    // } else {
-    // 
-    // }
-    // 
-    // sensors.tick();
+    if(state == ACTIVE)
+    {
+      if(millis() > (lastUpdate + WATCHDOG_THRESHOLD))
+        setState(IDLE);
+    }
+    
+    if (Serial.available() > 0) {
+      dispatch(Serial.read());
+      lastUpdate = millis();
+    } else {
+    
+    }
+    
+    sensors.tick();
   }
 };
 
@@ -218,19 +218,14 @@ static Hermes* hermes;
 void setup()
 {
   Serial.begin(BAUDRATE);
-  LOG("Serial done");
   Wire.begin();
-  LOG("Wire ready");
   hermes = new Hermes();
-  
-  LOG("Ready");
-    
+      
   // Power computer
-  // digitalWrite(DIGITAL_RELAY, HIGH);
+  digitalWrite(DIGITAL_RELAY, HIGH);
 }
 
 void loop()
 {
-  LOG("Why");
-  // hermes->tick();
+  hermes->tick();
 }

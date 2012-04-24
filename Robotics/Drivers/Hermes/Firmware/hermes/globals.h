@@ -4,7 +4,7 @@
 // 
 // Debug 
 // 
-#define DEBUG
+// #define DEBUG
 
 #define POS __FUNCTION__ + "() line " + __LINE__ + ":\t"
 
@@ -25,7 +25,7 @@
 #ifndef DEBUG
 #define RATE_LIMIT(duration) if(millis() % duration == 0)
 #else
-#define RATE_LIMIT(duration) if(millis() % 3000 == 0)
+#define RATE_LIMIT(duration) if(millis() % 2000 == 0)
 #endif
 
 #endif
