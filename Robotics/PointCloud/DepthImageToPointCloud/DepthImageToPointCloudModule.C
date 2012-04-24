@@ -45,9 +45,9 @@ void DepthImageToPointCloudModule::onMessage( Input in )
 {
   // Check for a focal length
   float focal;
-  if( nrt::Message<nrt::real>::const_ptr res = check<FocalLength>(nrt::MessageCheckerPolicy::Any).get() )
+  if( auto res = check<FocalLength>(nrt::MessageCheckerPolicy::Any) )
   {
-    focal = res->value; 
+    focal = res.get()->value; 
   }
   else 
   {

@@ -19,6 +19,8 @@
 
 @implementation RobotLayer
 int count = 0;
+int joypadRadius = 100;
+int joystickRadius = 30;
 
 +(CCScene *) scene
 {
@@ -37,16 +39,16 @@ int count = 0;
 
 - (id)init	
 {
-    NSLog(@"initializing joysticks");
+    // screen is 320x640
     self = [super init];
     if (self) {        
         // ask director the the window size
 		CGSize size = [[CCDirector sharedDirector] winSize];
 
         SneakyJoystickSkinnedBase *leftJoy = [[SneakyJoystickSkinnedBase alloc] init];
-        leftJoy.position = ccp(150, size.height/2);
-        leftJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:145];
-        leftJoy.thumbSprite = [ColoredCircleSprite circleWithColor:ccc4(0, 0, 255, 200) radius:40];
+        leftJoy.position = ccp(joypadRadius+20, size.height/2);
+        leftJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:joypadRadius];
+        leftJoy.thumbSprite = [ColoredCircleSprite circleWithColor:ccc4(0, 0, 255, 200) radius:joystickRadius];
         leftJoy.joystick = [[[SneakyJoystick alloc] initWithRect:CGRectMake(0, 0, 100, 100)] autorelease];
         leftJoystick = [leftJoy.joystick retain];
         leftJoystick.deadRadius = 10;
@@ -54,7 +56,19 @@ int count = 0;
         [self addChild:leftJoy];
         [leftJoy release];
         [leftJoystick release];
-        
+
+        SneakyJoystickSkinnedBase *rightJoy = [[SneakyJoystickSkinnedBase alloc] init];
+        rightJoy.position = ccp(size.width-joypadRadius, size.height/2);
+        rightJoy.backgroundSprite = [ColoredCircleSprite circleWithColor:ccc4(255, 0, 0, 128) radius:joypadRadius];
+        rightJoy.thumbSprite = [ColoredCircleSprite circleWithColor:ccc4(0, 0, 255, 200) radius:joystickRadius];
+        rightJoy.joystick = [[[SneakyJoystick alloc] initWithRect:CGRectMake(0, 0, 100, 100)] autorelease];
+        rightJoystick = [rightJoy.joystick retain];
+        rightJoystick.deadRadius = 10;
+        rightJoystick.hasDeadzone = YES;
+        [self addChild:rightJoy];
+        [rightJoy release];
+        [rightJoystick release];
+
 		[self scheduleUpdate];
         
         /* request the webview url */
@@ -62,13 +76,9 @@ int count = 0;
         NSError *error = nil;
         id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
 
-        NSLog(@"Doing request: %s\n", [data bytes]);
         SUDP_SendMsg([data bytes], [data length]);
-        
-        NSLog(@"Waiting for reply...");
         char buf[512];
         SUDP_RecvMsg(buf, 512);
-        NSLog(@"Got reply: %s\n", buf);
     }
     return self;
 }
@@ -77,20 +87,28 @@ int count = 0;
 {
     if (SUDP_IsOpen())
     {
-        int x = (((leftJoystick.stickPosition.x / 145.0) + 1.0)/2) * 255;
-        int y = (((leftJoystick.stickPosition.y / 145.0) + 1.0)/2) * 255;
+        // position varies from -100 to 100
+        float xlef = leftJoystick.stickPosition.x;
+        float ylef = leftJoystick.stickPosition.y;
+        float xrig = rightJoystick.stickPosition.x;
+        float yrig = rightJoystick.stickPosition.y;
         
-        NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
-                              [NSNumber numberWithInt:0], @"joystick",
-                              [NSNumber numberWithInt:x], @"x",
-                              [NSNumber numberWithInt:y], @"y",
-                              nil];
+        NSDictionary *leftDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                                 [NSNumber numberWithInt:0], @"joystick",
+                                 [NSNumber numberWithFloat:xlef], @"x",
+                                 [NSNumber numberWithFloat:ylef], @"y",
+                                 nil];
 
-        NSArray *array = [NSArray arrayWithObject:dict];
+        NSDictionary *rightDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                                  [NSNumber numberWithInt:1], @"joystick",
+                                  [NSNumber numberWithFloat:xrig], @"x",
+                                  [NSNumber numberWithFloat	:yrig], @"y",
+                                  nil];
+
+        NSArray *array = [NSArray arrayWithObjects:leftDict, rightDict, nil];
         
         NSError *error = nil;
         id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
-        
         SUDP_SendMsg([data bytes], [data length]);
     }
 }

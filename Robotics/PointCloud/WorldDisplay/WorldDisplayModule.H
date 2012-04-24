@@ -44,12 +44,13 @@
 
 namespace worlddisplay
 {
-  NRT_DECLARE_MESSAGESUBSCRIBER_PORT(Cloud, GenericCloudMessage, void, "Input Cloud");
+  NRT_DECLARE_MESSAGECHECKER_PORT(Cloud, GenericCloudMessage, "Input Cloud");
   NRT_DECLARE_MESSAGEPOSTER_PORT(TransformLookup, nrt::TransformLookupMessage, nrt::TransformMessage, "The transform lookup port");
 
   static const nrt::ParameterCategory ParamCategory("World Display Sink Module Related Options");
   static const nrt::ParameterDef<std::string> baseParamDef("base", "The base transform", "world");
   static const nrt::ParameterDef<std::string> transformsParamDef("transforms", "A comma separated list of transforms to display", "");
+  static const nrt::ParameterDef<nrt::real> framerateParamDef("framerate", "The refresh framerate (in Hz)", 10.0);
 }
 
 //! Displays point clouds and transforms in a single opengl window
@@ -58,13 +59,11 @@ namespace worlddisplay
 
     \keywords display, point, cloud, 3d, world, transform, transformation*/
 class WorldDisplayModule: public nrt::Module,
-                          public nrt::MessageSubscriber<worlddisplay::Cloud>,
+                          public nrt::MessageChecker<worlddisplay::Cloud>,
                           public nrt::MessagePoster<worlddisplay::TransformLookup>
 {
   public:
     WorldDisplayModule(std::string const& instanceid = "");
-
-    void onMessage( worlddisplay::Cloud msg );
 
     void run();
 
@@ -77,6 +76,7 @@ class WorldDisplayModule: public nrt::Module,
     nrt::GLWindowPointCloud itsWindow;
     nrt::Parameter<std::string> itsBaseParam;
     nrt::Parameter<std::string> itsTransformsParam;
+    nrt::Parameter<nrt::real> itsFramerateParam;
 };
 
 #endif // MODULES_POINTCLOUD_IO_WORLDDISPLAY_WORLDDISPLAYMODULE_H_

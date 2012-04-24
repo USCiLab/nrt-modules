@@ -38,7 +38,7 @@
 #include <nrt/Core/Blackboard/Message.H>
 #include <nrt/Core/Image/GenericImage.H>
 
-class GenericImageMessage : public nrt::MessageBase
+NRT_DECLARE_MESSAGE(GenericImageMessage)
 {
   public:
     GenericImageMessage() { }

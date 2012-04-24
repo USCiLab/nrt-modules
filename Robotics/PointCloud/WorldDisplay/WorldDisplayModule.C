@@ -41,9 +41,12 @@ WorldDisplayModule::WorldDisplayModule(std::string const & instanceid) :
     Module(instanceid),
     itsWindow("NRT World View"),
     itsBaseParam(baseParamDef, this),
-    itsTransformsParam(transformsParamDef, this, &WorldDisplayModule::transformParamCallback)
+    itsTransformsParam(transformsParamDef, this, &WorldDisplayModule::transformParamCallback),
+    itsFramerateParam(framerateParamDef, this)
 { 
-  itsWindow.setUserDrawMethod(std::bind(&WorldDisplayModule::drawFrames, this));
+  itsWindow.setUserDraw(std::bind(&WorldDisplayModule::drawFrames, this));
+  itsWindow.setDrawAxes(true);
+  itsWindow.setDrawPlane(GLWindowPointCloud::Plane::xy);
 }
 
 // ######################################################################
@@ -58,9 +61,14 @@ void WorldDisplayModule::transformParamCallback(std::string const & transforms)
 // ######################################################################
 void WorldDisplayModule::drawFrames()
 {
-  std::lock_guard<std::mutex> _(itsMtx);
 
-  for(std::pair<std::string, Transform3D> const & tran : itsTransforms)
+  std::map<std::string, nrt::Transform3D> transforms;
+  {
+    std::lock_guard<std::mutex> _(itsMtx);
+    transforms = itsTransforms;
+  }
+
+  for(std::pair<std::string, Transform3D> const & tran : transforms)
   {
     const float len = 0.1f;
     Eigen::Vector3f centervec = (tran.second * Eigen::Vector3d(0,0,0)).cast<float>();
@@ -89,15 +97,19 @@ void WorldDisplayModule::drawFrames()
     glEnd();
     glPopAttrib();
     glPopAttrib();
+
+    GLfloat textColor[] = {1, 1, 1};
+    itsWindow.drawText(tran.first, textColor, axesZ);
   }
 }
 
 // ######################################################################
 void WorldDisplayModule::run()
 {
+  itsWindow.show();
   while(running())
   {
-    auto waitTime = now() + std::chrono::milliseconds(33);
+    auto waitTime = now() + std::chrono::milliseconds((int)std::round(1000.0/itsFramerateParam.getVal()));
 
     std::map<std::string, Transform3D> transforms;
     std::string const & baseName = itsBaseParam.getVal();
@@ -112,14 +124,12 @@ void WorldDisplayModule::run()
         if(results.size() > 1)  { NRT_WARNING("Multiple TransformManagers detected!"); sleep(1); break; }
         TransformMessage::const_ptr transform = results.get();
         {
-          std::lock_guard<std::mutex> _(itsMtx);
           transforms[transformName] = transform->transform;
         }
       }
       catch(...)
       {
         NRT_WARNING("Error looking up transform from [" << baseName << "] to [" << transformName << "]");
-        sleep(1);
       }
     }
 
@@ -128,16 +138,17 @@ void WorldDisplayModule::run()
       itsTransforms = transforms;
     }
 
+    if( auto res = check<Cloud>(nrt::MessageCheckerPolicy::Unseen) )
+    {
+      itsWindow.setCloud(res.get()->cloud, true);
+      itsWindow.show();
+    }
+
+    if(nrt::now() > waitTime) NRT_WARNING("Cannot keep up framerate!");
+
     std::this_thread::sleep_until(waitTime);
   }
 
-}
-
-// ######################################################################
-void WorldDisplayModule::onMessage(Cloud msg)
-{
-  itsWindow.setCloud(msg->cloud, true);
-  itsWindow.show();
 }
 
 NRT_REGISTER_MODULE(WorldDisplayModule);
