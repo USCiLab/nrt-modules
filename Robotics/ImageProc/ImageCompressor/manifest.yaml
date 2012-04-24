@@ -1,0 +1,73 @@
+Module: 
+  general: 
+    displayname: Image Compressor 
+    classname: ImageCompressorModule 
+    category: /Robotics/ImageProc
+    synopsis: Compresses Images using JPEG compression. 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+      - image
+      - compression
+      - compress
+      - jpg
+      - jpeg
+ 
+    subscriberports: 
+      - name: Input
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "Input Uncompressed Frames"
+
+    checkerports: 
+
+    posterports: 
+      - name: Output
+        outmsg: CompressedImageMessage
+        retmsg: void
+        description: "Output Compressed Frames"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/ImageCompressorModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 

@@ -1,7 +1,7 @@
 #include "Hermes.H"
 #include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
-#include "Firmware/hermes/sensordata.h"
+#include "Firmware/hermes/serialdata.h"
 
 using namespace nrt;
 using namespace hermes; 
@@ -56,7 +56,7 @@ void HermesModule::serialDevCallback(std::string const & dev)
   if(!itsSerialPort->IsOpen()) throw exception::BadParameter("Failed to open serial port");
 
   // Send the Hermes "reset" command 
-  itsSerialPort->WriteByte(97);
+  itsSerialPort->WriteByte(CMD_RESET);
 }
 
 // ######################################################################
@@ -84,7 +84,7 @@ void HermesModule::onMessage(VelocityCommand msg)
   std::lock_guard<std::mutex> _(itsMtx);
   itsVelocityCommand = 
   {
-    byte(98),
+    byte(CMD_SETSPEED),
     leftspeed,
     rightspeed,
   };

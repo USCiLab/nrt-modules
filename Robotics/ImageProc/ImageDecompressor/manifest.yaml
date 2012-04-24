@@ -1,0 +1,73 @@
+Module: 
+  general: 
+    displayname: Image Decompressor 
+    classname: ImageDecompressorModule 
+    category: /Robotics/ImageProc
+    synopsis: Decompresses Images using JPEG compression. 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+      - image
+      - compression
+      - compress
+      - jpg
+      - jpeg
+ 
+    subscriberports: 
+      - name: Input
+        inmsg: CompressedImageMessage
+        retmsg: void
+        description: "Input Compressed Frames"
+
+    checkerports: 
+
+    posterports: 
+      - name: Output
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "Output Decompressed Frames"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/ImageDecompressorModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
