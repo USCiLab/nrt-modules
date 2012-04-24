@@ -84,6 +84,7 @@ void HermesModule::onMessage(VelocityCommand msg)
   std::lock_guard<std::mutex> _(itsMtx);
   itsVelocityCommand = 
   {
+    byte(CMD_RESET),
     byte(CMD_SETSPEED),
     leftspeed,
     rightspeed,
@@ -152,7 +153,6 @@ void HermesModule::writeThreadMethod()
   NRT_INFO("Write Thread Started");
   while(running())
   {
-    NRT_INFO("Locking");
     std::lock_guard<std::mutex> _(itsMtx);
     if(!itsSerialPort) 
     { 
