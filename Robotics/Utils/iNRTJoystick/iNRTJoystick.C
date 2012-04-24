@@ -145,12 +145,6 @@ void iNRTJoystickModule::run()
                 // joystick position varies from -100.0 to 100.0
                 angular = doc[i]["x"].GetDouble() * (itsMaxAngularVelParam.getVal()/100.0);
               }
-              /*
-               *else if ( doc[i]["joystick"].GetInt() == 1 )
-               *{
-               *  // process another joystick
-               *}
-              */
             }
             else if ( doc[i].IsString() )
             {
@@ -184,7 +178,7 @@ void iNRTJoystickModule::run()
       }
     }
   
-    Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
+    Image<PixRGB<byte>> image(290, 60, ImageInitPolicy::Zeros);
     nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
     nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
     itsDisplaySink->out(GenericImage(image), "Velocity Commander");
