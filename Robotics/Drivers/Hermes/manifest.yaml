@@ -13,7 +13,7 @@ Module:
     subscriberports: 
       - name: VelocityCommand
         inmsg: nrt::VelocityMessage
-        retmsg: void 
+        retmsg: void
         description: "The requested velocity of the robot"
 
     checkerports: 
@@ -44,9 +44,9 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.png 
     screenshots: 
-    objectfile: build/Hermes.so 
+    objectfile: build/HermesModule.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

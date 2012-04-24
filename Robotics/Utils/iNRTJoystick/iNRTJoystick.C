@@ -25,7 +25,7 @@ iNRTJoystickModule::iNRTJoystickModule(std::string const & instanceName) :
   itsPort(PortParam, this, &iNRTJoystickModule::PortChangeCallback),
   itsMaxLinearVelParam(MaxLinearVel, this),
   itsMaxAngularVelParam(MaxAngularVel, this),
-  itsWebviewURL(WebviewURLParam, this, &iNRTJoystickModule::WebviewURLChangeCallback)
+  itsWebviewURL(WebviewURLParam, this)
 { 
   addSubComponent(itsDisplaySink);
 }
@@ -35,11 +35,6 @@ iNRTJoystickModule::~iNRTJoystickModule()
 {
   itsRunning = false;
   close(itsSocket);
-}
-
-// ######################################################################
-void iNRTJoystickModule::WebviewURLChangeCallback(std::string const & webviewurl)
-{
 }
 
 // ######################################################################
@@ -95,10 +90,6 @@ void iNRTJoystickModule::run()
 
   while(running())
   {
-    // wait for messages from the app
-    // convert them to velocity commands
-    // repeat
-    
     double linear, angular;
     {
       std::lock_guard<std::mutex> lock(itsMtx);
@@ -121,7 +112,7 @@ void iNRTJoystickModule::run()
         if ( recvfrom(itsSocket, json, BUFLEN, 0, (struct sockaddr*)&other, (unsigned int*)&olen) < 0 && !(errno == EWOULDBLOCK || errno == EAGAIN) )
           NRT_FATAL("Cannot receive on socket: " << errno);
 
-        NRT_INFO("Read JSON string: " << json);
+        //NRT_INFO("Read JSON string: " << json);
 
         if (doc.Parse<0>((const char*)json).HasParseError())
           NRT_FATAL("JSON parsing error (JSON data follows): " << json);
@@ -132,44 +123,31 @@ void iNRTJoystickModule::run()
           {
             if ( doc[i].IsObject() )
             {
+              // (joystick position varies from -100.0 to 100.0)
+
               // Left joystick (linear velocity)
               if ( doc[i]["joystick"].GetInt() == 0 )
-              {
-                // joystick position varies from -100.0 to 100.0
                 linear = doc[i]["y"].GetDouble() * (itsMaxLinearVelParam.getVal()/100.0);
-              }
 
               // Right joystick (angular velocity)
               if ( doc[i]["joystick"].GetInt() == 1)
-              {
-                // joystick position varies from -100.0 to 100.0
                 angular = doc[i]["x"].GetDouble() * (itsMaxAngularVelParam.getVal()/100.0);
-              }
             }
             else if ( doc[i].IsString() )
             {
-              // ["refresh"]
               if ( doc[i].GetString() == "refresh" )
               {
-                // send the URL
-                // prepare the string: [{"url": "http://www.google.com/"}]
                 std::string urljson("[{\"url\": \"" + itsWebviewURL.getVal() + "\"}]");
                 if ( sendto(itsSocket, urljson.c_str(), urljson.length(), 0, (struct sockaddr*)&other, olen) == -1 )
-                {
                   NRT_FATAL("Error sending URL back to iNRTJoystick: " << errno);
-                }
               }
             }
             else
-            {
               NRT_INFO("Unexpected JSON data (data wasn't a map!)");
-            }
           }
         }
         else
-        {
           NRT_INFO("Unexpected JSON data (top level object must be an array!)");
-        }
       }
       else // select timed out
       {
@@ -192,7 +170,6 @@ void iNRTJoystickModule::run()
       itsLinearVel = linear;
       itsAngularVel = angular;
     }
-    //usleep(100000);
   }
 }
 
