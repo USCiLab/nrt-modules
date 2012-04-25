@@ -42,12 +42,6 @@ class HermesModule : public nrt::Module,
     void onMessage(hermes::VelocityCommand msg);
 
   private:
-
-    void readThreadMethod();
-    void writeThreadMethod();
-    std::thread itsReadThread;
-    std::thread itsWriteThread;
-    
     std::mutex itsMtx;
     std::shared_ptr<SerialPort> itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;

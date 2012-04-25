@@ -34,8 +34,6 @@ class iNRTJoystickModule: public nrt::Module,
 
     void PortChangeCallback(int const & port);
 
-    void WebviewURLChangeCallback(std::string const & webviewurl);
-    
     void run();
 
   private:
