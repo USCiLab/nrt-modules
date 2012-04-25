@@ -12,7 +12,8 @@ HermesModule::HermesModule(std::string const& instanceName) :
   itsSerialPort(nullptr),
   itsOdometryBaseFrame(BaseFrameParamDef, this),
   itsOdometryOdomFrame(OdomFrameParamDef, this),
-  itsSerialDev(SerialDevParam, this, &HermesModule::serialDevCallback)
+  itsSerialDev(SerialDevParam, this, &HermesModule::serialDevCallback),
+  itsTrimConstantParam(TrimConstantParam, this)
 { }
 
 // ######################################################################
@@ -71,8 +72,11 @@ void HermesModule::onMessage(VelocityCommand msg)
   // 0   - full backwards
   // 64  - stopped
   // 128 - full forwards
-  nrt::byte const leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
-  nrt::byte const rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
+  nrt::byte leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
+  nrt::byte rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
+
+  leftspeed  = std::round(nrt::clamped(0.5*leftspeed + leftspeed*(1 - itsTrimConstantParam.getVal()), -64.0, 64.0));
+  rightspeed = std::round(nrt::clamped(0.5*rightspeed + rightspeed*itsTrimConstantParam.getVal(), -64.0, 64.0));
 
   std::lock_guard<std::mutex> _(itsMtx);
   itsVelocityCommand = 

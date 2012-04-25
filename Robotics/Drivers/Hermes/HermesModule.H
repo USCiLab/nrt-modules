@@ -25,6 +25,9 @@ namespace hermes
 
   static const nrt::ParameterDef<std::string> SerialDevParam("serialdev", 
       "The serial device file", "", ParamCat);
+
+  static const nrt::ParameterDef<nrt::real> TrimConstantParam("trim",
+      "A constant to adjust for drift between the left and right motors", 0.5, ParamCat);
 }
 
 class HermesModule : public nrt::Module,
@@ -47,6 +50,7 @@ class HermesModule : public nrt::Module,
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;
+    nrt::Parameter<nrt::real> itsTrimConstantParam;
     std::string itsVelocityCommand;
     nrt::Time itsLastCommandTime;
 };
