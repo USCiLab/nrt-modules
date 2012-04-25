@@ -1,0 +1,69 @@
+Module: 
+  general: 
+    displayname: Odom Calibrate 
+    classname: OdomCalibrate 
+    category: /Robotics/Utils
+    synopsis: This author is too lazy to write a synopsis! 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+
+ 
+    subscriberports: 
+      - name: VelocityCommand
+        inmsg: nrt::VelocityMessage
+        retmsg: void
+        description: "Velocity commanded to the robot."
+      - name: DepthImage
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "RGBD data for distance measurement."
+
+    checkerports: 
+
+    posterports: 
+ 
+  authorship: 
+    author: 
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon: icon.png 
+    screenshots: 
+    objectfile: build/OdomCalibrate.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
