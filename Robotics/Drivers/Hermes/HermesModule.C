@@ -13,6 +13,7 @@ HermesModule::HermesModule(std::string const& instanceName) :
   itsOdometryBaseFrame(BaseFrameParamDef, this),
   itsOdometryOdomFrame(OdomFrameParamDef, this),
   itsSerialDev(SerialDevParam, this, &HermesModule::serialDevCallback),
+  itsBatteryCutoffParam(BatteryCutoffParam, this),
   itsTrimConstantParam(TrimConstantParam, this)
 { }
 
@@ -139,7 +140,7 @@ void HermesModule::run()
         {
           packet.raw[i] = itsSerialPort->ReadByte();
         }
-        //NRT_INFO("Battery Level: " << packet.voltage << " Volts");
+        itsLastBatteryReading = packet.voltage;
       }
       else
         NRT_WARNING("Unrecognized data read from Hermes: " << dataIn);
@@ -151,8 +152,14 @@ void HermesModule::run()
       std::lock_guard<std::mutex> _(itsMtx);
       velocityCommand = itsVelocityCommand;
     }
-    itsSerialPort->Write(velocityCommand);
-    std::this_thread::sleep_until(endTime);
+
+    if (itsLastBatteryReading > itsBatteryCutoffParam.getVal())
+    {
+      itsSerialPort->Write(velocityCommand);
+      std::this_thread::sleep_until(endTime);
+    }
+    else
+      NRT_FATAL("Hermes reports low battery! (" << itsLastBatteryReading << ") Bailing out!");
   }
 }
 

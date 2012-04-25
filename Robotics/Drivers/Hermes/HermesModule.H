@@ -11,7 +11,6 @@ namespace hermes
 {
   NRT_DECLARE_TRANSFORM_UPDATE_PORT( OdometryUpdatePort );
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT( VelocityCommand, nrt::VelocityMessage, void, "The requested velocity of the robot" );
-
   NRT_DECLARE_MESSAGEPOSTER_PORT( CompassZ, nrt::Message<nrt::real>, void, "The Z component of Hermes' compass" );
   NRT_DECLARE_MESSAGEPOSTER_PORT( GyroZ, nrt::Message<nrt::real>, void, "The Z component of Hermes' gyroscope" );
 
@@ -28,6 +27,9 @@ namespace hermes
 
   static const nrt::ParameterDef<nrt::real> TrimConstantParam("trim",
       "A constant to adjust for drift between the left and right motors", 0.5, ParamCat);
+
+  static const nrt::ParameterDef<nrt::real> BatteryCutoffParam("batteryCutoff",
+      "The voltage below which Hermes will refuse to drive the motors.", 13.0, ParamCat);
 }
 
 class HermesModule : public nrt::Module,
@@ -51,8 +53,10 @@ class HermesModule : public nrt::Module,
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;
     nrt::Parameter<nrt::real> itsTrimConstantParam;
+    nrt::Parameter<nrt::real> itsBatteryCutoffParam;
     std::string itsVelocityCommand;
     nrt::Time itsLastCommandTime;
+    float itsLastBatteryReading;
 };
 
 #endif // HERMES_H 
