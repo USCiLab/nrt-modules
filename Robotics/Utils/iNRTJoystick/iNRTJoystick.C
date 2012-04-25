@@ -156,10 +156,10 @@ void iNRTJoystickModule::run()
       }
     }
   
-    Image<PixRGB<byte>> image(290, 60, ImageInitPolicy::Zeros);
-    nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
-    nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
-    itsDisplaySink->out(GenericImage(image), "Velocity Commander");
+    //Image<PixRGB<byte>> image(290, 60, ImageInitPolicy::Zeros);
+    //nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
+    //nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
+    //itsDisplaySink->out(GenericImage(image), "Velocity Commander");
 
     //if ( !(itsLinearVel == linear && itsAngularVel == angular) )
     {
