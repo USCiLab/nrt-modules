@@ -72,11 +72,13 @@ void HermesModule::onMessage(VelocityCommand msg)
   // 0   - full backwards
   // 64  - stopped
   // 128 - full forwards
-  nrt::byte leftspeed  = std::round(nrt::clamped((transvel + rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
-  nrt::byte rightspeed = std::round(nrt::clamped((transvel - rotwheeldist)*64.0/1.5, -64.0, 64.0)) + 64;
+  double const lefRaw  = (transvel+rotwheeldist) * (1 - itsTrimConstantParam.getVal() + 0.5);
+  double const rigRaw  = (transvel-rotwheeldist) * (0 + itsTrimConstantParam.getVal() + 0.5);
 
-  leftspeed  = std::round(nrt::clamped(0.5*leftspeed + leftspeed*(1 - itsTrimConstantParam.getVal()), -64.0, 64.0));
-  rightspeed = std::round(nrt::clamped(0.5*rightspeed + rightspeed*itsTrimConstantParam.getVal(), -64.0, 64.0));
+  nrt::byte const leftspeed  = std::round(nrt::clamped((lefRaw)*64.0/1.5, -64.0, 64.0)) + 64;
+  nrt::byte const rightspeed = std::round(nrt::clamped((rigRaw)*64.0/1.5, -64.0, 64.0)) + 64;
+
+  NRT_INFO("Setting velocity to " << leftspeed << ", " << rightspeed);
 
   std::lock_guard<std::mutex> _(itsMtx);
   itsVelocityCommand = 
@@ -86,7 +88,6 @@ void HermesModule::onMessage(VelocityCommand msg)
     leftspeed,
     rightspeed,
   };
-
   itsLastCommandTime = nrt::now();
 }
 
