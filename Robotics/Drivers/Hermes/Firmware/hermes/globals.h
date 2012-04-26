@@ -10,7 +10,7 @@
 
 #ifdef DEBUG
 #define LOG_RAW(message) Serial.write(message);
-#define LOG(message) { String msg = ""; Serial.println(msg + POS + message); }
+#define LOG(message) { String msg = ""; Serial.print(msg + POS); Serial.println(message); }
 #else
 #define LOG_RAW(message) ;
 #define LOG(message) ;

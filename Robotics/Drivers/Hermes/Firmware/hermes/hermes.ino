@@ -98,14 +98,14 @@ public:
   void tick()
   {
     RATE_LIMIT(200) {
-      battery->push(analogRead(A0));
+      battery->push(analogRead(BATTERY_IN));
       batteryPacket bp;
       bp.voltage = 0.020708*battery->median();
-    
-      if(bp.voltage < 13){
-        digitalWrite(DIGITAL_RELAY, LOW);
-      }
-        
+            
+      // if(bp.voltage < 13){
+      //         digitalWrite(DIGITAL_RELAY, LOW);
+      //       }
+      
       SERIALIZE(SEN_BATTERY, batteryPacket, bp);
     }
         
@@ -158,14 +158,12 @@ public:
   {
     if(newState == IDLE)
      {
-       LOG("Deactivating");
        motors.setSpeed(64,64);
        motors.disable();
      }
      if(newState == ACTIVE)
      {
        motors.enable();
-       LOG("Activating");
      }
      state = newState;
    }
@@ -198,13 +196,14 @@ public:
   {
     if(state == ACTIVE)
     {
-      if(millis() > (lastUpdate + WATCHDOG_THRESHOLD))
-        setState(IDLE);
+      if(millis()%65536 > (lastUpdate + WATCHDOG_THRESHOLD)){
+        setState(IDLE);        
+      }
     }
     
     if (Serial.available() > 0) {
       dispatch(Serial.read());
-      lastUpdate = millis();
+      lastUpdate = millis()%65536;
     } else {
     
     }
