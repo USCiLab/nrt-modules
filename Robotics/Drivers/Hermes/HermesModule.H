@@ -47,8 +47,10 @@ class HermesModule : public nrt::Module,
     void onMessage(hermes::VelocityCommand msg);
 
   private:
-    std::mutex itsMtx;
-    std::shared_ptr<SerialPort> itsSerialPort;
+    std::mutex itsSerialPortMtx;
+    std::mutex itsVelocityCommandMtx;
+    //std::shared_ptr<SerialPort> itsSerialPort;
+    SerialPort *itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;
