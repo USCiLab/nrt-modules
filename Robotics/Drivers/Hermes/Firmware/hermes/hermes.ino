@@ -100,7 +100,7 @@ public:
     RATE_LIMIT(200) {
       battery->push(analogRead(BATTERY_IN));
       batteryPacket bp;
-      bp.voltage = 0.020708*battery->median();
+      bp.voltage = 0.0214*battery->median();
             
       // if(bp.voltage < 13){
       //         digitalWrite(DIGITAL_RELAY, LOW);
