@@ -32,10 +32,10 @@ void VelocityCommanderModule::keyCallback(nrt::int32 key)
     case 'w':
       itsLinearVel += .01;
       break;
-    case 'a':
+    case 's':
       itsLinearVel -= .01;
       break;
-    case 's':
+    case 'a':
       itsAngularVel -= .01;
       break;
     case 'd':
@@ -60,7 +60,7 @@ void VelocityCommanderModule::run()
       angular = itsAngularVel;
     }
 
-    Image<PixRGB<byte>> image(640, 480, ImageInitPolicy::Zeros);
+    Image<PixRGB<byte>> image(300, 60, ImageInitPolicy::Zeros);
     nrt::drawText(image, Point2D<int32>(10, 10), nrt::sformat("Translational Vel: %f", linear));
     nrt::drawText(image, Point2D<int32>(10, 30), nrt::sformat("Rotational Vel   : %f", angular));
     itsDisplaySink->out(GenericImage(image), "Velocity Commander");

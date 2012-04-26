@@ -49,13 +49,13 @@ class HermesModule : public nrt::Module,
   private:
     std::mutex itsSerialPortMtx;
     std::mutex itsVelocityCommandMtx;
+    std::vector<nrt::byte> itsVelocityCommand;
     std::shared_ptr<SerialPort> itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;
     nrt::Parameter<nrt::real> itsTrimConstantParam;
     nrt::Parameter<nrt::real> itsBatteryCutoffParam;
-    std::string itsVelocityCommand;
     nrt::Time itsLastCommandTime;
     float itsLastBatteryReading;
 };
