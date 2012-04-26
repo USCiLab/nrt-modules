@@ -1,5 +1,4 @@
 #include "HermesModule.H"
-#include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
 #include "Firmware/hermes/serialdata.h"
 
@@ -36,42 +35,14 @@ void HermesModule::serialDevCallback(std::string const & dev)
   NRT_INFO(__LINE__);
   if(itsSerialPort)
   {
-    if (itsSerialPort->IsOpen())
-      itsSerialPort->Close();
-
-    //itsSerialPort.reset();
+    itsSerialPort->stop();
   }
+
   NRT_INFO(__LINE__);
 
-  try
-  {
-  NRT_INFO(__LINE__);
-    //itsSerialPort = std::make_shared<SerialPort>(dev);
-    itsSerialPort = new SerialPort(dev);
-    itsSerialPort->Open(
-        SerialPort::BAUD_9600,
-        SerialPort::CHAR_SIZE_8,
-        SerialPort::PARITY_NONE,
-        SerialPort::STOP_BITS_1,
-        SerialPort::FLOW_CONTROL_NONE);
-  NRT_INFO(__LINE__);
-  }
-  catch(SerialPort::AlreadyOpen & e)
-  {
-    // If it's already open, then who cares...
-  }
-  catch(SerialPort::OpenFailed & e)
-  {
-    throw exception::BadParameter(std::string("Open Failed: ") + e.what());
-  }
-  catch(std::invalid_argument & e)
-  {
-    throw exception::BadParameter(std::string("Invalid Argument: ") + e.what());
-  }
-  NRT_INFO(__LINE__);
+  itsSerialPort = new Serial();
+  itsSerialPort->configure(dev.c_str(), 9600);
 
-  if(!itsSerialPort->IsOpen())
-    throw exception::BadParameter("Failed to open serial port");
   NRT_INFO(__LINE__);
 
   // Send the Hermes "reset" command 
@@ -128,46 +99,46 @@ void HermesModule::run()
     auto endTime = nrt::now() + std::chrono::milliseconds(10);
 
     //read sensor readings from hermes;
-    while(itsSerialPort->IsDataAvailable() && running())
-    {
-      NRT_INFO("Hermes says: " << itsSerialPort->ReadLine());
-      //unsigned char dataIn = itsSerialPort->ReadByte();
-      //if(dataIn == SEN_COMPASS)
-      //{
-      //  compassPacket packet;
-      //  for(int i=0; i<sizeof(compassPacket); i++)
-      //  {
-      //    packet.raw[i] = itsSerialPort->ReadByte();
-      //  }
+    //while(itsSerialPort->IsDataAvailable() && running())
+    //{
+    //  NRT_INFO("Hermes says: " << itsSerialPort->ReadLine());
+    //  unsigned char dataIn = itsSerialPort->ReadByte();
+    //  if(dataIn == SEN_COMPASS)
+    //  {
+    //    compassPacket packet;
+    //    for(int i=0; i<sizeof(compassPacket); i++)
+    //    {
+    //      packet.raw[i] = itsSerialPort->ReadByte();
+    //    }
 
-      //  Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-      //  msg->value = packet.heading;
-      //  post<CompassZ>(msg);
-      //}
-      //else if(dataIn == SEN_GYRO) 
-      //{
-      //  gyroPacket packet;
-      //  for(int i=0; i<sizeof(gyroPacket); i++)
-      //  {
-      //    packet.raw[i] = itsSerialPort->ReadByte();
-      //  }
-      //  
-      //  //NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
-      //  Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-      //  msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
-      //  post<GyroZ>(msg);
-      //}
-      //else if(dataIn == SEN_BATTERY) {
-      //  batteryPacket packet;
-      //  for(int i=0; i<sizeof(batteryPacket); i++)
-      //  {
-      //    packet.raw[i] = itsSerialPort->ReadByte();
-      //  }
-      //  itsLastBatteryReading = packet.voltage;
-      //}
-      //else
-      //  NRT_WARNING("Unrecognized data read from Hermes: " << dataIn);
-    }
+    //    Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
+    //    msg->value = packet.heading;
+    //    post<CompassZ>(msg);
+    //  }
+    //  else if(dataIn == SEN_GYRO) 
+    //  {
+    //    gyroPacket packet;
+    //    for(int i=0; i<sizeof(gyroPacket); i++)
+    //    {
+    //      packet.raw[i] = itsSerialPort->ReadByte();
+    //    }
+    //    
+    //    //NRT_INFO("Data: X("<<packet.xyz[0]<<") Y("<<packet.xyz[1]<<") Z("<<packet.xyz[2]<<")");
+    //    Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
+    //    msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
+    //    post<GyroZ>(msg);
+    //  }
+    //  else if(dataIn == SEN_BATTERY) {
+    //    batteryPacket packet;
+    //    for(int i=0; i<sizeof(batteryPacket); i++)
+    //    {
+    //      packet.raw[i] = itsSerialPort->ReadByte();
+    //    }
+    //    itsLastBatteryReading = packet.voltage;
+    //  }
+    //  else
+    //    NRT_WARNING("Unrecognized data read from Hermes: " << dataIn);
+    //}
 
     //write velocity command to hermes;
     std::string velocityCommand;
@@ -178,13 +149,14 @@ void HermesModule::run()
 
     //if (itsLastBatteryReading > itsBatteryCutoffParam.getVal())
     {
-      itsSerialPort->Write(velocityCommand);
+      //itsSerialPort->Write(velocityCommand);
+      itsSerialPort->write(velocityCommand.c_str(), velocityCommand.size());
       std::this_thread::sleep_until(endTime);
     }
     //else
     //  NRT_FATAL("Hermes reports low battery! (" << itsLastBatteryReading << ") Bailing out!");
   }
-  itsSerialPort->Close();
+  itsSerialPort->stop();
 }
 
 NRT_REGISTER_MODULE(HermesModule);

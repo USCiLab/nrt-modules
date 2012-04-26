@@ -4,8 +4,7 @@
 #include <nrt/Core/Blackboard/Module.H>
 #include <nrt/Robotics/Messages/TransformMessage.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
-
-class SerialPort; 
+#include "Serial.H"
 
 namespace hermes
 {
@@ -50,7 +49,7 @@ class HermesModule : public nrt::Module,
     std::mutex itsSerialPortMtx;
     std::mutex itsVelocityCommandMtx;
     //std::shared_ptr<SerialPort> itsSerialPort;
-    SerialPort *itsSerialPort;
+    Serial *itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
     nrt::Parameter<std::string> itsOdometryOdomFrame;
     nrt::Parameter<std::string> itsSerialDev;

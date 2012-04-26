@@ -4,5 +4,5 @@ set(CMAKE_MODULE_PATH /usr/share/nrt/CMakeModules/)
 include(NRTHelpers)
 
 nrt_build_module(HermesModule
-	LINK_LIBS serial 
+  #LINK_LIBS serial 
   SOURCES HermesModule.C)
