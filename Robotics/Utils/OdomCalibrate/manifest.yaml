@@ -1,8 +1,8 @@
 Module: 
   general: 
-    displayname: Hermes 
-    classname: HermesModule 
-    category: /Robotics/Drivers
+    displayname: Odom Calibrate 
+    classname: OdomCalibrate 
+    category: /Robotics/Utils
     synopsis: This author is too lazy to write a synopsis! 
     description: > 
       This author is too lazy to write a description!
@@ -14,19 +14,15 @@ Module:
       - name: VelocityCommand
         inmsg: nrt::VelocityMessage
         retmsg: void
-        description: "The requested velocity of the robot"
+        description: "Velocity commanded to the robot."
+      - name: DepthImage
+        inmsg: GenericImageMessage
+        retmsg: void
+        description: "RGBD data for distance measurement."
 
     checkerports: 
 
     posterports: 
-      - name: CompassZ
-        outmsg: nrt::Message< nrt::real >
-        retmsg: void
-        description: "The Z component of Hermes' compass"
-      - name: GyroZ
-        outmsg: nrt::Message< nrt::real >
-        retmsg: void
-        description: "The Z component of Hermes' gyroscope"
  
   authorship: 
     author: 
@@ -46,7 +42,7 @@ Module:
   files: 
     icon: icon.png 
     screenshots: 
-    objectfile: build/HermesModule.so 
+    objectfile: build/OdomCalibrate.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 
