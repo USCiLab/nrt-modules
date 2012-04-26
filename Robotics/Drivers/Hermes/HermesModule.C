@@ -1,4 +1,5 @@
 #include "HermesModule.H"
+#include <SerialPort.h>
 #include <nrt/Core/Util/MathUtils.H>
 #include "Firmware/hermes/serialdata.h"
 
@@ -8,7 +9,7 @@ using namespace hermes;
 // ######################################################################
 HermesModule::HermesModule(std::string const& instanceName) :
   Module(instanceName),
-  itsSerialPort(NULL),
+  itsSerialPort(nullptr),
   itsOdometryBaseFrame(BaseFrameParamDef, this),
   itsOdometryOdomFrame(OdomFrameParamDef, this),
   itsSerialDev(SerialDevParam, this, &HermesModule::serialDevCallback),
@@ -19,7 +20,6 @@ HermesModule::HermesModule(std::string const& instanceName) :
 // ######################################################################
 HermesModule::~HermesModule()
 {
-  NRT_INFO(__LINE__);
 }
 
 // ######################################################################
@@ -27,26 +27,33 @@ void HermesModule::serialDevCallback(std::string const & dev)
 {
   std::lock_guard<std::mutex> _(itsSerialPortMtx);
 
-  NRT_INFO(__LINE__);
-
   if(dev == "")
     return;
 
-  NRT_INFO(__LINE__);
-  if(itsSerialPort)
+  if (itsSerialPort)
+    return;
+
+  try
   {
-    itsSerialPort->stop();
+    itsSerialPort = std::make_shared<SerialPort>(dev);
+    itsSerialPort->Open(
+        SerialPort::BAUD_9600,
+        SerialPort::CHAR_SIZE_8,
+        SerialPort::PARITY_NONE,
+        SerialPort::STOP_BITS_1,
+        SerialPort::FLOW_CONTROL_NONE);
+  }
+  catch(SerialPort::OpenFailed & e)
+  {
+    throw exception::BadParameter(std::string("Open Failed: ") + e.what());
+  }
+  catch (std::invalid_argument & e)
+  {
+    throw exception::BadParameter(std::string("Invalid argument: ") + e.what());
   }
 
-  NRT_INFO(__LINE__);
-
-  itsSerialPort = new Serial();
-  itsSerialPort->configure(dev.c_str(), 9600);
-
-  NRT_INFO(__LINE__);
-
-  // Send the Hermes "reset" command 
-  //itsSerialPort->WriteByte(CMD_RESET);
+  if (!itsSerialPort->IsOpen())
+    throw exception::BadParameter(std::string("Failed to open serial port."));
 }
 
 // ######################################################################
@@ -87,7 +94,6 @@ void HermesModule::onMessage(VelocityCommand msg)
 // ######################################################################
 void HermesModule::run()
 {
-  NRT_INFO(__LINE__);
   while (running())
   {
     if(!itsSerialPort) 
@@ -150,13 +156,14 @@ void HermesModule::run()
     //if (itsLastBatteryReading > itsBatteryCutoffParam.getVal())
     {
       //itsSerialPort->Write(velocityCommand);
-      itsSerialPort->write(velocityCommand.c_str(), velocityCommand.size());
+      //itsSerialPort->write(velocityCommand.c_str(), velocityCommand.size());
+      itsSerialPort->Write("ab--");
       std::this_thread::sleep_until(endTime);
     }
     //else
     //  NRT_FATAL("Hermes reports low battery! (" << itsLastBatteryReading << ") Bailing out!");
   }
-  itsSerialPort->stop();
+  itsSerialPort->Close();
 }
 
 NRT_REGISTER_MODULE(HermesModule);
