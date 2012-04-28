@@ -124,7 +124,7 @@ public:
     
       SERIALIZE(SEN_COMPASS, compassPacket, magPacket);
     }
-  
+    
     // Gyro
     RATE_LIMIT(100){
       if(gyro.isRawDataReady())
@@ -178,11 +178,7 @@ public:
       break;
     
       case(CMD_SETSPEED):
-        if(state == IDLE) 
-          waitForBytes(2); // Throw away 2 bytes
-        
-        if (!waitForBytes(2))
-          break;
+        waitForBytes(2);
         motors.setSpeed(Serial.read(), Serial.read());
       break;
     
