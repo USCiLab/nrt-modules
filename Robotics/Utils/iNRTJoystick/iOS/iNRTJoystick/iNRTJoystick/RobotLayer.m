@@ -72,6 +72,8 @@ int joystickRadius = 30;
 		[self scheduleUpdate];
         
         /* request the webview url */
+        
+        /* not yet implemented
         NSArray *array = [NSArray arrayWithObject:@"refresh"];
         NSError *error = nil;
         id data = [NSJSONSerialization dataWithJSONObject:array options:kNilOptions error:&error];
@@ -79,6 +81,7 @@ int joystickRadius = 30;
         SUDP_SendMsg([data bytes], [data length]);
         char buf[512];
         SUDP_RecvMsg(buf, 512);
+        */
     }
     return self;
 }

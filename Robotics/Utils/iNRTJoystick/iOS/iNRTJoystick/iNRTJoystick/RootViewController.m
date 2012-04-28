@@ -28,6 +28,7 @@
     
     glView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     [self.view insertSubview:glView atIndex:0];
+    [glView setMultipleTouchEnabled:YES];
     [[CCDirector sharedDirector] setOpenGLView:glView];
     [SceneManager goRobot];
 }

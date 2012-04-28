@@ -22,12 +22,13 @@ union batteryPacket {
 // Commands
 #define CMD_RESET     97
 #define CMD_SETSPEED  98 // {leftSpeed 0-127} {rightSpeed 0-127}
+
 union motorSpeedPacket { // TODO
   unsigned char raw[2];
-  struct values {
+  struct {
     unsigned char left;
     unsigned char right;
-  };
+  } values;
 };
 
 #endif // SERIALDATA_H

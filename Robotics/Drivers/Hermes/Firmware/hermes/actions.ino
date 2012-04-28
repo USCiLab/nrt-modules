@@ -13,7 +13,6 @@ bool waitForBytes(int aBytes)
   while(Serial.available() < aBytes)
   {
     // LOG(millis() - start);
-    ;
   }
   
   return true;
