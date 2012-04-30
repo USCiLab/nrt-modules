@@ -1,6 +1,6 @@
 Module: 
   general: 
-    displayname: i NRT Joystick 
+    displayname: iNRTJoystick 
     classname: iNRTJoystickModule 
     category: /Robotics/Utils
     synopsis: A simple module to allow joystick control of robots with the iNRTJoystick iOS app. 
