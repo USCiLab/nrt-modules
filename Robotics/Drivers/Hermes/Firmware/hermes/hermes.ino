@@ -32,6 +32,7 @@ public:
   */
   unsigned int microsFromByte(byte speed)
   {
+    return map(speed, 0, 128, 1000, 2000);
     if(speed > 64)
       return BOUND_STOP + (BOUND_FORWARD-BOUND_STOP) * ((float)(speed-64)/64);
     else
@@ -97,6 +98,7 @@ public:
   
   void tick()
   {
+    return;
     RATE_LIMIT(200) {
       battery->push(analogRead(BATTERY_IN));
       batteryPacket bp;
@@ -110,12 +112,12 @@ public:
     }
         
     RATE_LIMIT(200){
-      // Magnetometer
+      Magnetometer
       mag = magnetometer.ReadRawAxis();
       magPacket.heading = atan2(mag.YAxis, mag.XAxis);
       float declination = 219/1000.0; // Magnetic declination in Los Angeles
       magPacket.heading += declination;
-    
+      
       // Normalize 
       if(magPacket.heading < 0)
         magPacket.heading += 2*PI;
@@ -124,7 +126,6 @@ public:
     
       SERIALIZE(SEN_COMPASS, compassPacket, magPacket);
     }
-  
     // Gyro
     RATE_LIMIT(100){
       if(gyro.isRawDataReady())
@@ -177,18 +178,22 @@ public:
         setState(ACTIVE);
       break;
     
-      case(CMD_SETSPEED):
-        if(state == IDLE) 
-          waitForBytes(2); // Throw away 2 bytes
-        
-        if (!waitForBytes(2))
-          break;
-        motors.setSpeed(Serial.read(), Serial.read());
-      break;
+      case(CMD_SETSPEED): {
+        // Deserialize
+        motorSpeedPacket msp;
+        for(int i=0; i<sizeof(motorSpeedPacket); i++){
+          if(Serial.available() > 0)
+            msp.raw[i] = Serial.read();
+          else
+            LOG("Data not got!");
+        }
+
+        motors.setSpeed(msp.values.left, msp.values.right);
+      } break;
     
       default:
         LOG("Unrecognized cmd");
-      break;
+      break
     }
   }
   

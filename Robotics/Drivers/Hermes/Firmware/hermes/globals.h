@@ -4,7 +4,7 @@
 // 
 // Debug 
 // 
-// #define DEBUG
+#define DEBUG
 
 #define POS __FUNCTION__ + "() line " + __LINE__ + ":\t"
 
