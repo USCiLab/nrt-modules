@@ -11,7 +11,12 @@ using namespace webvisualizer;
 WebVisualizerModule::WebVisualizerModule(std::string const & instanceName) :
   Module(instanceName),
   itsPort(PortParam, this, &WebVisualizerModule::PortChangeCallback),
-  itsDocumentRoot(DocumentRootParam, this, &WebVisualizerModule::DocumentRootChangeCallback)
+  itsDocumentRoot(DocumentRootParam, this, &WebVisualizerModule::DocumentRootChangeCallback),
+  itsVoltage(0), 
+  itsCompass(0), 
+  itsGyro(0), 
+  itsLatitude(0), 
+  itsLongitude(0)
 { 
 }
 
@@ -35,7 +40,30 @@ void *WebVisualizerModule::HTTPRequestCallback(enum mg_event event,
     std::string uri(request_info->uri);
     if (uri == "/telemetry.json")
     {
-      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n%s", "{json data}");
+      // check for messages, update
+      if (auto batteryResult = check<webvisualizer::BatteryInfo>(nrt::MessageCheckerPolicy::Unseen))
+        itsVoltage = batteryResult.get()->value;
+
+      if (auto gyroResult = check<webvisualizer::GyroInfo>(nrt::MessageCheckerPolicy::Unseen))
+        itsGyro = gyroResult.get()->value;
+
+      if (auto compassResult = check<webvisualizer::CompassInfo>(nrt::MessageCheckerPolicy::Unseen))
+        itsCompass = compassResult.get()->value;
+
+      if (auto gpsResult = check<webvisualizer::GPSInfo>(nrt::MessageCheckerPolicy::Unseen))
+      {
+        itsLatitude = (gpsResult.get()->isNorth ? 1 : -1);
+        itsLatitude *= gpsResult.get()->latitude;
+
+        itsLongitude = (gpsResult.get()->isWest ? -1 : 1);
+        itsLongitude *= gpsResult.get()->longitude;
+      }
+
+      // '{"battery": 10.2, "gyro": 34, "compass": 3.4, "gps": ["38.02", "-128.99"]}'
+      std::stringstream ss; 
+      ss << "{\"battery\":" << itsVoltage << ", " << "\"gyro\":" << itsGyro << ", " << "\"compass\":" << itsCompass << ", " << "\"gps\": [" << itsLatitude << ", " << itsLongitude << "]}";
+
+      mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n%s", ss.str().c_str());
       return (void*)""; 
     }
   }

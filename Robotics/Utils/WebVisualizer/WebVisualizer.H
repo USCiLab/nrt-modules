@@ -4,10 +4,14 @@
 #include "mongoose/mongoose.h"
 #include <nrt/Core/Blackboard/Module.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
+#include <Messages/Sensors/GPSMessage.H>
 
 namespace webvisualizer 
 {
-  NRT_DECLARE_MESSAGEPOSTER_PORT( VelocityCommand, nrt::VelocityMessage, void, "A velocity to send" );
+  NRT_DECLARE_MESSAGECHECKER_PORT( BatteryInfo, nrt::Message<nrt::real>, "Hermes battery data.");
+  NRT_DECLARE_MESSAGECHECKER_PORT( CompassInfo, nrt::Message<nrt::real>, "Hermes compass data.");
+  NRT_DECLARE_MESSAGECHECKER_PORT( GyroInfo, nrt::Message<nrt::real>, "Hermes gyroscope data.");
+  NRT_DECLARE_MESSAGECHECKER_PORT( GPSInfo, nrt::GPSMessage, "Hermes GPS data.");
 
   static const nrt::ParameterCategory ParamCat("WebVisualizer Related Options");
 
@@ -16,9 +20,8 @@ namespace webvisualizer
   static const nrt::ParameterDef<std::string> DocumentRootParam("docroot", "The directory from whence to serve documents", "/home/sagar/workspace/nrt-modules/Robotics/Utils/WebVisualizer/html/", ParamCat);
 }
 
-//! 
-/*!  */
-class WebVisualizerModule: public nrt::Module
+class WebVisualizerModule: public nrt::Module,
+  public nrt::MessageChecker<webvisualizer::BatteryInfo, webvisualizer::CompassInfo, webvisualizer::GyroInfo, webvisualizer::GPSInfo>
 {
   public:
     WebVisualizerModule(std::string const& instanceName="");
@@ -40,6 +43,7 @@ class WebVisualizerModule: public nrt::Module
     nrt::Parameter<int> itsPort;
     nrt::Parameter<std::string> itsDocumentRoot;
     struct mg_context *itsContext;
+    float itsVoltage, itsCompass, itsGyro, itsLatitude, itsLongitude;
 };
 
 #endif // WEBVISUALIZER_H 
