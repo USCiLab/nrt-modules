@@ -13,7 +13,8 @@ namespace webvisualizer
   NRT_DECLARE_MESSAGECHECKER_PORT(CompassInfo, nrt::Message<nrt::real>, "Hermes compass data.");
   NRT_DECLARE_MESSAGECHECKER_PORT(GyroInfo, nrt::Message<nrt::real>, "Hermes gyroscope data.");
   NRT_DECLARE_MESSAGECHECKER_PORT(GPSInfo, nrt::GPSMessage, "Hermes GPS data.");
-  NRT_DECLARE_MESSAGECHECKER_PORT(ImageMessage, GenericImageMessage, "An image stream that will be published as an MJPEG stream.");
+  NRT_DECLARE_MESSAGECHECKER_PORT(ViewPortImage, GenericImageMessage, "An image to show in the background of the HUD");
+  NRT_DECLARE_MESSAGECHECKER_PORT(OccupancyImage, GenericImageMessage, "The occupancy grid.");
 
   static const nrt::ParameterCategory ParamCat("WebVisualizer Related Options");
   static const nrt::ParameterDef<int> PortParam("port", "The port to listen on", 9000, ParamCat);
@@ -26,7 +27,8 @@ class WebVisualizerModule: public nrt::Module,
     webvisualizer::CompassInfo,
     webvisualizer::GyroInfo,
     webvisualizer::GPSInfo,
-    webvisualizer::ImageMessage>
+    webvisualizer::ViewPortImage,
+    webvisualizer::OccupancyImage>
 {
   public:
     WebVisualizerModule(std::string const& instanceName="");

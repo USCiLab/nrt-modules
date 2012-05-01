@@ -4,44 +4,103 @@
     <script type="text/javascript" src="jquery.js"></script>
     <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false"></script>
     <script>
-      jQuery.fn.center = function () {
-        this.css("position","absolute");
-        this.css("top", (($(window).height() - this.outerHeight()) / 2) + 
-        $(window).scrollTop() + "px");
-        this.css("left", (($(window).width() - this.outerWidth()) / 2) + 
-        $(window).scrollLeft() + "px");
-        return this;
-      }
-
-      var map;
-      function initialize() {
+      $(document).ready(function() {
         var myOptions = {
-          zoom: 8,
-          center: new google.maps.LatLng(-34.397, 150.644),
+          zoom: 18,
+          center: new google.maps.LatLng(34.02, -118.285),
+          disableDefaultUI: true,
           mapTypeId: google.maps.MapTypeId.ROADMAP
         };
-        map = new google.maps.Map(document.getElementById('map_canvas'),
-            myOptions);
-      }
+        var map = new google.maps.Map(document.getElementById('map_canvas'), myOptions);
 
-      $(document).ready(function() {
-        initialize();
-
-        function update()
+        function updateTelemetry()
         {
           $.getJSON('/telemetry.json', function(data) {
             var degree = (180/Math.PI)*data['compass'];
             $("#compass").css('-webkit-transform', 'rotate('+degree+'deg)');
             map.panTo(new google.maps.LatLng(data['gps'][0], data['gps'][1]));
-          });
 
-          //// also reload the image
-          var d = new Date();
-          $("#image").attr("src", "/image.jpg?" + d.getTime());
-          setTimeout(update, 100);
+            setBattery(0, (data['battery']-13)/(16.5-13));
+            $("#voltage").text(data['battery'] + "V");
+          });
+          setTimeout(updateTelemetry, 1000);
         }
-        update();
+
+        function updateOccupancy()
+        {
+          var d = new Date();
+          $("#occupancy").attr("src", "/occupancy.jpg?" + d.getTime());
+          setTimeout(updateOccupancy, 100);
+        }
+        function updateViewport()
+        {
+          var d = new Date();
+          $("#viewport").attr("src", "/viewport.jpg?" + d.getTime());
+          setTimeout(updateViewport, 100);
+        }
+        updateTelemetry();
+        updateOccupancy();
+        updateViewport();
       });
+
+      function setBattery(time, percentage){
+        if(percentage < 0)
+          percentage = 0;
+        if(percentage > 1)
+          percentage = 1;
+
+        var canvas=$('#battery_icon').get(0);
+        if (!canvas.getContext)
+          return;
+        var c=canvas.getContext('2d');
+        c.clearRect(0,0,40,40);
+        //Battery outline
+        c.fillStyle="black";
+        c.strokeStyle="black";
+        c.globalAlpha="1.0";
+        c.lineWidth="1";
+        c.lineCap="butt";
+        c.lineJoin="round";
+        c.mitterLimit="1";
+        c.font="normal normal 12 Courier";
+
+        if(percentage < .25)
+          c.strokeStyle="#FF0000";
+        else
+          c.strokeStyle="white";
+
+        c.lineWidth="0.75";
+        c.beginPath();
+        c.moveTo(36.78,18.46);
+        c.lineTo(34.99,18.46);
+        c.lineTo(34.99,12.69);
+        c.lineTo(3.22,12.69);
+        c.lineTo(3.22,27.31);
+        c.lineTo(34.99,27.31);
+        c.lineTo(34.99,21.54);
+        c.lineTo(36.78,21.54);
+        c.closePath();
+        c.stroke();
+
+        //Battery fill
+        if(percentage < .25)
+          c.fillStyle="#FF0000";
+        else
+          c.fillStyle="white";
+
+        c.lineWidth="1";
+        c.fillRect(5,15,28*percentage,10);
+
+        if(percentage < .05){
+          //Battery slash
+          c.lineWidth="2";
+          c.beginPath();
+          c.moveTo(30,5);
+          c.lineTo(0,30);
+          c.closePath();
+          c.stroke();
+        }
+      }
     </script>
 
     <style type="text/css">
@@ -53,31 +112,83 @@
 
       #map {
         position: absolute;
-        top: 0px; right: 0px;
-        width: 250px;
+        top: 10px; right: 10px;
+        box-shadow: 0px 0px 25px 5px #000;
+        opacity: 0.5;
+      }
+      
+      #compass {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 50px;
+        height: 50px;
+        margin-left: -25px;
+        margin-top: -25px;
       }
 
       #map_canvas {
-        position: absolute;
         width: 200px;
         height: 200px;
-        right: 0px;
       }
       
-      #image {
+      #viewport {
         display: block;
         height: 100%;
         margin-left: auto;
         margin-right: auto;
         box-shadow: 0px 0px 25px 5px #000;
       }
+
+      #occupancy {
+        position: absolute;
+        left: 10; top: 10;
+        width: 200px; height: 200px;
+        background: #080;
+        box-shadow: 0px 0px 25px 5px #000;
+        -webkit-border-radius: 150px;
+        opacity: 0.5;
+      }
+
+      #battery {
+        position:absolute;
+        top: 10;
+        left: 50%;
+        width: 120px;
+        height: 40px;
+        background-color: rgba(0, 0, 0, 0.6);
+        -webkit-border-radius: 10px;
+      }
+      
+      #battery_icon {
+        position: absolute;
+        margin-left: auto;
+        margin-right: auto;
+        left: 12px;
+        width: 40px;
+      }
+
+      #voltage {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        margin-top: -8px;
+        color: #fff;
+        font-family: helvetica;
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
-    <img src="/image.jpg" id="image"/>
+    <img src="/viewport.jpg" id="viewport"/>
+    <div id="battery">
+      <canvas id="battery_icon" width="40" height="40"></canvas>
+      <div id="voltage">15.5</div>
+    </div>
+    <img id="occupancy" src="/occupancy.jpg"/>
     <div id="map">
       <div id="map_canvas"></div>
-      <img id="compass" src="compass.png">
+      <img id="compass" src="compass.png"/>
     </div>
   </body>
 </html>
