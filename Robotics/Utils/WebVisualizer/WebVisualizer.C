@@ -1,6 +1,7 @@
 #include "WebVisualizer.H"
 #include "mongoose/mongoose.h"
 #include <nrt/Core/Util/StringUtil.H>
+#include <nrt/ImageProc/IO/ImageSink/ImageWriters/JpgImageWriter.H>
 #include <iostream>
 #include <fstream>
 
@@ -12,6 +13,7 @@ WebVisualizerModule::WebVisualizerModule(std::string const & instanceName) :
   Module(instanceName),
   itsPort(PortParam, this, &WebVisualizerModule::PortChangeCallback),
   itsDocumentRoot(DocumentRootParam, this, &WebVisualizerModule::DocumentRootChangeCallback),
+  itsQualityParam(QualtiyParam, this),
   itsVoltage(0), 
   itsCompass(0), 
   itsGyro(0), 
@@ -59,11 +61,22 @@ void *WebVisualizerModule::HTTPRequestCallback(enum mg_event event,
         itsLongitude *= gpsResult.get()->longitude;
       }
 
-      // '{"battery": 10.2, "gyro": 34, "compass": 3.4, "gps": ["38.02", "-128.99"]}'
-      std::stringstream ss; 
-      ss << "{\"battery\":" << itsVoltage << ", " << "\"gyro\":" << itsGyro << ", " << "\"compass\":" << itsCompass << ", " << "\"gps\": [" << itsLatitude << ", " << itsLongitude << "]}";
+      // '{"battery": 10.2, "gyro": 34, "compass": 3.4, "gps": [38.02, -128.99]}'
+      std::stringstream ss;
+      ss << "{\"battery\": " << itsVoltage << ", \"gyro\": " << itsGyro << ", \"compass\": " << itsCompass << ", \"gps\": [" << itsLatitude << ", " << itsLongitude << "]}\r\n";
 
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n%s", ss.str().c_str());
+      return (void*)""; 
+    }
+    else if (uri == "/image.jpg")
+    {
+      if (auto imageResult = check<webvisualizer::ImageMessage>(nrt::MessageCheckerPolicy::Any))
+      {
+        //mg_printf(conn, "HTTP Code: 200 OK\r\n");
+        std::vector<byte> imgData = nrt::compressJPG(imageResult.get()->img, itsQualityParam.getVal());
+        //mg_printf(conn, "Content-Type: image/jpeg\r\nContent-Length: %d\r\n\r\n", imgData.size());
+        mg_write(conn, &imgData[0], imgData.size());
+      }
       return (void*)""; 
     }
   }
