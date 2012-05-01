@@ -5,6 +5,7 @@
 #include <nrt/Robotics/Messages/TransformMessage.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
 #include <boost/asio/serial_port.hpp>
+#include "Firmware/hermes/serialdata.h"
 
 namespace hermes
 {
@@ -25,7 +26,7 @@ namespace hermes
       "The serial device file", "", ParamCat);
 
   static const nrt::ParameterDef<nrt::real> TrimConstantParam("trim",
-      "A constant to adjust for drift between the left and right motors", 0.5, ParamCat);
+      "A constant to adjust for drift between the left and right motors", 0.52, ParamCat);
 
   static const nrt::ParameterDef<nrt::real> BatteryCutoffParam("batteryCutoff",
       "The voltage below which Hermes will refuse to drive the motors.", 13.0, ParamCat);
@@ -46,10 +47,13 @@ class HermesModule : public nrt::Module,
     void onMessage(hermes::VelocityCommand msg);
 
   private:
+    std::vector<nrt::byte> serialRead(int ms, size_t length);
+    void processMessageBuffer();
+
     std::mutex itsSerialPortMtx;
     std::mutex itsVelocityCommandMtx;
     std::vector<nrt::byte> itsMessageBuffer;
-    std::vector<nrt::byte> itsVelocityCommand;
+    motorSpeedPacket itsVelocityCommand;
     boost::asio::io_service itsIO;
     boost::asio::serial_port itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;
