@@ -4,7 +4,7 @@
 // 
 // Debug 
 // 
-//#define DEBUG
+// #define DEBUG
 
 #define POS __FUNCTION__ + "() line " + __LINE__ + ":\t"
 
@@ -26,6 +26,12 @@
 #define RATE_LIMIT(duration) if(millis() % duration == 0)
 #else
 #define RATE_LIMIT(duration) if(millis() % 2000 == 0)
+#endif
+
+#ifndef DEBUG
+#define MAX_SERIAL_DELAY 100
+#else
+#define MAX_SERIAL_DELAY 500
 #endif
 
 #endif

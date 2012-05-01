@@ -33,10 +33,6 @@ public:
   unsigned int microsFromByte(byte speed)
   {
     return map(speed, 0, 128, 1000, 2000);
-    if(speed > 64)
-      return BOUND_STOP + (BOUND_FORWARD-BOUND_STOP) * ((float)(speed-64)/64);
-    else
-      return BOUND_BACKWARD + (BOUND_STOP-BOUND_BACKWARD) * ((float)(speed)/64);
   }
   
   void setSpeed(int leftSpeed, int rightSpeed)
@@ -53,7 +49,7 @@ public:
     int writeLeft = (leftSpeed == 64) ? 0 : microsFromByte(leftSpeed);
     int writeRight = (rightSpeed == 64) ? 0 : microsFromByte(rightSpeed);
     LOG(leftSpeed);
-    Left.writeMicroseconds(microsFromByte(leftSpeed-6));
+    Left.writeMicroseconds(microsFromByte(leftSpeed-6)); // 6 is an offset for these defective motor drivers
     Right.writeMicroseconds(microsFromByte(rightSpeed-6));
   }
   
@@ -98,21 +94,19 @@ public:
   
   void tick()
   {
-    return;
     RATE_LIMIT(200) {
       battery->push(analogRead(BATTERY_IN));
       batteryPacket bp;
       bp.voltage = 0.0214*battery->median();
             
       // if(bp.voltage < 13){
-      //         digitalWrite(DIGITAL_RELAY, LOW);
-      //       }
+      //   digitalWrite(DIGITAL_RELAY, LOW);
+      // }
       
       SERIALIZE(SEN_BATTERY, batteryPacket, bp);
     }
         
     RATE_LIMIT(200){
-      Magnetometer
       mag = magnetometer.ReadRawAxis();
       magPacket.heading = atan2(mag.YAxis, mag.XAxis);
       float declination = 219/1000.0; // Magnetic declination in Los Angeles
@@ -126,14 +120,17 @@ public:
     
       SERIALIZE(SEN_COMPASS, compassPacket, magPacket);
     }
+    
+    return;
+    
     // Gyro
     RATE_LIMIT(100){
       if(gyro.isRawDataReady())
       {
         gyroPacket packet;
-        gyro.readGyro(packet.xyz);
-    
-        SERIALIZE(SEN_GYRO, gyroPacket, packet);
+        // gyro.readGyro(packet.xyz);
+        //   
+        // SERIALIZE(SEN_GYRO, gyroPacket, packet);
       }
     }
   }
@@ -178,22 +175,39 @@ public:
         setState(ACTIVE);
       break;
     
-      case(CMD_SETSPEED): {
+      case(CMD_SETSPEED):
+      {
         // Deserialize
         motorSpeedPacket msp;
+        bool failed = false;
         for(int i=0; i<sizeof(motorSpeedPacket); i++){
           if(Serial.available() > 0)
             msp.raw[i] = Serial.read();
           else
-            LOG("Data not got!");
+          {
+            int start = millis();
+            bool didRead = false;
+            while(start < (millis() + MAX_SERIAL_DELAY)) {
+              if(Serial.available() > 0){
+                msp.raw[i] = Serial.read();
+                didRead = true;
+                break;
+              }
+            }
+            if(!didRead) failed = true;
+          }
+        }
+        if(failed) {
+          msp.values.left = 64;
+          msp.values.right = 64;
         }
 
         motors.setSpeed(msp.values.left, msp.values.right);
-      } break;
+      } break; // case(CMD_SETSPEED)
     
       default:
         LOG("Unrecognized cmd");
-      break
+      break;
     }
   }
   
@@ -224,7 +238,7 @@ void setup()
   Serial.begin(BAUDRATE);
   Wire.begin();
   hermes = new Hermes();
-      
+  
   // Power computer
   digitalWrite(DIGITAL_RELAY, HIGH);
 }
