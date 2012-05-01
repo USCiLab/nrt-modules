@@ -1,12 +1,11 @@
 Module: 
   general: 
-    displayname: iNRTJoystick 
-    classname: iNRTJoystickModule 
+    displayname: Number Poster 
+    classname: NumberPosterModule 
     category: /Robotics/Utils
-    synopsis: A simple module to allow joystick control of robots with the iNRTJoystick iOS app. 
+    synopsis: This author is too lazy to write a synopsis! 
     description: > 
-      This module simply opens a new GTK window, and allows users to use the
-      iNRTJoystick controller to send out velocity command messages.
+      This author is too lazy to write a description!
  
     keywords: 
 
@@ -16,10 +15,10 @@ Module:
     checkerports: 
 
     posterports: 
-      - name: VelocityCommand
-        outmsg: nrt::VelocityMessage
+      - name: OutputMessage
+        outmsg: nrt::Message< nrt::real >
         retmsg: void
-        description: "A velocity to send"
+        description: "The port where numbers go out."
  
   authorship: 
     author: 
@@ -39,7 +38,7 @@ Module:
   files: 
     icon:  
     screenshots: 
-    objectfile: build/iNRTJoystick.so 
+    objectfile: build/NumberPoster.so 
     docfiles: 
     sharedfiles: 
     otherfiles: 

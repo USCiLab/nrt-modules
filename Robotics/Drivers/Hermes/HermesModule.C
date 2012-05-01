@@ -1,9 +1,9 @@
 #include "HermesModule.H"
 #include <nrt/Core/Util/MathUtils.H>
-#include "Firmware/hermes/serialdata.h"
 #include <boost/asio/write.hpp>
 #include <boost/asio/read.hpp>
-
+#include <boost/asio/deadline_timer.hpp>
+#include <boost/date_time/posix_time/posix_time_types.hpp>
 
 using namespace nrt;
 using namespace hermes; 
@@ -19,7 +19,8 @@ HermesModule::HermesModule(std::string const& instanceName) :
   itsBatteryCutoffParam(BatteryCutoffParam, this),
   itsTrimConstantParam(TrimConstantParam, this)
 {
-
+  itsVelocityCommand.raw[0] = 0;
+  itsVelocityCommand.raw[1] = 0;
 }
 
 // ######################################################################
@@ -77,13 +78,138 @@ void HermesModule::onMessage(VelocityCommand msg)
   NRT_INFO("Setting velocity to " << leftspeed << ", " << rightspeed);
   {
     std::lock_guard<std::mutex> _(itsVelocityCommandMtx);
-    itsVelocityCommand =
+    itsVelocityCommand.values.left = leftspeed;
+    itsVelocityCommand.values.right = rightspeed;
+  }
+}
+
+// ######################################################################
+std::vector<byte> HermesModule::serialRead(const int ms, const size_t length)
+{
+  std::vector<byte> read_buffer(length);
+  std::vector<byte> retn_buffer(length);
+  bool readComplete = false, timedOut = false;
+  int bytesRead = 0;
+
+  auto finishedRead = [&](const boost::system::error_code & ec, const size_t bytes_transferred)
+  {
+    if (ec.value() != 0)
     {
-      nrt::byte(CMD_RESET),
-      nrt::byte(CMD_SETSPEED),
-      leftspeed,
-      rightspeed,
-    };
+      if (ec.value() != boost::asio::error::operation_aborted)
+        NRT_WARNING("Read had some kind of error: " << ec.value());
+      readComplete = false;
+    }
+    else
+    {
+      readComplete = true;
+      bytesRead = bytes_transferred;
+    }
+  };
+
+  auto finishedTimer = [&](const boost::system::error_code & ec)
+  {
+    if (ec.value() != 0)
+    {
+      if (ec.value() != boost::asio::error::operation_aborted)
+        NRT_WARNING("Timer had some kind of error: " << ec.value());
+      timedOut = false;
+    }
+    else
+    {
+      timedOut = true;
+    }
+  };
+
+  deadline_timer timer( itsIO );
+  timer.expires_from_now(boost::posix_time::millisec(ms));
+  timer.async_wait( finishedTimer );
+
+  itsSerialPort.async_read_some( boost::asio::buffer(read_buffer), finishedRead );
+  itsIO.reset();
+
+  while (itsIO.run_one())
+  {
+    if (timedOut)
+      itsSerialPort.cancel();
+    else if (readComplete)
+      timer.cancel();
+    
+    retn_buffer.insert(retn_buffer.end(), read_buffer.begin(), read_buffer.begin() + bytesRead);
+  }
+  return retn_buffer;
+}
+
+// ######################################################################
+void HermesModule::processMessageBuffer()
+{
+  static std::vector<byte> dataCodes = {SEN_BATTERY, SEN_COMPASS, SEN_GYRO};
+
+  while (itsMessageBuffer.size() > 0)
+  {
+    std::vector<byte>::iterator firstCode =
+      std::find_first_of(itsMessageBuffer.begin(), itsMessageBuffer.end(), dataCodes.begin(), dataCodes.end());
+
+    itsMessageBuffer.erase(itsMessageBuffer.begin(), firstCode);
+
+    if (itsMessageBuffer[0] == SEN_BATTERY)
+    {
+      if (itsMessageBuffer.size() < sizeof(batteryPacket)+2)
+        return;
+
+      batteryPacket packet;
+      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(batteryPacket)+1, &packet.raw[0]);
+      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(batteryPacket), 0, std::bit_xor<byte>());
+
+      if(itsMessageBuffer[sizeof(batteryPacket)+1] == checksum)
+      {
+        itsLastBatteryReading = packet.voltage;
+        NRT_INFO("Got Battery: " << packet.voltage);
+
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(batteryPacket) + 2);
+      }
+      else
+      {
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
+      }
+    }
+    else if (itsMessageBuffer[0] == SEN_COMPASS)
+    {
+      if (itsMessageBuffer.size() < sizeof(compassPacket)+2)
+        return;
+
+      compassPacket packet;
+      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(compassPacket)+1, &packet.raw[0]);
+      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(compassPacket), 0, std::bit_xor<byte>());
+
+      if(itsMessageBuffer[sizeof(compassPacket)+1] == checksum)
+      {
+        NRT_INFO("Got Compass heading: " << packet.heading);
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(compassPacket) + 2);
+      }
+      else
+      {
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
+      }
+    }
+    else if (itsMessageBuffer[0] == SEN_GYRO)
+    {
+      if (itsMessageBuffer.size() < sizeof(gyroPacket)+2)
+        return;
+
+      gyroPacket packet;
+      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(gyroPacket)+1, &packet.raw[0]);
+      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(gyroPacket), 0, std::bit_xor<byte>());
+
+      if(itsMessageBuffer[sizeof(gyroPacket)+1] == checksum)
+      {
+        NRT_INFO("Got gyro: " << packet.xyz[2]);
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(gyroPacket) + 2);
+      }
+      else
+      {
+        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
+      }
+    }
   }
 }
 
@@ -101,126 +227,20 @@ void HermesModule::run()
 
     auto endTime = nrt::now() + std::chrono::milliseconds(100);
 
-    //write velocity command to hermes;
-    std::vector<byte> velocityCommand;
+    std::vector<byte> data = serialRead(10, 20);
+    itsMessageBuffer.insert(itsMessageBuffer.end(), data.begin(), data.end());
+
+    processMessageBuffer();
+    
+    // write velocity command to hermes;
+    std::vector<byte> velocityCommand = {CMD_RESET, CMD_SETSPEED};
     {
       std::lock_guard<std::mutex> _(itsVelocityCommandMtx);
-      velocityCommand = itsVelocityCommand;
+      velocityCommand.push_back(itsVelocityCommand.values.left);
+      velocityCommand.push_back(itsVelocityCommand.values.right);
     }
 
-    //if (itsLastBatteryReading < itsBatteryCutoffParam.getVal())
-    //  NRT_WARNING("Hermes reports low battery! (" << itsLastBatteryReading << ") Bailing out!");
-
-
-    bool reading = true;
-    std::vector<byte> read_buffer(10);
-    auto readHandler = [&](const boost::system::error_code& error, size_t bytes_transferred)
-    {
-      if(error && error.value() != 2) // What the hell is 2?
-      {
-        //NRT_INFO("Read Handler Error: " << error.message() << " " << error.default_error_condition().value());
-        reading = false;
-      }
-      else
-      {
-        itsMessageBuffer.insert(itsMessageBuffer.end(), read_buffer.begin(), read_buffer.begin()+bytes_transferred);
-        NRT_INFO("Message Buffer Size: " << itsMessageBuffer.size());
-
-        while(itsMessageBuffer.size() && nrt::now() < endTime)
-        {
-          while(itsMessageBuffer.size() 
-              //&& itsMessageBuffer[0] != SEN_COMPASS
-              //&& itsMessageBuffer[0] != SEN_GYRO
-              && itsMessageBuffer[0] != SEN_BATTERY)
-            itsMessageBuffer.erase(itsMessageBuffer.begin());
-
-          if(itsMessageBuffer.size() == 0) return;
-
-          //if(itsMessageBuffer[0] == SEN_COMPASS && itsMessageBuffer.size() >= sizeof(compassPacket) + 1)
-          //{
-          //  compassPacket packet;
-          //  std::copy(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(compassPacket), &packet.raw[0]);
-          //  byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(compassPacket), 0, std::bit_xor<byte>());
-          //  
-          //  if(itsMessageBuffer[sizeof(compassPacket)] == checksum)
-          //  {
-          //    Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-          //    msg->value = packet.heading;
-          //    post<CompassZ>(msg);
-          //    NRT_INFO("Got Compass: " << packet.heading);
-          //    itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(compassPacket) + 2);
-          //  }
-          //  else
-          //  {
-          //    NRT_WARNING("Bad Checksum");
-          //    for(int i=0; i<=sizeof(compassPacket)+1; ++i)
-          //      std::cout << (int)itsMessageBuffer[i] << " ";
-          //    std::cout << std::endl;
-          //    itsMessageBuffer.erase(itsMessageBuffer.begin());
-          //  }
-          //}
-          //else if(itsMessageBuffer[0] == SEN_GYRO && itsMessageBuffer.size() >= sizeof(gyroPacket) + 1)
-          //{
-          //  gyroPacket packet;
-          //  std::copy(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(gyroPacket), &packet.raw[0]);
-          //  byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(gyroPacket), 0, std::bit_xor<byte>());
-
-          //  if(itsMessageBuffer[sizeof(gyroPacket)] == checksum)
-          //  {
-          //    Message<nrt::real>::unique_ptr msg(new Message<nrt::real>);
-          //    msg->value = (NRT_D_PI/180.0) * packet.xyz[2];
-          //    post<GyroZ>(msg);
-          //    NRT_INFO("Got Gyro: " << packet.xyz[2]);
-          //    itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(gyroPacket) + 1);
-          //  }
-          //  else
-          //  {
-          //    NRT_WARNING("Bad Checksum");
-          //    for(int i=0; i<=sizeof(gyroPacket); ++i)
-          //      std::cout << (int)itsMessageBuffer[i] << " ";
-          //    std::cout << std::endl;
-          //    itsMessageBuffer.erase(itsMessageBuffer.begin());
-          //  }
-          //}
-          if(itsMessageBuffer[0] == SEN_BATTERY && itsMessageBuffer.size() >= sizeof(batteryPacket) + 2)
-          {
-            batteryPacket packet;
-            std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(batteryPacket)+1, &packet.raw[0]);
-            byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(batteryPacket), 0, std::bit_xor<byte>());
-
-            if(itsMessageBuffer[sizeof(batteryPacket)+1] == checksum)
-            {
-              itsLastBatteryReading = packet.voltage;
-              NRT_INFO("Got Battery: " << packet.voltage);
-
-              itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(batteryPacket) + 2);
-            }
-            else
-            {
-              NRT_WARNING("Bad Checksum");
-              for(int i=0; i<sizeof(batteryPacket)+2; ++i)
-                std::cout << (int)itsMessageBuffer[i] << " ";
-              std::cout << std::endl;
-              itsMessageBuffer.erase(itsMessageBuffer.begin());
-            }
-          }
-        }
-        reading = false;
-      }
-    };
-
-    boost::asio::async_read(itsSerialPort, boost::asio::buffer(read_buffer, 10), readHandler);
-
-    itsIO.reset();
-    while(reading && (nrt::now() < endTime))
-    {
-      itsIO.poll();
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-    }
-    //itsSerialPort.cancel();
-
-    boost::asio::write(itsSerialPort, boost::asio::buffer(velocityCommand, 4));
-
+    boost::asio::write(itsSerialPort, boost::asio::buffer(velocityCommand));
     std::this_thread::sleep_until(endTime);
   }
 }
