@@ -33,6 +33,8 @@ screen.nodelay(1)
 screen.border(0)
 
 speed = 25
+left = 0
+right = 0
 
 running = True
 while running:
