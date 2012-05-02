@@ -17,20 +17,21 @@ except:
   print "Could not open serial port: " + options.dev
   exit()
 
-def move(left, right):
-  cmd = bytearray(4)
-  cmd[0] = max(0, min(255, int(255))
-  cmd[1] = max(0, min(255, int((left  / 100.0) * 64))
-  cmd[2] = max(0, min(255, int((right / 100.0) * 64))
-  cmd[3] = int(0 ^ cmd[0] ^ cmd[1] ^ cmd[2])
-  ser.write(cmd)
-
 screen = curses.initscr()
 curses.noecho()
 curses.cbreak()
 screen.keypad(1);
 screen.nodelay(1)
 screen.border(0)
+
+def move(left, right):
+  cmd = bytearray(4)
+  cmd[0] = int(255)
+  cmd[1] = max(0, min(255, int(left  / 100.0 * 128 + 128)))
+  cmd[2] = max(0, min(255, int(right / 100.0 * 128 + 128)))
+  cmd[3] = cmd[0] ^ cmd[1] ^ cmd[2]
+  screen.addstr(10, 1, "Writing: " + ''.join([str(x)+" " for x in cmd]) + '                     ')
+  ser.write(cmd)
 
 speed = 25
 left = 0
@@ -53,26 +54,28 @@ while running:
   if cmd == ord('q'):
     running = False
   elif cmd == ord('w'):
-    left  = speed
-    right = speed
-  elif cmd == ord('a'):
-    left  = -speed
-    right = -speed
+    left  = 1
+    right = 1
   elif cmd == ord('s'):
-    left  = -speed
-    right = speed
+    left  = -1
+    right = -1
+  elif cmd == ord('a'):
+    left  = -1
+    right = 1
   elif cmd == ord('d'):
-    left  = speed
-    right = -speed
+    left  = 1
+    right = -1
   elif cmd == ord(' '):
     left  = 0
     right = 0
+    speed = 0
   elif cmd == ord('+') or cmd == ord('='):
-    speed += 1
+    speed += 10
   elif cmd == ord('-') or cmd == ord('_'):
-    speed -= 1
+    speed -= 10
 
-  move(left, right)
+  speed = max(0, min(100, speed))
+  move(left*speed, right*speed)
 
   screen.refresh()
   time.sleep(.1)
