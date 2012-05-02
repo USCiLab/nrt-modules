@@ -19,9 +19,9 @@ except:
 
 def move(left, right):
   cmd = bytearray(4)
-  cmd[0] = int(255)
-  cmd[1] = int((left  / 100.0) * 64)
-  cmd[2] = int((right / 100.0) * 64)
+  cmd[0] = max(0, min(255, int(255))
+  cmd[1] = max(0, min(255, int((left  / 100.0) * 64))
+  cmd[2] = max(0, min(255, int((right / 100.0) * 64))
   cmd[3] = int(0 ^ cmd[0] ^ cmd[1] ^ cmd[2])
   ser.write(cmd)
 
