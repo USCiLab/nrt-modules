@@ -17,8 +17,6 @@ except:
   print "Could not open serial port: " + options.dev
   exit()
 
-
-
 def move(left, right):
   cmd = bytearray(4)
   cmd[0] = int(255)
@@ -53,17 +51,26 @@ while running:
   if cmd == ord('q'):
     running = False
   elif cmd == ord('w'):
-    move(speed, speed)
+    left  = speed
+    right = speed
   elif cmd == ord('a'):
-    move(-speed, -speed)
+    left  = -speed
+    right = -speed
   elif cmd == ord('s'):
-    move(speed, -speed)
+    left  = -speed
+    right = speed
   elif cmd == ord('d'):
-    move(-speed, speed)
+    left  = speed
+    right = -speed
+  elif cmd == ord(' '):
+    left  = 0
+    right = 0
   elif cmd == ord('+') or cmd == ord('='):
     speed += 1
   elif cmd == ord('-') or cmd == ord('_'):
     speed -= 1
+
+  move(left, right)
 
   screen.refresh()
   time.sleep(.1)
