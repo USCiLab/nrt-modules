@@ -165,6 +165,9 @@ void HermesModule::processMessageBuffer()
         itsLastBatteryReading = packet.voltage;
         NRT_INFO("Got Battery: " << packet.voltage);
 
+        std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(packet.voltage));
+        post<hermes::Battery>(msg);
+
         itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(batteryPacket) + 2);
       }
       else
@@ -184,6 +187,9 @@ void HermesModule::processMessageBuffer()
       if(itsMessageBuffer[sizeof(compassPacket)+1] == checksum)
       {
         NRT_INFO("Got Compass heading: " << packet.heading);
+
+        std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(packet.heading));
+        post<hermes::CompassZ>(msg);
         itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(compassPacket) + 2);
       }
       else
@@ -203,6 +209,10 @@ void HermesModule::processMessageBuffer()
       if(itsMessageBuffer[sizeof(gyroPacket)+1] == checksum)
       {
         NRT_INFO("Got gyro: " << packet.xyz[2]);
+
+        std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(packet.xyz[2]));
+        post<hermes::GyroZ>(msg);
+
         itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(gyroPacket) + 2);
       }
       else
