@@ -1,8 +1,8 @@
-#include <Wire.h>
+#include "I2C.h"
 #include <Servo.h>
 #include "Arduino.h"
 #include "HMC5883L.h"
-#include "ITG3200.h"
+#include "itg3200.h"
 #include "MedianFilter.h"
 #include "circbuf.h"
 #include "hermes.h"
@@ -12,28 +12,21 @@ unsigned long start;
 void setup()
 {
   Serial.begin(115200);
-  leftMotor.attach(LEFT_SERVO_PIN);
-  rightMotor.attach(RIGHT_SERVO_PIN);
-  setMotors(128, 128);
+  I2c.begin();
 
-  Wire.begin();
+  //leftMotor.attach(LEFT_SERVO_PIN);
+  //rightMotor.attach(RIGHT_SERVO_PIN);
+  //setMotors(128, 128);
 
-  //Serial.println("Setting up magnetometer.");
-  magnetometer.SetMeasurementMode(Measurement_SingleShot);
+  gyro.begin(0x68);
 
-  //Serial.println("Initializing gyro.");
-  gyro.init(ITG3200_ADDR_AD0_LOW);
+  //magnetometer.SetMeasurementMode(Measurement_Continuous);
+  //magnetometer.SetScale(1.3);
 
-  //Serial.println("Resetting gyro.");
-  gyro.reset();
-  gyro.setPowerMode(NORMAL);
-  gyro.zeroCalibrate(100, 1);
-  
-  //battery = new MedianFilter(10);
+  delay(1000);
 
   watchdog = millis();
-
-  start = millis();
+  start    = millis();
 }
 
 
@@ -64,8 +57,7 @@ void printBuffer()
 }
 
 
-float gyropack[3];
-MagnetometerRaw magraw;
+MagnetometerScaled mag;
 byte line[3];
 void loop()
 {
@@ -86,28 +78,28 @@ void loop()
         sendResponse(ID_BATTERY, BATTERY_ADJUSTMENT * analogRead(BATTERY_PIN));
         break;
       case ID_MAG_X:
-        magraw = magnetometer.ReadRawAxis();
-        sendResponse(ID_MAG_X, magraw.XAxis);
+        mag = magnetometer.ReadScaledAxis();
+        sendResponse(ID_MAG_X, mag.XAxis);
         break;
       case ID_MAG_Y:
-        magraw = magnetometer.ReadRawAxis();
-        sendResponse(ID_MAG_Y, magraw.YAxis);
+        mag = magnetometer.ReadScaledAxis();
+        sendResponse(ID_MAG_Y, mag.YAxis);
         break;
       case ID_MAG_Z:
-        magraw = magnetometer.ReadRawAxis();
-        sendResponse(ID_MAG_Z, magraw.ZAxis);
+        mag = magnetometer.ReadScaledAxis();
+        sendResponse(ID_MAG_Z, mag.ZAxis);
         break;
       case ID_GYRO_X:
-        gyro.readGyro(gyropack);
-        sendResponse(ID_GYRO_X, gyropack[0]);
+        sendResponse(ID_GYRO_X, gyro.getX());
         break;
       case ID_GYRO_Y:
-        gyro.readGyro(gyropack);
-        sendResponse(ID_GYRO_Y, gyropack[1]);
+        sendResponse(ID_GYRO_Y, gyro.getY());
         break;
       case ID_GYRO_Z:
-        gyro.readGyro(gyropack);
-        sendResponse(ID_GYRO_Z, gyropack[2]);
+        sendResponse(ID_GYRO_Z, gyro.getZ());
+        break;
+      default:
+        sendResponse(ID_ERROR, 42.0);
         break;
     }
 

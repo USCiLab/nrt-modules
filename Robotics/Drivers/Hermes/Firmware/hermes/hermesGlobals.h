@@ -1,13 +1,9 @@
 #ifndef _HERMES_GLOBALS_H
 #define _HERMES_GLOBALS_H
 
-//#define CMD_MOTOR   98
-//#define CMD_COMPASS 99
-//#define CMD_COMPASS 99
-//#define CMD_GYRO    100
-//#define CMD_BATTERY 101
 enum packetid
 {
+  ID_ERROR   = 1,
   ID_MOTOR   = 98,
   ID_MAG_X   = 99,
   ID_MAG_Y   = 100,
@@ -47,29 +43,5 @@ union ResponsePacket
   uint8_t raw[4];
   float data;
 };
-
-//union BatteryPacket
-//{
-//  unsigned char raw[4];
-//  float voltage;
-//};
-//
-//union CompassPacket
-//{
-//  unsigned char raw[4];
-//  float heading;
-//};
-//
-//union GyroPacket
-//{
-//  unsigned char raw[12];
-//  float xyz[3];
-//  struct
-//  {
-//    float x;
-//    float y;
-//    float z;
-//  };
-//};
 
 #endif // _HERMES_GLOBALS_H

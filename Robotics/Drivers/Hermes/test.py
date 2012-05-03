@@ -23,17 +23,6 @@ def checksum(l):
     checksum ^= n
   return checksum
 
-def move(leftSpeed, rightSpeed):
-  l = max(0, min(255, int(leftSpeed  / 100.0 * 128 + 128)))
-  r = max(0, min(255, int(rightSpeed / 100.0 * 128 + 128)))
-  c = checksum([255, l, r])
-
-  cmd = struct.pack('BBBB', 255, l, r, c)
-
-  print "Writing (%d, %d): %s " % (leftSpeed, rightSpeed, ''.join(["%s " % str(ord(x)) for x in cmd]))
-  ser.write(cmd)
-  ser.flush()
-
 def writePacket(packet):
   if len(packet) != 3:
     raise Exception("Packet must be 3 bytes!")
@@ -56,7 +45,7 @@ def writePacket(packet):
         found = True
 
   if found == False:
-    raise Exception("Timed out when receiving response")
+    raise Exception("Timed out when receiving response: buffer was", buf)
 
   if buf[0] != 255:
     raise Exception("Bad start byte")
@@ -67,36 +56,34 @@ def writePacket(packet):
   if buf[6] != checksum(buf[0:6]):
     raise Exception("Bad Checksum")
 
+  time.sleep(0.001)
   return struct.unpack('f', ''.join([chr(x) for x in buf[2:6]]))[0]
 
+def move(leftSpeed, rightSpeed):
+  l = max(0, min(255, int(leftSpeed  / 100.0 * 128 + 128)))
+  r = max(0, min(255, int(rightSpeed / 100.0 * 128 + 128)))
 
-#ser.write(chr(99))
-#ser.write(chr(98))
-#response = writePacket([98,160,160])
-#print "Got Response: " + str(response)
-#time.sleep(1.0)
+  writePacket([98, l, r])
 
-response = writePacket([105,0,0])
-print "Got Battery: ", response
+for i in range(0, 1000):
+  response = writePacket([105,0,0])
+  print "Got Battery: ", response
 
-response = writePacket([99,0,0])
-print "Got MagX: ",response
+  response = writePacket([99,0,0])
+  print "Got MagX: ",response
 
-response = writePacket([100,0,0])
-print "Got MagY: ",response
+  response = writePacket([100,0,0])
+  print "Got MagY: ",response
 
-response = writePacket([101,0,0])
-print "Got MagZ: ",response
+  response = writePacket([101,0,0])
+  print "Got MagZ: ",response
+    
+  response = writePacket([102,0,0])
+  print "Got GyroX: ",response
+    
+  response = writePacket([103,0,0])
+  print "Got GyroY: ",response
 
-response = writePacket([102,0,0])
-print "Got GyroX: ",response
+  response = writePacket([104,0,0])
+  print "Got GyroZ: ",response
 
-response = writePacket([103,0,0])
-print "Got GyroY: ",response
-
-response = writePacket([104,0,0])
-print "Got GyroZ: ",response
-
-#ser.write(struct.pack('BBBB', 1, 2, 3, 4, 5))
-
-#move(20, 20)
