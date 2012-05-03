@@ -1,9 +1,22 @@
 #ifndef _HERMES_GLOBALS_H
 #define _HERMES_GLOBALS_H
 
-#define SEN_COMPASS 99
-#define SEN_GYRO 100
-#define SEN_BATTERY 101
+//#define CMD_MOTOR   98
+//#define CMD_COMPASS 99
+//#define CMD_COMPASS 99
+//#define CMD_GYRO    100
+//#define CMD_BATTERY 101
+enum packetid
+{
+  ID_MOTOR   = 98,
+  ID_MAG_X   = 99,
+  ID_MAG_Y   = 99,
+  ID_MAG_Z   = 99,
+  ID_GYRO_X  = 100,
+  ID_GYRO_Y  = 101,
+  ID_GYRO_Z  = 102,
+  ID_BATTERY = 103
+};
 
 #define MOTOR_PWM_OFFSET      24
 #define BATTERY_ADJUSTMENT    0.0214
@@ -29,28 +42,34 @@ union MotorPacket
   };
 };
 
-union BatteryPacket
+union ResponsePacket
 {
-  unsigned char raw[4];
-  float voltage;
+  uint8_t raw[4];
+  float data;
 };
 
-union CompassPacket
-{
-  unsigned char raw[4];
-  float heading;
-};
-
-union GyroPacket
-{
-  unsigned char raw[12];
-  float xyz[3];
-  struct
-  {
-    float x;
-    float y;
-    float z;
-  };
-};
+//union BatteryPacket
+//{
+//  unsigned char raw[4];
+//  float voltage;
+//};
+//
+//union CompassPacket
+//{
+//  unsigned char raw[4];
+//  float heading;
+//};
+//
+//union GyroPacket
+//{
+//  unsigned char raw[12];
+//  float xyz[3];
+//  struct
+//  {
+//    float x;
+//    float y;
+//    float z;
+//  };
+//};
 
 #endif // _HERMES_GLOBALS_H

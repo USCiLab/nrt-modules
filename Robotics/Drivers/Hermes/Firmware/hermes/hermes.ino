@@ -34,8 +34,6 @@ void setup()
   watchdog = millis();
 
   start = millis();
-
-  Serial.println("Finished setting up.");
 }
 
 
@@ -65,29 +63,37 @@ void printBuffer()
   Serial.println("]");
 }
 
+
+
 byte line[3];
 void loop()
 {
   if(Serial.available() > 0)
-  {
-    byte b = Serial.read();
-    buffer.write(b);
-    printBuffer();
-  }
+    buffer.write(Serial.read());
 
   if(buffer.isFull() && buffer.peek(0) == 255 && checksumOK())
   {
     readLine(line, sizeof(line));
 
-    Serial.print("GOT A FULL LINE: ");
-    for(int i=0; i<sizeof(line); ++i)
+    switch(line[0])
     {
-      Serial.print(line[i]);
-      Serial.print(" ");
+      case ID_MOTOR:
+        setMotors(line[1], line[2]);
+        sendResponse(ID_MOTOR, 666);
+        break;
+      case ID_BATTERY:
+        sendResponse(ID_BATTERY, BATTERY_PIN * analogRead(BATTERY_PIN));
+        break;
     }
-    Serial.println("");
+
+    watchdog = millis();
   }
 
+  if (millis() - watchdog > WATCHDOG_THRESHOLD)
+  {
+    setMotors(128, 128);
+    watchdog = millis();
+  }
 
 
 

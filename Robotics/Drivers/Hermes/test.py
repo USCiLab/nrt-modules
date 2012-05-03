@@ -36,20 +36,49 @@ def move(leftSpeed, rightSpeed):
 
 def writePacket(packet):
   if len(packet) != 3:
-    raise "Packet must be 3 bytes!"
+    raise Exception("Packet must be 3 bytes!")
 
   packet.insert(0, 255)
 
   s = struct.pack('BBBBB', packet[0], packet[1], packet[2], packet[3], checksum(packet))
   ser.write(s)
 
+  buf = []
+  endtime = time.time() + 1.0
+  found = False
+  while time.time() < endtime and found == False:
+    if ser.inWaiting() > 0:
+      buf.append(ord(ser.read(1)))
+      if len(buf) > 7:
+        buf.pop(0)
+
+      if len(buf) == 7 and buf[0] == 255 and buf[1] == packet[1] and buf[6] == checksum(buf[0:6]):
+        found = True
+
+  if found == False:
+    raise Exception("Timed out when receiving response")
+
+  if buf[0] != 255:
+    raise Exception("Bad start byte")
+
+  if buf[1] != packet[1]:
+    raise Exception("Got wrong packet back")
+
+  if buf[6] != checksum(buf[0:6]):
+    raise Exception("Bad Checksum")
+
+  return struct.unpack('f', ''.join([chr(x) for x in buf[2:6]]))[0]
+
 
 ser.write(chr(99))
 ser.write(chr(98))
-writePacket([1,2,3])
+response = writePacket([98,160,160])
+print "Got Response: " + str(response)
+time.sleep(1.0)
 ser.write(chr(255))
 ser.write(chr(255))
-writePacket([4,5,6])
+response = writePacket([103,0,0])
+print "Got Response: " + str(response)
 
 #ser.write(struct.pack('BBBB', 1, 2, 3, 4, 5))
 
