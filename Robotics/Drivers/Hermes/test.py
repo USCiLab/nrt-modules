@@ -88,6 +88,15 @@ print "Got MagY: ",response
 response = writePacket([101,0,0])
 print "Got MagZ: ",response
 
+response = writePacket([102,0,0])
+print "Got GyroX: ",response
+
+response = writePacket([103,0,0])
+print "Got GyroY: ",response
+
+response = writePacket([104,0,0])
+print "Got GyroZ: ",response
+
 #ser.write(struct.pack('BBBB', 1, 2, 3, 4, 5))
 
 #move(20, 20)

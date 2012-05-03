@@ -19,7 +19,7 @@ void setup()
   Wire.begin();
 
   //Serial.println("Setting up magnetometer.");
-  magnetometer.SetMeasurementMode(Measurement_Continuous);
+  magnetometer.SetMeasurementMode(Measurement_SingleShot);
 
   //Serial.println("Initializing gyro.");
   gyro.init(ITG3200_ADDR_AD0_LOW);
@@ -64,6 +64,7 @@ void printBuffer()
 }
 
 
+float gyropack[3];
 MagnetometerRaw magraw;
 byte line[3];
 void loop()
@@ -95,6 +96,18 @@ void loop()
       case ID_MAG_Z:
         magraw = magnetometer.ReadRawAxis();
         sendResponse(ID_MAG_Z, magraw.ZAxis);
+        break;
+      case ID_GYRO_X:
+        gyro.readGyro(gyropack);
+        sendResponse(ID_GYRO_X, gyropack[0]);
+        break;
+      case ID_GYRO_Y:
+        gyro.readGyro(gyropack);
+        sendResponse(ID_GYRO_Y, gyropack[1]);
+        break;
+      case ID_GYRO_Z:
+        gyro.readGyro(gyropack);
+        sendResponse(ID_GYRO_Z, gyropack[2]);
         break;
     }
 
