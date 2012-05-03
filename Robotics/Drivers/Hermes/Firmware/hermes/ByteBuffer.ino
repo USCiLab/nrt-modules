@@ -43,15 +43,15 @@ byte ByteBuffer::peek(unsigned int index){
 }
 
 int ByteBuffer::put(byte in){
-	if(length < capacity){
-		// save data byte at end of buffer
-		data[(position+length) % capacity] = in;
-		// increment the length
-		length++;
-		return 1;
-	}
-	// return failure
-	return 0;
+  // commented this out otherwise what's the point?
+  if (length >= capacity)
+    get();
+
+  // save data byte at end of buffer
+  data[(position+length) % capacity] = in;
+  // increment the length
+  length++;
+  return 1;
 }
 
 int ByteBuffer::putInFront(byte in){

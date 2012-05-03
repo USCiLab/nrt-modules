@@ -104,9 +104,9 @@ int HMC5883L::SetMeasurementMode(uint8_t mode)
 	Write(ModeRegister, mode);
 }
 
-void HMC5883L::Write(int address, int data)
+void HMC5883L::Write(uint8_t address, uint8_t data)
 {
-  Wire.beginTransmission(HMC5883L_Address);
+  Wire.beginTransmission(0x3C);
   Wire.write(address);
   Wire.write(data);
   Wire.endTransmission();
