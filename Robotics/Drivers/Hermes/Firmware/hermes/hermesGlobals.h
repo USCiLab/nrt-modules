@@ -10,12 +10,12 @@ enum packetid
 {
   ID_MOTOR   = 98,
   ID_MAG_X   = 99,
-  ID_MAG_Y   = 99,
-  ID_MAG_Z   = 99,
-  ID_GYRO_X  = 100,
-  ID_GYRO_Y  = 101,
-  ID_GYRO_Z  = 102,
-  ID_BATTERY = 103
+  ID_MAG_Y   = 100,
+  ID_MAG_Z   = 101,
+  ID_GYRO_X  = 102,
+  ID_GYRO_Y  = 103,
+  ID_GYRO_Z  = 104,
+  ID_BATTERY = 105
 };
 
 #define MOTOR_PWM_OFFSET      24

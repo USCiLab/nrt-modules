@@ -70,18 +70,24 @@ def writePacket(packet):
   return struct.unpack('f', ''.join([chr(x) for x in buf[2:6]]))[0]
 
 
-ser.write(chr(99))
-ser.write(chr(98))
-response = writePacket([98,160,160])
-print "Got Response: " + str(response)
-time.sleep(1.0)
-ser.write(chr(255))
-ser.write(chr(255))
-response = writePacket([103,0,0])
-print "Got Response: " + str(response)
+#ser.write(chr(99))
+#ser.write(chr(98))
+#response = writePacket([98,160,160])
+#print "Got Response: " + str(response)
+#time.sleep(1.0)
+
+response = writePacket([105,0,0])
+print "Got Battery: ", response
+
+response = writePacket([99,0,0])
+print "Got MagX: ",response
+
+response = writePacket([100,0,0])
+print "Got MagY: ",response
+
+response = writePacket([101,0,0])
+print "Got MagZ: ",response
 
 #ser.write(struct.pack('BBBB', 1, 2, 3, 4, 5))
 
 #move(20, 20)
-while True:
-  print ser.readline()

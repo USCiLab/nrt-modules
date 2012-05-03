@@ -64,7 +64,7 @@ void printBuffer()
 }
 
 
-
+MagnetometerRaw magraw;
 byte line[3];
 void loop()
 {
@@ -82,13 +82,27 @@ void loop()
         sendResponse(ID_MOTOR, 666);
         break;
       case ID_BATTERY:
-        sendResponse(ID_BATTERY, BATTERY_PIN * analogRead(BATTERY_PIN));
+        sendResponse(ID_BATTERY, BATTERY_ADJUSTMENT * analogRead(BATTERY_PIN));
+        break;
+      case ID_MAG_X:
+        magraw = magnetometer.ReadRawAxis();
+        sendResponse(ID_MAG_X, magraw.XAxis);
+        break;
+      case ID_MAG_Y:
+        magraw = magnetometer.ReadRawAxis();
+        sendResponse(ID_MAG_Y, magraw.YAxis);
+        break;
+      case ID_MAG_Z:
+        magraw = magnetometer.ReadRawAxis();
+        sendResponse(ID_MAG_Z, magraw.ZAxis);
         break;
     }
 
+    // Reset the watchdog
     watchdog = millis();
   }
 
+  // Check the watchdog
   if (millis() - watchdog > WATCHDOG_THRESHOLD)
   {
     setMotors(128, 128);
