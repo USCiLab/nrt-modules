@@ -12,16 +12,18 @@ unsigned long start;
 void setup()
 {
   Serial.begin(115200);
-  I2c.begin();
 
-  //leftMotor.attach(LEFT_SERVO_PIN);
-  //rightMotor.attach(RIGHT_SERVO_PIN);
-  //setMotors(128, 128);
+  I2c.begin();
+  I2c.timeOut(2);
+  
+
+  leftMotor.attach(LEFT_SERVO_PIN);
+  rightMotor.attach(RIGHT_SERVO_PIN);
+  setMotors(128, 128);
 
   gyro.begin(0x68);
 
-  //magnetometer.SetMeasurementMode(Measurement_Continuous);
-  //magnetometer.SetScale(1.3);
+  magnetometer.SetMeasurementMode(Measurement_Continuous);
 
   delay(1000);
 
@@ -57,7 +59,7 @@ void printBuffer()
 }
 
 
-MagnetometerScaled mag;
+MagnetometerRaw mag;
 byte line[3];
 void loop()
 {
@@ -78,15 +80,15 @@ void loop()
         sendResponse(ID_BATTERY, BATTERY_ADJUSTMENT * analogRead(BATTERY_PIN));
         break;
       case ID_MAG_X:
-        mag = magnetometer.ReadScaledAxis();
+        mag = magnetometer.ReadRawAxis();
         sendResponse(ID_MAG_X, mag.XAxis);
         break;
       case ID_MAG_Y:
-        mag = magnetometer.ReadScaledAxis();
+        mag = magnetometer.ReadRawAxis();
         sendResponse(ID_MAG_Y, mag.YAxis);
         break;
       case ID_MAG_Z:
-        mag = magnetometer.ReadScaledAxis();
+        mag = magnetometer.ReadRawAxis();
         sendResponse(ID_MAG_Z, mag.ZAxis);
         break;
       case ID_GYRO_X:

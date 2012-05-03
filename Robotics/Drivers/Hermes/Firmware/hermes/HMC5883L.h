@@ -67,7 +67,7 @@ class HMC5883L
 
 	protected:
 	  void Write(uint8_t address, uint8_t byte);
-	  uint8_t* Read(int address, int length);
+	  void Read(int address, uint8_t * buffer, int length);
 
 	private:
 	  float m_Scale;

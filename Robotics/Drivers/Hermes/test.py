@@ -65,7 +65,22 @@ def move(leftSpeed, rightSpeed):
 
   writePacket([98, l, r])
 
-for i in range(0, 1000):
+speed = 0
+up = 1
+inc = 0.1
+maximum = 30
+while True:
+  move(speed, speed)
+  if up:
+    speed = speed + inc
+    if speed > maximum:
+      up = 0
+  else:
+    speed = speed - inc
+    if speed < -maximum:
+      up = 1
+
+
   response = writePacket([105,0,0])
   print "Got Battery: ", response
 
@@ -77,7 +92,7 @@ for i in range(0, 1000):
 
   response = writePacket([101,0,0])
   print "Got MagZ: ",response
-    
+   
   response = writePacket([102,0,0])
   print "Got GyroX: ",response
     
