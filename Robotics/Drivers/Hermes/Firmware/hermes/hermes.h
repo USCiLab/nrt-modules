@@ -3,7 +3,7 @@
 #include "hermesGlobals.h"
 
 // bookkeeping vars
-CircularBuffer<4> buffer;
+CircularBuffer<5> buffer;
 unsigned long watchdog;
 
 // motors
