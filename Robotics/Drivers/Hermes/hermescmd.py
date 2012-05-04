@@ -37,6 +37,7 @@ def writePacket(packet):
 
   packet.insert(0, 255)
 
+  #                        255........Command....Data1......Data2......Checksum.......
   s = struct.pack('BBBBB', packet[0], packet[1], packet[2], packet[3], checksum(packet))
   ser.write(s)
 

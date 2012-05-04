@@ -226,6 +226,27 @@ void HermesModule::processMessageBuffer()
   }
 }
 
+void HermesModule::writePacket(CommandPacket packet)
+{
+  byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(CommandPacket), 255, std::bit_xor<byte>());
+  vector<byte> data = {255, packet.command, packet.data1, packet.data2, checksum};
+
+  boost::asio::write(itsSerialPort, boost::asio::buffer(data));
+
+  vector<byte> buf = serialRead(1000, 7);
+  checksum = std::accumulate(); // TODO
+  
+  if (buf[0] != 255)
+    throw exception::BadParameter("Bad start byte.");
+
+  if (buf[1] != data[1])
+    throw exception::BadParameter("Got wrong packet back.");
+
+  if 
+
+  }
+}
+
 // ######################################################################
 void HermesModule::run()
 {

@@ -28,13 +28,14 @@ enum packetid
 #define DIGITAL_RELAY         52
 
 // packet definitions
-union MotorPacket
+union CommandPacket
 {
-  unsigned char raw[2];
+  unsigned char raw[3];
   struct
   {
-    unsigned char left;
-    unsigned char right;
+    unsigned char command;
+    unsigned char data1;
+    unsigned char data2;
   };
 };
 
