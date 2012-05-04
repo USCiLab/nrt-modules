@@ -7,13 +7,15 @@ CircularBuffer<5> buffer;
 unsigned long watchdog;
 
 // motors
-Servo leftMotor;
-Servo rightMotor;
+//Servo leftMotor;
+//Servo rightMotor;
 
 // sensors
 HMC5883L magnetometer;
 MagnetometerRaw magnetometerRaw;
 ITG3200 gyro;
+
+SoftwareSerial motorSerial(9, 10);
 
 void sendResponse(packetid id, float value)
 {
@@ -32,8 +34,10 @@ void sendResponse(packetid id, float value)
 
 void setMotors(unsigned char left, unsigned char right)
 {
-  leftMotor.writeMicroseconds(map(left, 0, 256, 1000, 2000)-MOTOR_PWM_OFFSET);
-  rightMotor.writeMicroseconds(map(right, 0, 256, 1000, 2000)-MOTOR_PWM_OFFSET);
+  motorSerial.write(map(left,  0, 255, 1,   127));
+  motorSerial.write(map(right, 0, 255, 128, 255));
+  //leftMotor.writeMicroseconds(map(left, 0, 256, 1000, 2000)-MOTOR_PWM_OFFSET);
+  //rightMotor.writeMicroseconds(map(right, 0, 256, 1000, 2000)-MOTOR_PWM_OFFSET);
 }
 
 #endif // _HERMES_H

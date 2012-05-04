@@ -1,3 +1,5 @@
+#include <SoftwareSerial.h>
+
 #include "I2C.h"
 #include <Servo.h>
 #include "Arduino.h"
@@ -7,18 +9,19 @@
 #include "circbuf.h"
 #include "hermes.h"
 
-
+// ######################################################################
 unsigned long start;
 void setup()
 {
   Serial.begin(115200);
 
+  motorSerial.begin(9600);
+
   I2c.begin();
   I2c.timeOut(2);
   
-
-  leftMotor.attach(LEFT_SERVO_PIN);
-  rightMotor.attach(RIGHT_SERVO_PIN);
+  //leftMotor.attach(LEFT_SERVO_PIN);
+  //rightMotor.attach(RIGHT_SERVO_PIN);
   setMotors(128, 128);
 
   gyro.begin(0x68);
@@ -32,6 +35,7 @@ void setup()
 }
 
 
+// ######################################################################
 bool checksumOK()
 {
   byte checksum = 0;
@@ -40,6 +44,7 @@ bool checksumOK()
   return checksum == buffer.peek(buffer.capacity()-1);
 }
 
+// ######################################################################
 void readLine(byte *line, int size)
 {
   buffer.read(); // start
@@ -47,6 +52,7 @@ void readLine(byte *line, int size)
   buffer.read(); //checksum
 }
 
+// ######################################################################
 void printBuffer()
 {
   Serial.print("Buffer [");
@@ -59,6 +65,7 @@ void printBuffer()
 }
 
 
+// ######################################################################
 MagnetometerRaw mag;
 byte line[3];
 void loop()
@@ -115,101 +122,4 @@ void loop()
     setMotors(128, 128);
     watchdog = millis();
   }
-
-
-
-  //// read a byte
-  //if (Serial.available() > 0)
-  //{
-  //  buffer.write(Serial.read());
-  //  for (int i = 0; i < 4; i++)
-  //  {
-  //    //Serial.print(buffer.peek(i));
-  //    //Serial.print(" ");
-  //  }
-  //  //Serial.println();
-  //}
-
-  //// check the buffer for motor commands
-  //if (buffer.peek(0) == 255 && buffer.isFull())
-  //{
-  //  //Serial.println("Motor packet start");
-  //  byte checksum = 0;
-  //  for (int i = 0; i < sizeof(MotorPacket)+1; i++)
-  //    checksum ^= buffer.peek(i);
-
-  //  if (checksum == buffer.peek(sizeof(MotorPacket)+1))
-  //  {
-  //    //Serial.println("Checksum is good");
-  //    MotorPacket packet;
-  //    
-  //    // discard the start byte
-  //    buffer.read();
-  //    for (int i = 0; i < sizeof(MotorPacket); i++)
-  //      packet.raw[i] = buffer.read();
-
-  //    // discard the checksum byte
-  //    buffer.read();
-  //    
-  //    //Serial.print("Setting motors to ");
-  //    //Serial.print(packet.left);
-  //    //Serial.print(" ");
-  //    //Serial.println(packet.right);
-
-  //    // set the motors
-  //    setMotors(packet.left, packet.right);
-  //    //Serial.println("Motors set!");
-  //    
-  //    //// reset watchdog
-  //    watchdog = millis();
-  //  }
-  //  else
-  //  {
-  //    //Serial.print("Bad checksum! ");
-  //    //Serial.println(buffer.peek(sizeof(MotorPacket)+1));
-  //    buffer.read();
-  //  }
-  //}
-
-  //// write any sensor data
-  //
-  //{
-  //  //battery.push(analogRead(BATTERY_PIN));
-  //  BatteryPacket bp;
-  //  //bp.voltage = BATTERY_ADJUSTMENT*battery.median(); 
-  //  //bp.voltage = analogRead(BATTERY_PIN);
-  //  bp.voltage = millis() - start;
-  //  sendPacket(bp);
-  //}
-
-  //{
-  //  CompassPacket cp;
-  //  MagnetometerRaw raw = magnetometer.ReadRawAxis();
-  //  cp.heading = atan2(raw.YAxis, raw.XAxis);
-  //  cp.heading += MAGNETIC_DECLINATION;
-
-  //  // normalize
-  //  if (cp.heading < 0)
-  //    cp.heading += 2*PI;
-  //  else if (cp.heading > 2*PI)
-  //    cp.heading -= 2*PI;
-
-  //  sendPacket(cp);
-  //}
-
-  ////{
-  ////  if (gyro.isRawDataReady())
-  ////  {
-  ////    GyroPacket gp;
-  ////    gyro.readGyro(gp.xyz);
-  ////    sendPacket(gp);
-  ////  }
-  ////}
-  //
-  //if (millis() - watchdog > WATCHDOG_THRESHOLD)
-  //{
-  //  //Serial.println("Watchdog expired.");
-  //  setMotors(128, 128);
-  //  watchdog = millis();
-  //}
 }

@@ -63,42 +63,45 @@ def move(leftSpeed, rightSpeed):
   l = max(0, min(255, int(leftSpeed  / 100.0 * 128 + 128)))
   r = max(0, min(255, int(rightSpeed / 100.0 * 128 + 128)))
 
-  writePacket([98, l, r])
+  result = writePacket([98, l, r])
+  print "Move Result: ", result
 
-speed = 0
-up = 1
-inc = 0.1
-maximum = 30
-while True:
-  move(speed, speed)
-  if up:
-    speed = speed + inc
-    if speed > maximum:
-      up = 0
-  else:
-    speed = speed - inc
-    if speed < -maximum:
-      up = 1
+move(20, 20)
 
-
-  response = writePacket([105,0,0])
-  print "Got Battery: ", response
-
-  response = writePacket([99,0,0])
-  print "Got MagX: ",response
-
-  response = writePacket([100,0,0])
-  print "Got MagY: ",response
-
-  response = writePacket([101,0,0])
-  print "Got MagZ: ",response
-   
-  response = writePacket([102,0,0])
-  print "Got GyroX: ",response
-    
-  response = writePacket([103,0,0])
-  print "Got GyroY: ",response
-
-  response = writePacket([104,0,0])
-  print "Got GyroZ: ",response
-
+#speed = 0
+#up = 1
+#inc = 0.1
+#maximum = 30
+#while True:
+#  move(speed, speed)
+#  if up:
+#    speed = speed + inc
+#    if speed > maximum:
+#      up = 0
+#  else:
+#    speed = speed - inc
+#    if speed < -maximum:
+#      up = 1
+#
+#
+#  response = writePacket([105,0,0])
+#  print "Got Battery: ", response
+#
+#  response = writePacket([99,0,0])
+#  print "Got MagX: ",response
+#
+#  response = writePacket([100,0,0])
+#  print "Got MagY: ",response
+#
+#  response = writePacket([101,0,0])
+#  print "Got MagZ: ",response
+#   
+#  response = writePacket([102,0,0])
+#  print "Got GyroX: ",response
+#    
+#  response = writePacket([103,0,0])
+#  print "Got GyroY: ",response
+#
+#  response = writePacket([104,0,0])
+#  print "Got GyroZ: ",response
+#

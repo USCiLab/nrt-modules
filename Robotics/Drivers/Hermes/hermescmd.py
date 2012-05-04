@@ -31,16 +31,46 @@ def checksum(l):
     checksum ^= n
   return checksum
 
+def writePacket(packet):
+  if len(packet) != 3:
+    raise Exception("Packet must be 3 bytes!")
+
+  packet.insert(0, 255)
+
+  s = struct.pack('BBBBB', packet[0], packet[1], packet[2], packet[3], checksum(packet))
+  ser.write(s)
+
+  buf = []
+  endtime = time.time() + 1.0
+  found = False
+  while time.time() < endtime and found == False:
+    if ser.inWaiting() > 0:
+      buf.append(ord(ser.read(1)))
+      if len(buf) > 7:
+        buf.pop(0)
+
+      if len(buf) == 7 and buf[0] == 255 and buf[1] == packet[1] and buf[6] == checksum(buf[0:6]):
+        found = True
+
+  if found == False:
+    raise Exception("Timed out when receiving response: buffer was", buf)
+
+  if buf[0] != 255:
+    raise Exception("Bad start byte")
+
+  if buf[1] != packet[1]:
+    raise Exception("Got wrong packet back")
+
+  if buf[6] != checksum(buf[0:6]):
+    raise Exception("Bad Checksum")
+
+  time.sleep(0.001)
+  return struct.unpack('f', ''.join([chr(x) for x in buf[2:6]]))[0]
+
 def move(leftSpeed, rightSpeed):
   l = max(0, min(255, int(leftSpeed  / 100.0 * 128 + 128)))
   r = max(0, min(255, int(rightSpeed / 100.0 * 128 + 128)))
-  c = checksum([255, l, r])
-
-  cmd = struct.pack('BBBB', 255, l, r, c)
-
-  screen.addstr(10, 1, "Writing (%d, %d): %s               " % (leftSpeed, rightSpeed, ''.join(["%s " % str(ord(x)) for x in cmd])))
-  ser.write(cmd)
-  ser.flush()
+  writePacket([98, l, r])
 
 speed   = 0
 left    = 0
@@ -92,44 +122,24 @@ try:
 
     speed = max(0, min(100, speed))
 
-    if abs(time.time() - lastmotortime) > .1:
-      screen.addstr(18, 1, "TIME: " + str(time.time() - lastmotortime))
-      lastmotortime = time.time()
-      counter += 1
-      screen.addstr(19, 1, "CMD COUNT: " + str(counter))
-      move(left*speed, right*speed)
+    # Move this robot
+    move(speed*left, speed*right)
 
-
-    endtime = time.time() + .01
-    while(time.time() < endtime):
-      if ser.inWaiting() > 0:
-        databuf.append( ser.read(1) )
-
+    
     # battery
-    if len(databuf) >= 7 and databuf[0] == 255 and databuf[1] == 101 and databuf[6] == checksum(databuf[0:6]):
-      screen.addstr(11, 1, "##### Battery: %.8f" % struct.unpack('f', ''.join([chr(x) for x in databuf[2:6]]))[0])
+    screen.addstr(11, 1, "Battery: %.3f" % writePacket([105,0,0]))
 
-      for i in range(0, 6):
-        databuf.pop(0)
+    # magnetometer
+    screen.addstr(13, 1, "MAGNETOMETER")
+    screen.addstr(14, 1, " > X: %.3f       " % writePacket([99,0,0]))
+    screen.addstr(15, 1, " > Y: %.3f       " % writePacket([100,0,0]))
+    screen.addstr(16, 1, " > Z: %.3f       " % writePacket([101,0,0]))
 
-    # compass
-    elif len(databuf) >= 7 and databuf[0] == 255 and databuf[1] == 99 and databuf[6] == checksum(databuf[0:6]):
-      screen.addstr(12, 1, "Compass: %.8f" % struct.unpack('f', ''.join([chr(x) for x in databuf[2:6]]))[0])
-
-      for i in range(0, 6):
-        databuf.pop(0)
-
-    # gyro 
-    elif len(databuf) >= 15 and databuf[0] == 255 and databuf[1] == 100 and databuf[14] == checksum(databuf[0:14]):
-      screen.addstr(13, 1, "Gyro: %.8f %.8f %.8f" % (struct.unpack('f', ''.join([chr(x) for x in databuf[2:6]]))[0],
-          struct.unpack('f', ''.join([chr(x) for x in databuf[6:10]]))[0],
-          struct.unpack('f', ''.join([chr(x) for x in databuf[10:14]]))[0]))
-
-      for i in range(0, 14):
-        databuf.pop(0)
-
-    elif len(databuf) >= 15:
-      databuf.pop(0)
+    # gyroscope
+    screen.addstr(18, 1, "GYROSCOPE")
+    screen.addstr(19, 1, " > X: %.3f       " % writePacket([102,0,0]))
+    screen.addstr(20, 1, " > Y: %.3f       " % writePacket([103,0,0]))
+    screen.addstr(21, 1, " > Z: %.3f       " % writePacket([104,0,0]))
 
     time.sleep(0.001)
     screen.refresh()
