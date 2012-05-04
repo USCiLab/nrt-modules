@@ -110,8 +110,8 @@ class ITG3200
     static const int GYRO_TEMP_OFFSET = 13200;
     static const float GYRO_TEMP_OFFSET_CELSIUS = 35.0;
     uint8_t _gyro_address;
-    void write(uint8_t reg, uint8_t val);
-    uint8_t read(uint8_t reg);
+    void write(uint8_t reg, uint8_t val, bool * error = NULL);
+    uint8_t read(uint8_t reg, bool * error = NULL);
 };
 
 

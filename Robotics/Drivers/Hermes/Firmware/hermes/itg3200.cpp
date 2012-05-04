@@ -21,7 +21,6 @@
 //#include "WConstants.h" 
 #include "itg3200.h"
 
-
 ITG3200::ITG3200()
 {
   I2c.begin();
@@ -55,15 +54,24 @@ void ITG3200::begin(int address,byte pwr_mgm, byte fs_lpf, byte smplrt_div, byte
 }
 
 float ITG3200::getX() {
-  return (float)(this->read(GYRO_REG_X_L) | this->read(GYRO_REG_X_H)<<8)/GYRO_SENSITIVITY; 
+  bool error = false;
+  float result = (float)(this->read(GYRO_REG_X_L, &error) | this->read(GYRO_REG_X_H, &error)<<8)/GYRO_SENSITIVITY; 
+  if(error) return NAN;
+  return result;
 }
 
 float ITG3200::getY() {
-  return (float)(this->read(GYRO_REG_Y_L) | this->read(GYRO_REG_Y_H)<<8)/GYRO_SENSITIVITY; 
+  bool error = false;
+  float result = (float)(this->read(GYRO_REG_Y_L, &error) | this->read(GYRO_REG_Y_H, &error)<<8)/GYRO_SENSITIVITY; 
+  if(error) return NAN;
+  return result;
 }
 
 float ITG3200::getZ() {
-  return (float)(this->read(GYRO_REG_Z_L) | this->read(GYRO_REG_Z_H)<<8)/GYRO_SENSITIVITY; 
+  bool error = false;
+  float result = (float)(this->read(GYRO_REG_Z_L, &error) | this->read(GYRO_REG_Z_H, &error)<<8)/GYRO_SENSITIVITY; 
+  if(error) return NAN;
+  return result;
 }
 
 float ITG3200::getTemperature(){
@@ -129,27 +137,15 @@ void ITG3200::setClockSource(byte clockSource)
   this->write(GYRO_REG_PWR_MGM, 0xF8 & clockSource);
 }
 
-void ITG3200::write(byte reg, byte val) {
-  I2c.write(_gyro_address, reg, val);
-  //I2c.beginTransmission(_gyro_address);
-  //I2c.write(reg);
-  //I2c.write(val);
-  //I2c.endTransmission();
+void ITG3200::write(byte reg, byte val, bool *error) {
+  byte errorcode = I2c.write(_gyro_address, reg, val);
+  if(error != NULL && errorcode >= 1 && errorcode <= 7) *error = true;
 }
 
-byte ITG3200::read(byte reg) {
+byte ITG3200::read(byte reg, bool *error) {
+  byte errorcode = I2c.write(_gyro_address, reg);
+  if(error != NULL && errorcode >= 1 && errorcode <= 7) *error = true;
 
-  I2c.write(_gyro_address, reg);
   I2c.read(_gyro_address, byte(1));
   return I2c.receive();
-
-  //I2c.beginTransmission(_gyro_address);
-  //I2c.write(reg);
-  //I2c.endTransmission();
-  //I2c.beginTransmission(_gyro_address);
-  //I2c.requestFrom(_gyro_address,  1);
-  //while (I2c.available() ==0) {}; // block unil data is available
-  //byte buf = I2c.receive();
-  //I2c.endTransmission();
-  //return buf;
 }
