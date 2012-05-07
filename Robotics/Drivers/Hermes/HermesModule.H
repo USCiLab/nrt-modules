@@ -5,7 +5,7 @@
 #include <nrt/Robotics/Messages/TransformMessage.H>
 #include <nrt/Robotics/Messages/VelocityMessage.H>
 #include <boost/asio/serial_port.hpp>
-#include "Firmware/hermes/serialdata.h"
+#include "Firmware/hermes/hermesGlobals.h"
 
 namespace hermes
 {
@@ -54,7 +54,7 @@ class HermesModule : public nrt::Module,
     std::mutex itsSerialPortMtx;
     std::mutex itsVelocityCommandMtx;
     std::vector<nrt::byte> itsMessageBuffer;
-    motorSpeedPacket itsVelocityCommand;
+    MotorPacket itsVelocityCommand;
     boost::asio::io_service itsIO;
     boost::asio::serial_port itsSerialPort;
     nrt::Parameter<std::string> itsOdometryBaseFrame;

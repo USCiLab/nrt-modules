@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // #include <WProgram.h> 
-#include <Wire.h>
+//#include <Wire.h>
 #include "HMC5883L.h"
 
 HMC5883L::HMC5883L()
@@ -30,7 +30,8 @@ HMC5883L::HMC5883L()
 
 MagnetometerRaw HMC5883L::ReadRawAxis()
 {
-  uint8_t* buffer = Read(DataRegisterBegin, 6);
+  unsigned char buffer[6];
+  this->Read(DataRegisterBegin, buffer, 6);
   MagnetometerRaw raw = MagnetometerRaw();
   raw.XAxis = (buffer[0] << 8) | buffer[1];
   raw.ZAxis = (buffer[2] << 8) | buffer[3];
@@ -96,42 +97,49 @@ int HMC5883L::SetScale(float gauss)
 	
 	// Setting is in the top 3 bits of the register.
 	regValue = regValue << 5;
-	Write(ConfigurationRegisterB, regValue);
+	this->Write(ConfigurationRegisterB, regValue);
 }
 
 int HMC5883L::SetMeasurementMode(uint8_t mode)
 {
-	Write(ModeRegister, mode);
+	this->Write(ModeRegister, mode);
 }
 
-void HMC5883L::Write(int address, int data)
+void HMC5883L::Write(uint8_t address, uint8_t data)
 {
-  Wire.beginTransmission(HMC5883L_Address);
-  Wire.write(address);
-  Wire.write(data);
-  Wire.endTransmission();
+  I2c.write((uint8_t)HMC5883L_Address, address, data);
+  //Wire.beginTransmission(0x3C);
+  //Wire.write(address);
+  //Wire.write(data);
+  //Wire.endTransmission();
 }
 
-uint8_t* HMC5883L::Read(int address, int length)
+void HMC5883L::Read(int address, unsigned char * buffer, int length)
 {
-  Wire.beginTransmission(HMC5883L_Address);
-  Wire.write(address);
-  Wire.endTransmission();
-  
-  Wire.beginTransmission(HMC5883L_Address);
-  Wire.requestFrom(HMC5883L_Address, length);
+  I2c.write(HMC5883L_Address, address);
 
-  uint8_t buffer[length];
-  if(Wire.available() == length)
-  {
-	  for(uint8_t i = 0; i < length; i++)
-	  {
-		  buffer[i] = Wire.read();
-	  }
-  }
-  Wire.endTransmission();
+  I2c.read(HMC5883L_Address, length);
+  for(int i=0; i<length; ++i)
+    buffer[i] = I2c.receive();
 
-  return buffer;
+  //Wire.beginTransmission(HMC5883L_Address);
+  //Wire.write(address);
+  //Wire.endTransmission();
+  //
+  //Wire.beginTransmission(HMC5883L_Address);
+  //Wire.requestFrom(HMC5883L_Address, length);
+
+  //uint8_t buffer[length];
+  //if(Wire.available() == length)
+  //{
+	//  for(uint8_t i = 0; i < length; i++)
+	//  {
+	//	  buffer[i] = Wire.read();
+	//  }
+  //}
+  //Wire.endTransmission();
+
+  //return buffer;
 }
 
 char* HMC5883L::GetErrorText(int errorCode)
