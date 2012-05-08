@@ -26,8 +26,7 @@ AStarPathPlannerModule::AStarPathPlannerModule(std::string const& instanceName) 
   itsFromTransformParam(FromTransformParam, this),
   itsToTransformParam(ToTransformParam, this),
   itsSegmentLengthParam(SegmentLengthParam, this),
-  itsUpdateRateParam(UpdateRateParam, this),
-  itsShowDebugParam(ShowDebugParam, this, &AStarPathPlannerModule::debugParamCallback)
+  itsUpdateRateParam(UpdateRateParam, this)
 {
   //
 }
@@ -175,23 +174,6 @@ nrt::Transform3D AStarPathPlannerModule::lookupTransform(std::string from, std::
 }
 
 // ######################################################################
-void AStarPathPlannerModule::debugParamCallback(bool const & debug)
-{
-  std::lock_guard<std::mutex> _(itsMtx);
-  
-  if (debug && !itsDisplay)
-  {
-    itsDisplay.reset(new nrt::DisplayImageSink);
-    addSubComponent(itsDisplay);
-  }
-  else if (!debug && itsDisplay)
-  {
-    removeSubComponent(itsDisplay);
-    itsDisplay.reset();
-  }
-}
-
-// ######################################################################
 void AStarPathPlannerModule::run()
 {
   while (running())
@@ -214,7 +196,6 @@ void AStarPathPlannerModule::run()
           Point2D<int> goal(goalVector.x(), goalVector.y());
           goal *= pixelsPerMeter;
           goal += start;
-          NRT_INFO("I think my Goal is at position " << goal << " relative to the robot");
 
           std::vector<Point2D<int>> path = AStar(map, start, goal);
           if (path.size())
@@ -234,20 +215,20 @@ void AStarPathPlannerModule::run()
 
             {
               std::lock_guard<std::mutex> _(itsMtx);
-              if (itsDisplay)
+              Image<PixRGB<byte>> pathImage(map);
+              double i = 0;
+              for (Point2D<int> const & p : path)
               {
-                Image<PixRGB<byte>> pathImage(map);
-                double i = 0;
-                for (Point2D<int> const & p : path)
-                {
-                  drawDisk(pathImage, Circle<int>(p, 2), PixHSV<double>(255*i/path.size(), 255, 128));
-                  drawLine(pathImage, Line<int>(start, goal), PixRGBA<byte>(255, 0, 0, 128));
-                  i++;
-                }
-                itsDisplay->out(GenericImage(pathImage));
+                drawDisk(pathImage, Circle<int>(p, 2), PixHSV<double>(255*i/path.size(), 255, 128));
+                drawLine(pathImage, Line<int>(start, goal), PixRGBA<byte>(255, 0, 0, 128));
+                i++;
               }
+              std::unique_ptr<GenericImageMessage> pathImageMsg(new GenericImageMessage(GenericImage(pathImage)));
+              post<PathImage>(pathImageMsg);
             }
           }
+          else
+            NRT_WARNING("No path found!");
         }
         catch (std::runtime_error &e)
         {
@@ -261,9 +242,7 @@ void AStarPathPlannerModule::run()
       //}
     }
     else
-    {
       NRT_WARNING("No occupancy grid found!");
-    }
     
     if (nrt::now() > endTime)
       NRT_WARNING("Cannot maintain update rate!");

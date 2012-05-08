@@ -3,6 +3,7 @@
 #include <nrt/Core/Util/StringUtil.H>
 #include <nrt/ImageProc/IO/ImageSink/ImageWriters/JpgImageWriter.H>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 
 using namespace nrt;
@@ -63,7 +64,7 @@ void *WebVisualizerModule::HTTPRequestCallback(enum mg_event event,
 
       // '{"battery": 10.2, "gyro": 34, "compass": 3.4, "gps": [38.02, -128.99]}'
       std::stringstream ss;
-      ss << "{\"battery\": " << itsVoltage << ", \"gyro\": " << itsGyro << ", \"compass\": " << itsCompass << ", \"gps\": [" << itsLatitude << ", " << itsLongitude << "]}\r\n";
+      ss << "{\"battery\": " << std::setprecision(4) << itsVoltage << ", \"gyro\": " << itsGyro << ", \"compass\": " << itsCompass << ", \"gps\": [" << itsLatitude << ", " << itsLongitude << "]}\r\n";
 
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n%s", ss.str().c_str());
       return (void*)""; 
