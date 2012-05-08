@@ -1,32 +1,15 @@
-/*
- * libwebsockets-test-server - libwebsockets test implementation
- *
- * Copyright (C) 2010-2011 Andy Green <andy@warmcat.com>
- *
- *  This library is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public
- *  License as published by the Free Software Foundation:
- *  version 2.1 of the License.
- *
- *  This library is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- *  Lesser General Public License for more details.
- *
- *  You should have received a copy of the GNU Lesser General Public
- *  License along with this library; if not, write to the Free Software
- *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- *  MA  02110-1301  USA
- */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
 #include <string.h>
 #include <sys/time.h>
+extern "C"
+{
 #include "libs/libwebsockets/libwebsockets.h"
-#include "MessageSerializers.hpp"
+}
+#include "Server.H"
+#include <stdexcept>
 
 enum nrt_protocols {
 	/* always first */
@@ -128,8 +111,6 @@ callback_nrt_ws(struct libwebsocket_context *context,
 	return 0;
 }
 
-
-
 /* list of supported protocols and callbacks */
 static struct libwebsocket_protocols protocols[] = {
 	/* first protocol must always be HTTP handler */
@@ -148,38 +129,36 @@ static struct libwebsocket_protocols protocols[] = {
 	}
 };
 
-int main(int argc, char **argv)
-{
-  int port = 8080;
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + 1024 + LWS_SEND_BUFFER_POST_PADDING];
 
-  struct libwebsocket_context *context = libwebsocket_create_context(
+// ######################################################################
+Server::Server()
+{ }
+
+// ######################################################################
+Server::~Server() 
+{
+  stop(); 
+}
+
+// ######################################################################
+void Server::start(int port, std::string interface)
+{
+  if(itsContext != nullptr) stop();
+
+  itsContext = libwebsocket_create_context(
       port, "", protocols, libwebsocket_internal_extensions, nullptr, nullptr, -1, -1, 0);
 
-  if (context == NULL) 
-  {
-    fprintf(stderr, "libwebsocket init failed\n");
-    return -1;
-  }
+  if (itsContext == NULL) throw std::runtime_error("libwebsocket init failed");
 
-	buf[LWS_SEND_BUFFER_PRE_PADDING] = 'x';
-
-	int n = libwebsockets_fork_service_loop(context);
-	if (n < 0) 
-  {
-		fprintf(stderr, "Unable to fork service loop %d\n", n);
-		return 1;
-	}
-
-  while(true)
-  {
-    sleep(1);
-		libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS],
-					&buf[LWS_SEND_BUFFER_PRE_PADDING], 1);
-  }
-
-	libwebsocket_context_destroy(context);
-
-  return 0;
-
+	int n = libwebsockets_fork_service_loop(itsContext);
+	if (n < 0) throw std::runtime_error("Unable to fork service loop");
 }
+
+// ######################################################################
+void Server::stop()
+{
+  if(itsContext != nullptr)
+    libwebsocket_context_destroy(itsContext);
+  itsContext = nullptr;
+}
+
