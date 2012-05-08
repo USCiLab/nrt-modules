@@ -20,7 +20,7 @@
             $("#compass").css('-webkit-transform', 'rotate('+degree+'deg)');
             map.panTo(new google.maps.LatLng(data['gps'][0], data['gps'][1]));
 
-            setBattery(0, (data['battery']-13)/(16.5-13));
+            setBattery(0, (data['battery']-13)/(16.0-13.0));
             $("#voltage").text(data['battery'] + "V");
           });
           setTimeout(updateTelemetry, 1000);

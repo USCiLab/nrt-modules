@@ -1,0 +1,44 @@
+<html>
+  <head>
+    <title>NRT Designer</title>
+  </head>
+</html>
+<body>
+  <h1>NRT Designer</h1>
+  <div id="nrt_socket_status">websocket not opened</div>
+</body>
+
+<script>
+  function get_websocket_url()
+  {
+    var pcol;
+    var u = document.URL;
+
+    pcol = "ws://";
+    u = u.substr(7);
+
+    u = u.split('/');
+
+    return pcol + u[0];
+  }
+
+  var socket_address = get_websocket_url();
+  var nrt_socket = new WebSocket(socket_address, "nrt-ws-protocol");
+
+  try {
+    document.getElementById("nrt_socket_status").textContent =
+      "trying to open [" + socket_address + "]";
+
+    nrt_socket.onopen = function() {
+      document.getElementById("nrt_socket_status").textContent = "websocket connection opened";
+    }
+    nrt_socket.onmessage = function got_packet(msg) {
+    }
+    nrt_socket.onclose = function() {
+      document.getElementById("nrt_socket_status").textContent = "websocket connection closed";
+    }
+  }
+  catch(exception) {
+    document.getElementById("nrt_socket_status").textContent = "EXCEPTION: " + exception;
+  }
+</script>

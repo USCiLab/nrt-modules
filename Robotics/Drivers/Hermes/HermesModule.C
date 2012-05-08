@@ -17,10 +17,14 @@ HermesModule::HermesModule(std::string const& instanceName) :
   itsOdometryOdomFrame(OdomFrameParamDef, this),
   itsSerialDev(SerialDevParam, this, &HermesModule::serialDevCallback),
   itsBatteryCutoffParam(BatteryCutoffParam, this),
-  itsTrimConstantParam(TrimConstantParam, this)
+  itsTrimConstantParam(TrimConstantParam, this),
+  itsForwardMaxParam(ForwardMaxParam, this),
+  itsBackwardMaxParam(BackwardMaxParam, this),
+  itsTurnRadiusParam(TurnRadiusParam, this)
 {
-  itsVelocityCommand.raw[0] = 0;
-  itsVelocityCommand.raw[1] = 0;
+  itsVelocityCommand.command = packetid::ID_MOTOR;
+  itsVelocityCommand.data1 = 128;
+  itsVelocityCommand.data2 = 128;
 }
 
 // ######################################################################
@@ -42,7 +46,7 @@ void HermesModule::serialDevCallback(std::string const & dev)
   try
   {
     itsSerialPort.open(dev);
-    itsSerialPort.set_option(serial_port_base::baud_rate(9600));
+    itsSerialPort.set_option(serial_port_base::baud_rate(115200));
     itsSerialPort.set_option(serial_port_base::character_size( 8 ));
     itsSerialPort.set_option(serial_port_base::flow_control(serial_port_base::flow_control::none));
     itsSerialPort.set_option(serial_port_base::parity(serial_port_base::parity::none));
@@ -57,14 +61,11 @@ void HermesModule::serialDevCallback(std::string const & dev)
 // ######################################################################
 void HermesModule::onMessage(VelocityCommand msg)
 {
-  // 1/2 the wheelbase of the create
-  double const radius = 0.3429/2.0; 
-
   double const transvel = msg->linear.x();
   double const rotvel   = msg->angular.z();
 
   // The distance each wheel should travel to accomodate the rotational velocity
-  double const rotwheeldist = rotvel * radius; 
+  double const rotwheeldist = 2*M_PI * rotvel * itsTurnRadiusParam.getVal(); 
 
   // 0   - full backwards
   // 64  - stopped
@@ -72,14 +73,25 @@ void HermesModule::onMessage(VelocityCommand msg)
   double const lefRaw  = (transvel+rotwheeldist) * (1 - itsTrimConstantParam.getVal() + 0.5);
   double const rigRaw  = (transvel-rotwheeldist) * (0 + itsTrimConstantParam.getVal() + 0.5);
 
-  nrt::byte const leftspeed  = std::round(nrt::clamped((lefRaw)*64.0/1.5, -64.0, 64.0)) + 64;
-  nrt::byte const rightspeed = std::round(nrt::clamped((rigRaw)*64.0/1.5, -64.0, 64.0)) + 64;
+  nrt::byte leftspeed; 
+  nrt::byte rightspeed; 
 
-  NRT_INFO("Setting velocity to " << leftspeed << ", " << rightspeed);
+  if (lefRaw >= 0)
+    leftspeed = std::round(nrt::clamped( int(lefRaw*127/itsForwardMaxParam.getVal()), 0, 127 )) + 128;
+  else
+    leftspeed = 127-std::round(nrt::clamped( int(-lefRaw*127/itsBackwardMaxParam.getVal()), 0, 127 ));
+
+  if (rigRaw >= 0)
+    rightspeed = std::round(nrt::clamped( int(rigRaw*127/itsForwardMaxParam.getVal()), 0, 127 )) + 128;
+  else
+    rightspeed = 127-std::round(nrt::clamped( int(-rigRaw*127/itsBackwardMaxParam.getVal()), 0, 127 ));
+
+
   {
     std::lock_guard<std::mutex> _(itsVelocityCommandMtx);
-    itsVelocityCommand.values.left = leftspeed;
-    itsVelocityCommand.values.right = rightspeed;
+    itsVelocityCommand.command = packetid::ID_MOTOR;
+    itsVelocityCommand.data2 = leftspeed;
+    itsVelocityCommand.data1 = rightspeed;
   }
 }
 
@@ -87,7 +99,7 @@ void HermesModule::onMessage(VelocityCommand msg)
 std::vector<byte> HermesModule::serialRead(const int ms, const size_t length)
 {
   std::vector<byte> read_buffer(length);
-  std::vector<byte> retn_buffer(length);
+  std::vector<byte> retn_buffer;
   bool readComplete = false, timedOut = false;
   int bytesRead = 0;
 
@@ -124,7 +136,7 @@ std::vector<byte> HermesModule::serialRead(const int ms, const size_t length)
   timer.expires_from_now(boost::posix_time::millisec(ms));
   timer.async_wait( finishedTimer );
 
-  itsSerialPort.async_read_some( boost::asio::buffer(read_buffer), finishedRead );
+  boost::asio::async_read(itsSerialPort, boost::asio::buffer(read_buffer, length), finishedRead);
   itsIO.reset();
 
   while (itsIO.run_one())
@@ -140,76 +152,42 @@ std::vector<byte> HermesModule::serialRead(const int ms, const size_t length)
 }
 
 // ######################################################################
-void HermesModule::processMessageBuffer()
+ResponsePacket HermesModule::writePacket(CommandPacket packet)
 {
-  static std::vector<byte> dataCodes = {SEN_BATTERY, SEN_COMPASS, SEN_GYRO};
+  byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(CommandPacket), 255, std::bit_xor<byte>());
+  std::vector<byte> data = {255, packet.command, packet.data1, packet.data2, checksum};
+  boost::asio::write(itsSerialPort, boost::asio::buffer(data));
 
-  while (itsMessageBuffer.size() > 0)
+  std::vector<byte> buf;
+  bool found = false;
+  auto endTime = nrt::now() + std::chrono::milliseconds(1000);
+  while (nrt::now() < endTime && !found)
   {
-    std::vector<byte>::iterator firstCode =
-      std::find_first_of(itsMessageBuffer.begin(), itsMessageBuffer.end(), dataCodes.begin(), dataCodes.end());
-
-    itsMessageBuffer.erase(itsMessageBuffer.begin(), firstCode);
-
-    if (itsMessageBuffer[0] == SEN_BATTERY)
+    std::vector<byte> tmp = serialRead(100, 1);
+    if (tmp.size() > 0)
     {
-      if (itsMessageBuffer.size() < sizeof(batteryPacket)+2)
-        return;
+      buf.push_back(tmp[0]);
 
-      batteryPacket packet;
-      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(batteryPacket)+1, &packet.raw[0]);
-      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(batteryPacket), 0, std::bit_xor<byte>());
+      if (buf.size() > 7)
+        buf.erase(buf.begin());
 
-      if(itsMessageBuffer[sizeof(batteryPacket)+1] == checksum)
-      {
-        itsLastBatteryReading = packet.voltage;
-        NRT_INFO("Got Battery: " << packet.voltage);
-
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(batteryPacket) + 2);
-      }
-      else
-      {
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
-      }
+      if (buf.size() == 7 && buf[0] == 255 && buf[1] == data[1] && buf[6] == std::accumulate(&buf[0], &buf[0]+6, 0, std::bit_xor<byte>()))
+        found = true;
     }
-    else if (itsMessageBuffer[0] == SEN_COMPASS)
-    {
-      if (itsMessageBuffer.size() < sizeof(compassPacket)+2)
-        return;
+  }
 
-      compassPacket packet;
-      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(compassPacket)+1, &packet.raw[0]);
-      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(compassPacket), 0, std::bit_xor<byte>());
-
-      if(itsMessageBuffer[sizeof(compassPacket)+1] == checksum)
-      {
-        NRT_INFO("Got Compass heading: " << packet.heading);
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(compassPacket) + 2);
-      }
-      else
-      {
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
-      }
-    }
-    else if (itsMessageBuffer[0] == SEN_GYRO)
-    {
-      if (itsMessageBuffer.size() < sizeof(gyroPacket)+2)
-        return;
-
-      gyroPacket packet;
-      std::copy(itsMessageBuffer.begin()+1, itsMessageBuffer.begin() + sizeof(gyroPacket)+1, &packet.raw[0]);
-      byte checksum = std::accumulate(&packet.raw[0], &packet.raw[0] + sizeof(gyroPacket), 0, std::bit_xor<byte>());
-
-      if(itsMessageBuffer[sizeof(gyroPacket)+1] == checksum)
-      {
-        NRT_INFO("Got gyro: " << packet.xyz[2]);
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin() + sizeof(gyroPacket) + 2);
-      }
-      else
-      {
-        itsMessageBuffer.erase(itsMessageBuffer.begin(), itsMessageBuffer.begin()+1);
-      }
-    }
+  ResponsePacket response;
+  if (!found)
+  {
+    NRT_WARNING("Timed out");
+    response.data = -1;
+    return response;
+  }
+  else
+  {
+    for (int i = 0; i < sizeof(ResponsePacket); i++)
+      response.raw[i] = buf[i+2];
+    return response;
   }
 }
 
@@ -227,20 +205,56 @@ void HermesModule::run()
 
     auto endTime = nrt::now() + std::chrono::milliseconds(100);
 
-    std::vector<byte> data = serialRead(10, 20);
-    itsMessageBuffer.insert(itsMessageBuffer.end(), data.begin(), data.end());
-
-    processMessageBuffer();
-    
-    // write velocity command to hermes;
-    std::vector<byte> velocityCommand = {CMD_RESET, CMD_SETSPEED};
+    // send a motor command
     {
       std::lock_guard<std::mutex> _(itsVelocityCommandMtx);
-      velocityCommand.push_back(itsVelocityCommand.values.left);
-      velocityCommand.push_back(itsVelocityCommand.values.right);
+      writePacket(itsVelocityCommand);
     }
 
-    boost::asio::write(itsSerialPort, boost::asio::buffer(velocityCommand));
+    // battery
+    CommandPacket cmd;
+    cmd.command = packetid::ID_BATTERY;
+    ResponsePacket res = writePacket(cmd);
+    if (res.data != -1)
+    {
+      std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(res.data));
+      post<hermes::Battery>(msg);
+    }
+
+    // magnetometer
+    //cmd.command = packetid::ID_MAG_X;
+    //res = writePacket(cmd);
+    //NRT_INFO("MagX: " << res.data);
+
+    //cmd.command = packetid::ID_MAG_Y;
+    //res = writePacket(cmd);
+    //NRT_INFO("MagY: " << res.data);
+
+    cmd.command = packetid::ID_MAG_Z;
+    res = writePacket(cmd);
+    if (res.data != -1)
+    {
+      std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(res.data));
+      post<hermes::CompassZ>(msg);
+    }
+
+    // gyroscope
+    //cmd.command = packetid::ID_GYRO_X;
+    //res = writePacket(cmd);
+    //NRT_INFO("GyroX: " << res.data);
+
+    cmd.command = packetid::ID_GYRO_Y;
+    res = writePacket(cmd);
+    if (res.data != -1)
+    {
+      std::unique_ptr<nrt::Message<nrt::real>> msg(new nrt::Message<nrt::real>(res.data));
+      post<hermes::GyroZ>(msg);
+    }
+
+    //cmd.command = packetid::ID_GYRO_Z;
+    //res = writePacket(cmd);
+    //NRT_INFO("GyroZ:" << res.data);
+
     std::this_thread::sleep_until(endTime);
   }
 }

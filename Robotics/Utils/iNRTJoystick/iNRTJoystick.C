@@ -100,7 +100,6 @@ void iNRTJoystickModule::run()
       tv.tv_sec = 5;
       tv.tv_usec = 0;
 
-      NRT_INFO("Selecting...");
       retval = select(FD_SETSIZE, &rfds, NULL, NULL, &tv);
 
       if (retval == -1)

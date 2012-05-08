@@ -25,7 +25,7 @@ void DeadReckoningModule::extrapolatePosition()
   // unless we got a compass message in the last time step, then use it for angle data instead
   if (nrt::Duration(nrt::now() - itsLastCompassTime).count() <= deltaTime)
   {
-    angular = itsLastCompassData.value;
+    angular = double(itsLastCompassData.value);
   }
 
   if(angular == 0)
