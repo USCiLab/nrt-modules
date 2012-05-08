@@ -8,37 +8,15 @@
   <div id="nrt_socket_status">websocket not opened</div>
 </body>
 
-<script>
-  function get_websocket_url()
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/nrt_protocol.js"></script>
+<script type="text/javascript">
+
+  var master_connection = new nrt_protocol(this_websocket_url());
+
+  master_connection.register_callback("BlackboardFederationSummary", function(bfs)
   {
-    var pcol;
-    var u = document.URL;
+    console.log("Got bfs!");
+  });
 
-    pcol = "ws://";
-    u = u.substr(7);
-
-    u = u.split('/');
-
-    return pcol + u[0];
-  }
-
-  var socket_address = get_websocket_url();
-  var nrt_socket = new WebSocket(socket_address, "nrt-ws-protocol");
-
-  try {
-    document.getElementById("nrt_socket_status").textContent =
-      "trying to open [" + socket_address + "]";
-
-    nrt_socket.onopen = function() {
-      document.getElementById("nrt_socket_status").textContent = "websocket connection opened";
-    }
-    nrt_socket.onmessage = function got_packet(msg) {
-    }
-    nrt_socket.onclose = function() {
-      document.getElementById("nrt_socket_status").textContent = "websocket connection closed";
-    }
-  }
-  catch(exception) {
-    document.getElementById("nrt_socket_status").textContent = "EXCEPTION: " + exception;
-  }
 </script>

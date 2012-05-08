@@ -24,6 +24,7 @@ class DesignerServerModule : public nrt::Module,
 
   private:
     Server itsServer;
+    std::mutex itsMtx;
 };
 
 #endif // NRT_MODULES_UTILITIES_DESIGNERSERVER_DESIGNERSERVERMODULE_H
