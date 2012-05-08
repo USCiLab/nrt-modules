@@ -4,6 +4,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <sys/time.h>
+#include <iostream>
 extern "C"
 {
 #include "libs/libwebsockets/libwebsockets.h"
@@ -34,8 +35,6 @@ static int callback_http(struct libwebsocket_context *context,
 
 	switch (reason) {
 	case LWS_CALLBACK_HTTP:
-    printf("Request [%s]\n", input);
-
     if(input[0] == '/' && input[1] == 0)
       sprintf(filenamebuffer, LOCAL_RESOURCE_PATH"/index.html");
     else
@@ -60,9 +59,7 @@ static int callback_http(struct libwebsocket_context *context,
 	return 0;
 }
 
-struct per_session_data__nrt_ws {
-	int number;
-};
+struct per_session_data__nrt_ws { };
 
 static int
 callback_nrt_ws(struct libwebsocket_context *context,
@@ -76,36 +73,27 @@ callback_nrt_ws(struct libwebsocket_context *context,
 	unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 	per_session_data__nrt_ws *pss = static_cast<per_session_data__nrt_ws*>(user);
 
-  printf("nrt_ws callback\n");
-
 	switch (reason) {
 
-	case LWS_CALLBACK_ESTABLISHED:
-		fprintf(stderr, "callback_dumb_increment: "
-						 "LWS_CALLBACK_ESTABLISHED\n");
-		break;
+    case LWS_CALLBACK_ESTABLISHED:
+      fprintf(stderr, "callback_nrt_ws: LWS_CALLBACK_ESTABLISHED\n");
+      break;
 
-	/*
-	 * in this protocol, we just use the broadcast action as the chance to
-	 * send our own connection-specific data and ignore the broadcast info
-	 * that is available in the 'in' parameter
-	 */
+    case LWS_CALLBACK_BROADCAST:
+      n = libwebsocket_write(wsi, (unsigned char*)in, len, LWS_WRITE_TEXT);
+      if (n < 0) {
+        fprintf(stderr, "ERROR writing to socket");
+        return 1;
+      }
+      break;
 
-	case LWS_CALLBACK_BROADCAST:
-		n = sprintf((char *)p, "%s", "hi");
-		n = libwebsocket_write(wsi, p, n, LWS_WRITE_TEXT);
-		if (n < 0) {
-			fprintf(stderr, "ERROR writing to socket");
-			return 1;
-		}
-		break;
+    case LWS_CALLBACK_RECEIVE:
+      printf("Got Request of length %lu [%s]", len, (char*)in);
+      break;
 
-	case LWS_CALLBACK_RECEIVE:
-    printf("Got Request of length %lu [%s]", len, (char*)in);
-		break;
+    default:
+      break;
 
-	default:
-		break;
 	}
 
 	return 0;
@@ -129,15 +117,22 @@ static struct libwebsocket_protocols protocols[] = {
 	}
 };
 
-
 // ######################################################################
-Server::Server()
-{ }
+Server::Server() :
+  itsContext(nullptr),
+  itsStartMsgBuf(new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + sizeof("NRT_MESSAGE_BEGIN") + LWS_SEND_BUFFER_POST_PADDING]),
+  itsEndMsgBuf(new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + sizeof("NRT_MESSAGE_END") + LWS_SEND_BUFFER_POST_PADDING])
+{ 
+  sprintf((char*)&itsStartMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], "NRT_MESSAGE_BEGIN");
+  sprintf((char*)&itsEndMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], "NRT_MESSAGE_END");
+}
 
 // ######################################################################
 Server::~Server() 
 {
   stop(); 
+  delete[] itsStartMsgBuf;
+  delete[] itsEndMsgBuf;
 }
 
 // ######################################################################
@@ -146,7 +141,7 @@ void Server::start(int port, std::string interface)
   if(itsContext != nullptr) stop();
 
   itsContext = libwebsocket_create_context(
-      port, "", protocols, libwebsocket_internal_extensions, nullptr, nullptr, -1, -1, 0);
+      port, nullptr, protocols, libwebsocket_internal_extensions, nullptr, nullptr, -1, -1, 0);
 
   if (itsContext == NULL) throw std::runtime_error("libwebsocket init failed");
 
@@ -160,5 +155,20 @@ void Server::stop()
   if(itsContext != nullptr)
     libwebsocket_context_destroy(itsContext);
   itsContext = nullptr;
+}
+
+// ######################################################################
+void Server::broadcastMessage(std::string const& message)
+{
+  //std::cout << "----------------------- Sending Message -----------------------" << std::endl;
+  //std::cout << message << std::endl;
+  //std::cout << "---------------------------------------------------------------" << std::endl;
+
+	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + message.length() + LWS_SEND_BUFFER_POST_PADDING];
+  std::copy(message.begin(), message.end(), &buf[LWS_SEND_BUFFER_PRE_PADDING]);
+
+  libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS], &itsStartMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], sizeof("NRT_MESSAGE_BEGIN"));
+  libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS], &buf[LWS_SEND_BUFFER_PRE_PADDING], message.size());
+  libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS], &itsEndMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], sizeof("NRT_MESSAGE_END"));
 }
 

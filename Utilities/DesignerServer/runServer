@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+nrtLoader --master --module=DesignerServerModule.so

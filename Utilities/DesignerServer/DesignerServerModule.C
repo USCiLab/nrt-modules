@@ -1,4 +1,5 @@
 #include "DesignerServerModule.H"
+#include "MessageSerializers.H" 
 
 using namespace nrt;
 using namespace designerserver;
@@ -7,6 +8,8 @@ using namespace designerserver;
 DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   Module(instanceName)
 {
+  setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
+
   itsServer.start(8080);
 }
 
@@ -19,6 +22,8 @@ DesignerServerModule::~DesignerServerModule()
 // ######################################################################
 void DesignerServerModule::onMessage(BlackboardFederationSummary m)
 {
+  std::lock_guard<std::mutex> _(itsMtx);
+  itsServer.broadcastMessage(toJSON(*m));
 }
 
 // ######################################################################

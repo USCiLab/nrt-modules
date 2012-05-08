@@ -8,7 +8,9 @@
   <div id="nrt_socket_status">websocket not opened</div>
 </body>
 
-<script>
+<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="js/nrt_protocol.js"></script>
+<script type="text/javascript">
   function get_websocket_url()
   {
     var pcol;
@@ -22,23 +24,25 @@
     return pcol + u[0];
   }
 
-  var socket_address = get_websocket_url();
-  var nrt_socket = new WebSocket(socket_address, "nrt-ws-protocol");
+  var master_connection = new nrt_protocol(get_websocket_url());
 
-  try {
-    document.getElementById("nrt_socket_status").textContent =
-      "trying to open [" + socket_address + "]";
+  //var socket_address = get_websocket_url();
+  //var nrt_socket = new WebSocket(socket_address, "nrt-ws-protocol");
 
-    nrt_socket.onopen = function() {
-      document.getElementById("nrt_socket_status").textContent = "websocket connection opened";
-    }
-    nrt_socket.onmessage = function got_packet(msg) {
-    }
-    nrt_socket.onclose = function() {
-      document.getElementById("nrt_socket_status").textContent = "websocket connection closed";
-    }
-  }
-  catch(exception) {
-    document.getElementById("nrt_socket_status").textContent = "EXCEPTION: " + exception;
-  }
+  //try {
+  //  $("#nrt_socket_status").html("trying to open [" + socket_address + "]");
+
+  //  nrt_socket.onopen = function() {
+  //    $("#nrt_socket_status").html("websocket connection opened");
+  //  }
+  //  nrt_socket.onmessage = function got_packet(msg) {
+  //    $("#nrt_socket_status").append(msg.data);
+  //  }
+  //  nrt_socket.onclose = function() {
+  //    $("#nrt_socket_status").html("websocket closed");
+  //  }
+  //}
+  //catch(exception) {
+  //    $("#nrt_socket_status").html("EXCEPTION: " + exception);
+  //}
 </script>
