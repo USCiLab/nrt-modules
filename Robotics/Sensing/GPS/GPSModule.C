@@ -144,19 +144,23 @@ void GPSModule::run()
           if (lat < itsOriginLat.getVal()) x *= -1;
           if (lon < itsOriginLng.getVal()) y *= -1;
 
-          std::cout << std::setprecision(16);
+          //std::cout << std::setprecision(16);
 
           // post the transform
-          NRT_INFO("Posting transform with distance from (" << itsOriginLat.getVal() << ", " << itsOriginLng.getVal() <<
-                   ") to (" << lat << ", " << lon << ") = (" << x << ", " << y << ") = " << sqrt(x*x+y*y) << " meters");
+          //NRT_INFO("Posting transform with distance from (" << itsOriginLat.getVal() << ", " << itsOriginLng.getVal() <<
+          //         ") to (" << lat << ", " << lon << ") = (" << x << ", " << y << ") = " << sqrt(x*x+y*y) << " meters");
 
           itsTransform = Eigen::Translation3d(x, y, z);
           std::unique_ptr<nrt::TransformMessage> transformMsg(new nrt::TransformMessage(nrt::now(), itsBaseFrameParam.getVal(), itsGpsFrameParam.getVal(), itsTransform));
           post<gps::GpsTransform>(transformMsg);
 
           // post the GPS message
-          NRT_INFO("Posting GPS message: timestamp " << msg->timestamp << " " << msg->latitude/100 << "N, " << msg->longitude/100 << "W, altitude " << msg->altitude << "m from " << msg->numSatellites << " satellites.");
+          //NRT_INFO("Posting GPS message: timestamp " << msg->timestamp << " " << msg->latitude/100 << "N, " << msg->longitude/100 << "W, altitude " << msg->altitude << "m from " << msg->numSatellites << " satellites.");
           post<gps::GpsMessage>(msg);
+
+          // post the corrected lat/long data
+          std::unique_ptr<nrt::Message<std::pair<nrt::real, nrt::real>>> latlngmsg(new nrt::Message<std::pair<nrt::real, nrt::real>>(std::make_pair(lat, lon)));
+          post<gps::GpsLatLong>(latlngmsg);
           
           paragraphComplete = true;
         }

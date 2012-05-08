@@ -9,10 +9,12 @@
 
 namespace webvisualizer 
 {
+  typedef std::pair<nrt::real, nrt::real> LatLng;
+
+  NRT_DECLARE_MESSAGECHECKER_PORT(GpsLatLong, nrt::Message<LatLng>, "Pair of latitude/longitudes.");
   NRT_DECLARE_MESSAGECHECKER_PORT(BatteryInfo, nrt::Message<nrt::real>, "Hermes battery data.");
   NRT_DECLARE_MESSAGECHECKER_PORT(CompassInfo, nrt::Message<nrt::real>, "Hermes compass data.");
   NRT_DECLARE_MESSAGECHECKER_PORT(GyroInfo, nrt::Message<nrt::real>, "Hermes gyroscope data.");
-  NRT_DECLARE_MESSAGECHECKER_PORT(GPSInfo, nrt::GPSMessage, "Hermes GPS data.");
   NRT_DECLARE_MESSAGECHECKER_PORT(ViewPortImage, GenericImageMessage, "An image to show in the background of the HUD");
   NRT_DECLARE_MESSAGECHECKER_PORT(OccupancyImage, GenericImageMessage, "The occupancy grid.");
 
@@ -26,7 +28,7 @@ class WebVisualizerModule: public nrt::Module,
   public nrt::MessageChecker<webvisualizer::BatteryInfo,
     webvisualizer::CompassInfo,
     webvisualizer::GyroInfo,
-    webvisualizer::GPSInfo,
+    webvisualizer::GpsLatLong,
     webvisualizer::ViewPortImage,
     webvisualizer::OccupancyImage>
 {

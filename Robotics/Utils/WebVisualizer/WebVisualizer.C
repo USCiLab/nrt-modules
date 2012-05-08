@@ -53,18 +53,21 @@ void *WebVisualizerModule::HTTPRequestCallback(enum mg_event event,
       if (auto compassResult = check<webvisualizer::CompassInfo>(nrt::MessageCheckerPolicy::Unseen))
         itsCompass = compassResult.get()->value;
 
-      if (auto gpsResult = check<webvisualizer::GPSInfo>(nrt::MessageCheckerPolicy::Unseen))
+      if (auto gpsResult = check<webvisualizer::GpsLatLong>(nrt::MessageCheckerPolicy::Unseen))
       {
-        itsLatitude = (gpsResult.get()->isNorth ? 1 : -1);
-        itsLatitude *= gpsResult.get()->latitude;
+        std::pair<nrt::real, nrt::real> gps = gpsResult.get()->value;
+        itsLatitude = gps.first;
+        //itsLatitude = (gps->isNorth ? 1 : -1);
+        //itsLatitude *= gps->latitude;
 
-        itsLongitude = (gpsResult.get()->isWest ? -1 : 1);
-        itsLongitude *= gpsResult.get()->longitude;
+        itsLongitude = gps.second; 
+        //itsLongitude = (gps->isWest ? -1 : 1);
+        //itsLongitude *= gps->longitude;
       }
 
       // '{"battery": 10.2, "gyro": 34, "compass": 3.4, "gps": [38.02, -128.99]}'
       std::stringstream ss;
-      ss << "{\"battery\": " << std::setprecision(4) << itsVoltage << ", \"gyro\": " << itsGyro << ", \"compass\": " << itsCompass << ", \"gps\": [" << itsLatitude << ", " << itsLongitude << "]}\r\n";
+      ss << "{\"battery\": " << itsVoltage << ", \"gyro\": " << itsGyro << ", \"compass\": " << itsCompass << ", \"gps\": [" << itsLatitude << ", " << itsLongitude << "]}\r\n";
 
       mg_printf(conn, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n%s", ss.str().c_str());
       return (void*)""; 
