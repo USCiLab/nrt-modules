@@ -4,6 +4,19 @@ if (typeof String.prototype.startsWith != 'function') {
   };
 }
 
+function this_websocket_url()
+{
+  var pcol;
+  var u = document.URL;
+
+  pcol = "ws://";
+  u = u.substr(7);
+
+  u = u.split('/');
+
+  return pcol + u[0];
+}
+
 // Create a new websockets connection to an NRT server
 function nrt_protocol(socket_address)
 {
@@ -14,6 +27,7 @@ function nrt_protocol(socket_address)
   self.socket.onopen  = function() { self.is_open = true; }
   self.socket.onclose = function() { self.is_open = false; }
 
+  self.callbacks = {};
 
   self.buffer = "";
   self.socket.onmessage = function got_packet(msg)
@@ -36,33 +50,17 @@ function nrt_protocol(socket_address)
         self.buffer = self.buffer.substring(msgend);
       }
     }
-
-
-
-
-
-    //console.log("Got Message: " + msg.data);
-
-    //if(msg.data == "NRT_MESSAGE_BEGIN")
-    //{
-    //  console.log("Message beginning");
-    //  self.buffer = [];
-    //}
-    //else if(msg.data == "NRT_MESSAGE_END") 
-    //{
-    //  console.log("Message Ending");
-    //  self.handle_message(self.buffer.join(""));
-    //  self.buffer = [];
-    //}
-    //else
-    //{
-    //  self.buffer.push(msg.data);
-    //}
   }
 }
 
 nrt_protocol.prototype.handle_message = function(message_string)
 {
-  console.log("Got Message: " + message_string);
   var message_object = JSON.parse(message_string);
+  if(this.callbacks[message_object.msgtype] !== undefined)
+    this.callbacks[message_object.msgtype](message_object.message);
+}
+
+nrt_protocol.prototype.register_callback = function(msgtype, callback)
+{
+  this.callbacks[msgtype] = callback;
 }

@@ -145,33 +145,43 @@ std::string toJSON(nrt::blackboard::BlackboardFederationSummary const & summary)
   rapidjson::StringBuffer buffer;
 
   jsonwriter writer(buffer);
-  writer.StartObject(); 
 
-  writer.String("msgtype");
-  writer.String("BlackboardFederationSummary");
-
-  // Write the bbnicks
-  writer.String("bbnicks");
   {
-    writer.StartArray();
-    for(auto p : summary.bbnicks)
+    writer.StartObject(); 
+
+    writer.String("msgtype");
+    writer.String("BlackboardFederationSummary");
+
+    writer.String("message");
     {
       writer.StartObject();
-      writer.String("uid"); writer.String(p.first.c_str()); 
-      writer.String("nick"); writer.String(p.second.c_str());
+
+      // Write the bbnicks
+      writer.String("bbnicks");
+      {
+        writer.StartArray();
+        for(auto p : summary.bbnicks)
+        {
+          writer.StartObject();
+          writer.String("uid"); writer.String(p.first.c_str()); 
+          writer.String("nick"); writer.String(p.second.c_str());
+          writer.EndObject();
+        }
+        writer.EndArray();
+      }
+
+      writer.String("namespaces");
+      {
+        writer.StartArray();
+        toJSON("/", *summary.nss, writer);
+        writer.EndArray();
+      }
+
       writer.EndObject();
     }
-    writer.EndArray();
-  }
 
-  writer.String("namespaces");
-  {
-    writer.StartArray();
-    toJSON("/", *summary.nss, writer);
-    writer.EndArray();
+    writer.EndObject();
   }
-
-  writer.EndObject();
 
   return buffer.GetString();
 }
