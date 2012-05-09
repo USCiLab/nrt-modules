@@ -9,7 +9,10 @@ class SerialPort;
 
 namespace gps
 {
-  NRT_DECLARE_MESSAGEPOSTER_PORT(GpsMessage, nrt::GPSMessage, void, "The GPS data.");
+  typedef std::pair<nrt::real, nrt::real> LatLng;
+
+  NRT_DECLARE_MESSAGEPOSTER_PORT(GpsMessage, nrt::GPSMessage, void, "The raw GPS data.");
+  NRT_DECLARE_MESSAGEPOSTER_PORT(GpsLatLong, nrt::Message<LatLng>, void, "Latitude/Longitude pair.");
   NRT_DECLARE_MESSAGEPOSTER_PORT(GpsTransform, nrt::TransformMessage, void, "The GPS dongle's transform.");
   
   nrt::ParameterCategory ParamCat("GPS device related options");
@@ -20,7 +23,7 @@ namespace gps
   nrt::ParameterDef<std::string> BaseFrameParam("from", "The name of the parent frame of the GPS", "world", ParamCat);
 }
 
-class GPSModule : public nrt::Module, public nrt::MessagePoster<gps::GpsMessage, gps::GpsTransform>
+class GPSModule : public nrt::Module, public nrt::MessagePoster<gps::GpsMessage, gps::GpsLatLong, gps::GpsTransform>
 {
   public:
     GPSModule(std::string const & instanceName="");

@@ -26,11 +26,11 @@ class NumberPosterModule:
 
   private:
     std::mutex itsMtx;
+    std::vector<nrt::real> itsNumberList;
+    std::vector<nrt::real>::iterator itsNumberListIterator;
     nrt::Parameter<std::string> itsNumberListParam;
     nrt::Parameter<double> itsRateParam;
     nrt::Parameter<bool> itsRepeatParam;
-    std::vector<nrt::real> itsNumberList;
-    std::vector<nrt::real>::iterator itsNumberListIterator;
     bool itShouldPost;
 };
 

@@ -4,6 +4,7 @@
 #include <nrt/Eigen/Types.H>
 #include <nrt/Core/Blackboard/Message.H>
 #include <boost/serialization/vector.hpp>
+#include <boost/serialization/utility.hpp>
 
 namespace nrt
 {
