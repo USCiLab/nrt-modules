@@ -7,17 +7,17 @@
 typedef rapidjson::Writer<rapidjson::StringBuffer> jsonwriter;
 
 // ######################################################################
-void toJSON(std::string const & paramname, nrt::ParameterSummary const & ps, jsonwriter & writer)
+void toJSON(nrt::ParameterSummary const & ps, jsonwriter & writer)
 {
   writer.StartObject();
 
   writer.String("state");
   switch(ps.state)
   {
-    case nrt::ParameterState::Create:  writer.String("Create");
-    case nrt::ParameterState::Modify:  writer.String("Modify");
-    case nrt::ParameterState::Read:    writer.String("Read");
-    case nrt::ParameterState::Destroy: writer.String("Destroy");
+    case nrt::ParameterState::Create:  writer.String("Create");  break;
+    case nrt::ParameterState::Modify:  writer.String("Modify");  break;
+    case nrt::ParameterState::Read:    writer.String("Read");    break;
+    case nrt::ParameterState::Destroy: writer.String("Destroy"); break;
   }
 
   writer.String("descriptor"); writer.String(ps.descriptor.c_str());
@@ -101,9 +101,8 @@ void toJSON(std::string const & bbuid, std::string const & moduid, nrt::blackboa
     writer.StartArray();
     for(std::pair<std::string, nrt::ParameterSummary> const & p : ms.parameters)
     {
-      std::string const & paramname = p.first;
       nrt::ParameterSummary const & ps = p.second;
-      toJSON(paramname, ps, writer);
+      toJSON(ps, writer);
     }
     writer.EndArray();
   }
@@ -183,5 +182,35 @@ std::string toJSON(nrt::blackboard::BlackboardFederationSummary const & summary)
     writer.EndObject();
   }
 
+  return buffer.GetString();
+}
+
+// ######################################################################
+std::string toJSON(nrt::ModuleParamChangedMessage const & message)
+{
+  rapidjson::StringBuffer buffer;
+  jsonwriter writer(buffer);
+
+  {
+    writer.StartObject();
+
+    writer.String("msgtype");
+    writer.String("ModuleParamChangedMessage");
+
+    writer.String("message");
+    {
+      writer.StartObject();
+
+      writer.String("moduleuid");
+      writer.String(message.moduleuid.c_str());
+
+      writer.String("paramsummary");
+      toJSON(message.paramsummary, writer);
+
+      writer.EndObject();
+    }
+
+    writer.EndObject();
+  }
   return buffer.GetString();
 }

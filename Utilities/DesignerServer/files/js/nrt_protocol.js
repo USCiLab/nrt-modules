@@ -31,7 +31,7 @@ function nrt_protocol(socket_address, on_open_callback, on_close_callback)
   this.is_open   = false;
 
   this.socket = new WebSocket(socket_address, "nrt-ws-protocol");
-  this.socket.onopen  = function() { self.is_open = true; self.on_open_callback();}
+  this.socket.onopen  = function() { self.is_open = true; self.request_federation_summary(); self.on_open_callback();}
   this.socket.onclose = function() { self.is_open = false; self.on_close_callback(); }
 
   this.socket.onmessage = function(message_string){self.got_packet(message_string);};

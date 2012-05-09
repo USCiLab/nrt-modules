@@ -9,16 +9,24 @@ namespace designerserver
 {
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT_SPECIAL( BlackboardFederationSummary,
       nrt::blackboard::BlackboardFederationSummary, void, "Blackboard Federation Summary" );
+
+  NRT_DECLARE_MESSAGESUBSCRIBER_PORT_SPECIAL( ModuleParamChanged,
+      nrt::ModuleParamChangedMessage, void, "Parameter Changed" );
+
+  
 }
 
 
 class DesignerServerModule : public nrt::Module,
-                             public nrt::MessageSubscriber<designerserver::BlackboardFederationSummary>
+                             public nrt::MessageSubscriber<designerserver::BlackboardFederationSummary,
+                                                           designerserver::ModuleParamChanged>
 {
   public:
     DesignerServerModule(std::string const & instanceName = "");
     ~DesignerServerModule();
+
     void onMessage(designerserver::BlackboardFederationSummary m);
+    void onMessage(designerserver::ModuleParamChanged m);
 
     void run();
 
