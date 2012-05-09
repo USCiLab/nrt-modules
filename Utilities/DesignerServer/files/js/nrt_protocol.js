@@ -1,4 +1,5 @@
 // ######################################################################
+// Get the appropriate websocket URL to the server that's serving this page
 function this_websocket_url()
 {
   var pcol;
@@ -14,9 +15,19 @@ function this_websocket_url()
 
 // ######################################################################
 // Create a new websockets connection to an NRT server
+//   
+//  - nrt_protocol.start():
+//       Start up the connection. Call this method after all callbacks have been registered
+//   
+//  - nrt_protocol.register_callback(MessageName, Callback):
+//       Register a callback for a particular kind of message
+//  
+//  - nrt_protocol.request_federation_summary():
+//       Request a new BlackboardFederationSummary to be sent out
+//
 function nrt_protocol(socket_address, on_open_callback, on_close_callback)
 {
-  var self = this;
+  this.socket_address = socket_address;
 
   this.on_open_callback = function() {}; 
   if(arguments.length >= 2)
@@ -29,11 +40,15 @@ function nrt_protocol(socket_address, on_open_callback, on_close_callback)
   this.callbacks = {};
   this.buffer    = "";
   this.is_open   = false;
+}
 
-  this.socket = new WebSocket(socket_address, "nrt-ws-protocol");
+// ######################################################################
+nrt_protocol.prototype.start = function()
+{
+  var self = this;
+  this.socket = new WebSocket(this.socket_address, "nrt-ws-protocol");
   this.socket.onopen  = function() { self.is_open = true; self.request_federation_summary(); self.on_open_callback();}
   this.socket.onclose = function() { self.is_open = false; self.on_close_callback(); }
-
   this.socket.onmessage = function(message_string){self.got_packet(message_string);};
 }
 
@@ -44,7 +59,6 @@ nrt_protocol.prototype.handle_message = function(message_string)
   if(this.callbacks[message_object.msgtype] !== undefined)
     this.callbacks[message_object.msgtype](message_object.message);
 }
-
 
 // ######################################################################
 nrt_protocol.prototype.got_packet = function(msg)

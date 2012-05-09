@@ -11,7 +11,8 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");
 
-  itsServer.registerCallback("BlackboardFederationSummaryRequest", std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
+  itsServer.registerCallback("BlackboardFederationSummaryRequest",
+      std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
 
   itsServer.start(8080);
 }
@@ -20,6 +21,12 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
 DesignerServerModule::~DesignerServerModule()
 {
   itsServer.stop();
+}
+
+// ######################################################################
+void DesignerServerModule::run()
+{
+  while(running()) usleep(100000);
 }
 
 // ######################################################################
@@ -35,12 +42,6 @@ void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
   itsServer.broadcastMessage(toJSON(*m));
-}
-
-// ######################################################################
-void DesignerServerModule::run()
-{
-  while(running()) usleep(100000);
 }
 
 // ######################################################################
