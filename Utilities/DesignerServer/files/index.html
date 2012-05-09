@@ -13,7 +13,7 @@
 
   <p>
     <h2>ModuleParamChangedMessage</h2>
-    <div id="ModuleParamChangedMessage"></div>
+    <pre id="ModuleParamChangedMessage"></pre>
   </p>
 
   <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
@@ -25,16 +25,16 @@
       function() { $("#nrt_socket_status").html("websocket opened")},
       function() { $("#nrt_socket_status").html("websocket closed")});
 
-    // Register our message callbacks
+    ///////////// Message Callbacks ///////////// 
     master_connection.register_callback("BlackboardFederationSummary", function(bfs)
     {
-      console.log("Got bfs!");
-      $("#BlackboardFederationSummary").html(JSON.stringify(bfs, undefined, 2));
+      $("#BlackboardFederationSummary").append("<pre>" + JSON.stringify(bfs, null, 2) + "</pre><hr>");
+
     });
 
     master_connection.register_callback("ModuleParamChangedMessage", function(mpcm)
     {
-      console.log("Got mpcm!");
+      $("#ModuleParamChangedMessage").append("<pre>" + JSON.stringify(mpcm, null, 2) + "</pre><hr>");
     });
 
     // Start the connection to the Master

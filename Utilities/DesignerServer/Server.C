@@ -166,7 +166,7 @@ void Server::stop()
     libwebsocket_context_destroy(itsContext);
   itsContext = nullptr;
   itsRunning = false;
-  itsServiceThread.join();
+  try{ itsServiceThread.join(); } catch(...) {}
 }
 
 // ######################################################################
