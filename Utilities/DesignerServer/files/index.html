@@ -2,31 +2,44 @@
   <head>
     <title>NRT Designer</title>
   </head>
-</html>
-<body>
+  <body>
   <h1>NRT Designer</h1>
   <div id="nrt_socket_status">websocket not opened</div>
+
+  <p>
+    <h2>BlackboardFederationSummary</h2>
+    <div id="BlackboardFederationSummary"></div>
+  </p>
+
+  <p>
+    <h2>ModuleParamChangedMessage</h2>
+    <div id="ModuleParamChangedMessage"></div>
+  </p>
+
+  <script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
+  <script type="text/javascript" src="js/nrt_protocol.js"></script>
+  <script type="text/javascript">
+
+    // Create a connection to the NRT Master
+    var master_connection = new nrt_protocol(this_websocket_url(),
+      function() { $("#nrt_socket_status").html("websocket opened")},
+      function() { $("#nrt_socket_status").html("websocket closed")});
+
+    // Register our message callbacks
+    master_connection.register_callback("BlackboardFederationSummary", function(bfs)
+    {
+      console.log("Got bfs!");
+      $("#BlackboardFederationSummary").html(JSON.stringify(bfs, undefined, 2));
+    });
+
+    master_connection.register_callback("ModuleParamChangedMessage", function(mpcm)
+    {
+      console.log("Got mpcm!");
+    });
+
+    // Start the connection to the Master
+    master_connection.start();
+
+  </script>
 </body>
-
-<script type="text/javascript" src="js/jquery-1.7.2.min.js"></script>
-<script type="text/javascript" src="js/nrt_protocol.js"></script>
-<script type="text/javascript">
-
-  // Create a connection to the NRT Master
-  var master_connection = new nrt_protocol(this_websocket_url());
-
-  // Register our message callbacks
-  master_connection.register_callback("BlackboardFederationSummary", function(bfs)
-  {
-    console.log("Got bfs!");
-  });
-
-  master_connection.register_callback("ModuleParamChangedMessage", function(mpcm)
-  {
-    console.log("Got mpcm!");
-  });
-
-  // Start the connection to the Master
-  master_connection.start();
-
-</script>
+</html>

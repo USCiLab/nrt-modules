@@ -3,6 +3,7 @@
 
 #include <nrt/Core/Blackboard/ModuleLoaderMessages.H>
 #include <nrt/Core/Blackboard/Module.H>
+#include "libs/rapidjson/document.h"
 #include "Server.H"
 
 namespace designerserver
@@ -12,8 +13,6 @@ namespace designerserver
 
   NRT_DECLARE_MESSAGESUBSCRIBER_PORT_SPECIAL( ModuleParamChanged,
       nrt::ModuleParamChangedMessage, void, "Parameter Changed" );
-
-  
 }
 
 
@@ -30,14 +29,17 @@ class DesignerServerModule : public nrt::Module,
 
     void run();
 
+    void callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
+
+    std::function<void(rapidjson::Document const&)> itsCallback;
+
   private:
+    std::shared_ptr<nrt::blackboard::BlackboardFederationSummary const> itsLastFederationUpdate;
   
     Server itsServer;
     std::mutex itsMtx;
 
-    void callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
 
-    nrt::blackboard::BlackboardFederationSummary itsLastFederationSummary;
 };
 
 #endif // NRT_MODULES_UTILITIES_DESIGNERSERVER_DESIGNERSERVERMODULE_H

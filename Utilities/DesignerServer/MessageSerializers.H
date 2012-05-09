@@ -111,12 +111,61 @@ void toJSON(std::string const & bbuid, std::string const & moduid, nrt::blackboa
 }
 
 // ######################################################################
+void toJSON(std::string const & namespc, std::string const & connec, nrt::blackboard::ConnectorSummary const & cs, jsonwriter & writer)
+{
+  writer.StartObject();
+
+  writer.String("namespc"); writer.String(namespc.c_str());
+
+  writer.String("connec"); writer.String(connec.c_str());
+
+  writer.String("msgtype"); writer.String(cs.msgtype.c_str());
+
+  writer.String("rettype"); writer.String(cs.rettype.c_str());
+
+  writer.String("instance"); writer.String(cs.instance.c_str());
+
+  writer.String("type"); 
+  switch(cs.type)
+  {
+    case nrt::ConnectorType::Intra:  writer.String("Intra"); break;
+    case nrt::ConnectorType::Border: writer.String("Border"); break;
+  }
+
+  writer.String("topic"); writer.String(cs.topic.c_str());
+
+  writer.String("topicfilt"); writer.String(cs.topicfilt.c_str());
+
+  writer.EndObject();
+}
+
+
+// ######################################################################
+void toJSON(nrt::blackboard::ConnectionSummary const & cs, jsonwriter & writer)
+{
+  writer.StartObject();
+
+  writer.String("bbuid1");    writer.String(cs.bbuid1.c_str());     
+
+  writer.String("module1");   writer.String(cs.module1.c_str());    
+
+  writer.String("portname1"); writer.String(cs.portname1.c_str());  
+
+  writer.String("bbuid2");    writer.String(cs.bbuid2.c_str());     
+
+  writer.String("module2");   writer.String(cs.module2.c_str());    
+
+  writer.String("portname2"); writer.String(cs.portname2.c_str());  
+
+  writer.EndObject();
+}
+
+// ######################################################################
 void toJSON(std::string const & namespacename, nrt::blackboard::NamespaceSummary const & nss, jsonwriter & writer)
 {
   writer.StartObject();
 
-  writer.String("name");
-  writer.String(namespacename.c_str());
+  writer.String("name"); writer.String(namespacename.c_str());
 
   writer.String("modules");
   {
@@ -130,6 +179,76 @@ void toJSON(std::string const & namespacename, nrt::blackboard::NamespaceSummary
         nrt::blackboard::ModuleSummary const & ms = q.second;
         toJSON(bbuid, moduid, ms, writer);
       }
+    }
+    writer.EndArray();
+  }
+
+  writer.String("pconnectors");
+  {
+    writer.StartArray();
+    for(std::pair<std::string, std::map<std::string, nrt::blackboard::ConnectorSummary>> const & p : nss.pconnectors)
+    {
+      std::string const & namespc = p.first;
+      for(std::pair<std::string, nrt::blackboard::ConnectorSummary> const & q : p.second)
+      {
+        std::string const & connec = q.first;
+        nrt::blackboard::ConnectorSummary const & cs = q.second;
+        toJSON(namespc, connec, cs, writer);
+      }
+    }
+    writer.EndArray();
+  }
+
+  writer.String("cconnectors");
+  {
+    writer.StartArray();
+    for(std::pair<std::string, std::map<std::string, nrt::blackboard::ConnectorSummary>> const & p : nss.cconnectors)
+    {
+      std::string const & namespc = p.first;
+      for(std::pair<std::string, nrt::blackboard::ConnectorSummary> const & q : p.second)
+      {
+        std::string const & connec = q.first;
+        nrt::blackboard::ConnectorSummary const & cs = q.second;
+        toJSON(namespc, connec, cs, writer);
+      }
+    }
+    writer.EndArray();
+  }
+
+  writer.String("sconnectors");
+  {
+    writer.StartArray();
+    for(std::pair<std::string, std::map<std::string, nrt::blackboard::ConnectorSummary>> const & p : nss.sconnectors)
+    {
+      std::string const & namespc = p.first;
+      for(std::pair<std::string, nrt::blackboard::ConnectorSummary> const & q : p.second)
+      {
+        std::string const & connec = q.first;
+        nrt::blackboard::ConnectorSummary const & cs = q.second;
+        toJSON(namespc, connec, cs, writer);
+      }
+    }
+    writer.EndArray();
+  }
+
+  writer.String("connections");
+  {
+    writer.StartArray();
+    for(nrt::blackboard::ConnectionSummary const & cs : nss.connections)
+    {
+      toJSON(cs, writer);
+    }
+    writer.EndArray();
+  }
+
+  writer.String("subnamespaces");
+  {
+    writer.StartArray();
+    for(std::pair<std::string, std::shared_ptr<nrt::blackboard::NamespaceSummary>> const & p : nss.subnamespaces)
+    {
+      std::string const & relativenamespc = p.first;
+      nrt::blackboard::NamespaceSummary const & nss = *p.second;
+      toJSON(relativenamespc, nss, writer);
     }
     writer.EndArray();
   }

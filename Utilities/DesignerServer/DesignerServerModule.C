@@ -26,14 +26,14 @@ DesignerServerModule::~DesignerServerModule()
 // ######################################################################
 void DesignerServerModule::run()
 {
-  while(running()) usleep(100000);
+  while(running()) usleep(10000);
 }
 
 // ######################################################################
 void DesignerServerModule::onMessage(BlackboardFederationSummary m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  itsLastFederationSummary = *m;
+  itsLastFederationUpdate = m;
   itsServer.broadcastMessage(toJSON(*m));
 }
 
@@ -48,7 +48,9 @@ void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 void DesignerServerModule::callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  itsServer.broadcastMessage(toJSON(itsLastFederationSummary));
+  if(itsLastFederationUpdate)
+    itsServer.broadcastMessage(toJSON(*itsLastFederationUpdate));
+  else NRT_WARNING("No Federation Summary Available");
 }
 
 NRT_REGISTER_MODULE(DesignerServerModule);

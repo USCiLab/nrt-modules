@@ -8,10 +8,10 @@
 #include "libs/rapidjson/document.h"
 extern "C"
 {
-#include "libs/libwebsockets/libwebsockets.h"
+  #include "libs/libwebsockets/libwebsockets.h"
 }
-#include "Server.H"
 #include <stdexcept>
+#include "Server.H"
 
 enum nrt_protocols {
 	/* always first */
@@ -21,7 +21,7 @@ enum nrt_protocols {
 
 	/* always last */
 	DEMO_PROTOCOL_COUNT
-};
+}; 
 
 #define LOCAL_RESOURCE_PATH "/lab/rand/workspace/nrt-modules/Utilities/DesignerServer/files"
 
@@ -127,6 +127,7 @@ static struct libwebsocket_protocols protocols[] = {
 
 // ######################################################################
 Server::Server() :
+  itsRunning(false),
   itsContext(nullptr),
   itsStartMsgBuf(new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + sizeof("NRT_MESSAGE_BEGIN") + LWS_SEND_BUFFER_POST_PADDING]),
   itsEndMsgBuf(new uint8_t[LWS_SEND_BUFFER_PRE_PADDING + sizeof("NRT_MESSAGE_END") + LWS_SEND_BUFFER_POST_PADDING])
@@ -154,8 +155,8 @@ void Server::start(int port, std::string interface)
 
   if (itsContext == NULL) throw std::runtime_error("libwebsocket init failed");
 
-	int n = libwebsockets_fork_service_loop(itsContext);
-	if (n < 0) throw std::runtime_error("Unable to fork service loop");
+  itsRunning = true;
+  itsServiceThread = std::thread(std::bind(&Server::serviceThread, this));
 }
 
 // ######################################################################
@@ -164,12 +165,14 @@ void Server::stop()
   if(itsContext != nullptr)
     libwebsocket_context_destroy(itsContext);
   itsContext = nullptr;
+  itsRunning = false;
+  itsServiceThread.join();
 }
 
 // ######################################################################
-void Server::registerCallback(std::string const & messageName, std::function<void(rapidjson::Document const&)> function)
+void Server::registerCallback(std::string const & messageName, std::function<void(rapidjson::Document const&)> callback)
 {
-  itsCallbacks[messageName] = function;
+  itsCallbacks[messageName] = callback;
 }
 
 // ######################################################################
@@ -183,13 +186,24 @@ void Server::broadcastMessage(std::string const& message)
   libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS], &itsEndMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], sizeof("NRT_MESSAGE_END"));
 }
 
+// ###################################################################### 
+void Server::serviceThread()
+{
+  while(itsRunning)
+    libwebsocket_service(itsContext, 50);
+}
+
 // ######################################################################
 void Server::receiveMessage(rapidjson::Document const & document)
 {
   std::string const & msgtype = document["msgtype"].GetString();
 
   if(itsCallbacks.count(msgtype))
+  {
+    std::cout << "Calling Function: " << itsCallbacks[msgtype].target<void>() << std::endl;
+
     itsCallbacks[msgtype](document);
+  }
   else
     std::cerr << "No callback registered for [" << msgtype << "]" << std::endl;
 }
