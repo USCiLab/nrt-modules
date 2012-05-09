@@ -12,7 +12,7 @@
 <script type="text/javascript" src="js/nrt_protocol.js"></script>
 <script type="text/javascript">
 
-  var master_connection = new nrt_protocol(this_websocket_url());
+  var master_connection = new nrt_protocol(this_websocket_url(), function() { master_connection.request_federation_summary(); } );
 
   master_connection.register_callback("BlackboardFederationSummary", function(bfs)
   {

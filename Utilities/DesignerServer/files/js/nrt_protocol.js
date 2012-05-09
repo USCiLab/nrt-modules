@@ -1,9 +1,4 @@
-if (typeof String.prototype.startsWith != 'function') {
-  String.prototype.startsWith = function (str){
-    return this.indexOf(str) == 0;
-  };
-}
-
+// ######################################################################
 function this_websocket_url()
 {
   var pcol;
@@ -17,42 +12,32 @@ function this_websocket_url()
   return pcol + u[0];
 }
 
+// ######################################################################
 // Create a new websockets connection to an NRT server
-function nrt_protocol(socket_address)
+function nrt_protocol(socket_address, on_open_callback, on_close_callback)
 {
   var self = this;
-  self.socket = new WebSocket(socket_address, "nrt-ws-protocol");
 
-  self.is_open = false;
-  self.socket.onopen  = function() { self.is_open = true; }
-  self.socket.onclose = function() { self.is_open = false; }
+  this.on_open_callback = function() {}; 
+  if(arguments.length >= 2)
+    this.on_open_callback = on_open_callback;
 
-  self.callbacks = {};
+  this.on_close_callback = function() {}; 
+  if(arguments.length >= 3)
+    this.on_close_callback = on_close_callback;
 
-  self.buffer = "";
-  self.socket.onmessage = function got_packet(msg)
-  {
-    self.buffer += msg.data;
-    if(!self.buffer.startsWith("NRT_MESSAGE_BEGIN"))
-    {
-      var msgbegin = msg.data.indexOf("NRT_MESSAGE_BEGIN");
-      if(msgbegin >= 0)
-      {
-        self.buffer = msg.data.substring(msgbegin);
-      }
-    }
-    else
-    {
-      var msgend = self.buffer.indexOf("NRT_MESSAGE_END");
-      if(msgend >= 0)
-      {
-        self.handle_message(self.buffer.substring("NRT_MESSAGE_BEGIN".length+1, msgend));
-        self.buffer = self.buffer.substring(msgend);
-      }
-    }
-  }
+  this.callbacks = {};
+  this.buffer    = "";
+  this.is_open   = false;
+
+  this.socket = new WebSocket(socket_address, "nrt-ws-protocol");
+  this.socket.onopen  = function() { self.is_open = true; self.on_open_callback();}
+  this.socket.onclose = function() { self.is_open = false; self.on_close_callback(); }
+
+  this.socket.onmessage = function(message_string){self.got_packet(message_string);};
 }
 
+// ######################################################################
 nrt_protocol.prototype.handle_message = function(message_string)
 {
   var message_object = JSON.parse(message_string);
@@ -60,7 +45,41 @@ nrt_protocol.prototype.handle_message = function(message_string)
     this.callbacks[message_object.msgtype](message_object.message);
 }
 
+
+// ######################################################################
+nrt_protocol.prototype.got_packet = function(msg)
+{ 
+  this.buffer += msg.data;
+  if(this.buffer.indexOf("NRT_MESSAGE_BEGIN") != 0)
+  {
+    var msgbegin = msg.data.indexOf("NRT_MESSAGE_BEGIN");
+    if(msgbegin >= 0)
+    {
+      this.buffer = msg.data.substring(msgbegin);
+    }
+  }
+  else
+  {
+    var msgend = this.buffer.indexOf("NRT_MESSAGE_END");
+    if(msgend >= 0)
+    {
+      this.handle_message(this.buffer.substring("NRT_MESSAGE_BEGIN".length+1, msgend));
+      this.buffer = this.buffer.substring(msgend);
+    }
+  }
+}
+
+// ######################################################################
 nrt_protocol.prototype.register_callback = function(msgtype, callback)
 {
   this.callbacks[msgtype] = callback;
+}
+
+// ######################################################################
+nrt_protocol.prototype.request_federation_summary = function()
+{
+  var request = new Object();
+  request.msgtype = "BlackboardFederationSummaryRequest";
+  request.message = {};
+  this.socket.send(JSON.stringify(request));
 }

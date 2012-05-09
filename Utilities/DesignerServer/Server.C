@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <iostream>
+#include "libs/rapidjson/document.h"
 extern "C"
 {
 #include "libs/libwebsockets/libwebsockets.h"
@@ -24,6 +25,8 @@ enum nrt_protocols {
 
 #define LOCAL_RESOURCE_PATH "/lab/rand/workspace/nrt-modules/Utilities/DesignerServer/files"
 
+static Server * global_server;
+
 /* this protocol server (always the first one) just knows how to do HTTP */
 static int callback_http(struct libwebsocket_context *context,
 		struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason, void *user, void *in, size_t len)
@@ -40,17 +43,15 @@ static int callback_http(struct libwebsocket_context *context,
     else
       snprintf(filenamebuffer, 1024, LOCAL_RESOURCE_PATH"%s", input);
 
-		printf("serving HTTP URI %s\n", filenamebuffer);
-
 		if (in && strcmp(input, "/favicon.ico") == 0) {
 			if (libwebsockets_serve_http_file(wsi,
 			     LOCAL_RESOURCE_PATH"/favicon.ico", "image/x-icon"))
-				fprintf(stderr, "Failed to send favicon\n");
+        std::cerr << "Failed to send favicon" << std::endl;
 			break;
 		}
 
-		if (libwebsockets_serve_http_file(wsi, filenamebuffer, ""))
-			fprintf(stderr, "Failed to send HTTP file\n");
+    if (libwebsockets_serve_http_file(wsi, filenamebuffer, ""))
+      std::cerr << "Failed to send HTTP file" << std::endl;
 		break;
 
   default: break;
@@ -73,22 +74,29 @@ callback_nrt_ws(struct libwebsocket_context *context,
 	unsigned char *p = &buf[LWS_SEND_BUFFER_PRE_PADDING];
 	per_session_data__nrt_ws *pss = static_cast<per_session_data__nrt_ws*>(user);
 
+  rapidjson::Document document;
+  std::string msgtype;
 	switch (reason) {
 
     case LWS_CALLBACK_ESTABLISHED:
-      fprintf(stderr, "callback_nrt_ws: LWS_CALLBACK_ESTABLISHED\n");
+      std::cout << "callback_nrt_ws: LWS_CALLBACK_ESTABLISHED" << std::endl;
       break;
 
     case LWS_CALLBACK_BROADCAST:
       n = libwebsocket_write(wsi, (unsigned char*)in, len, LWS_WRITE_TEXT);
       if (n < 0) {
-        fprintf(stderr, "ERROR writing to socket");
+        std::cerr << "ERROR writing to socket" << std::endl;
         return 1;
       }
       break;
 
     case LWS_CALLBACK_RECEIVE:
-      printf("Got Request of length %lu [%s]", len, (char*)in);
+      if(document.Parse<0>((char*)in).HasParseError() || !document.IsObject() || !document.HasMember("msgtype")) 
+      { 
+        std::cerr << "ERROR parsing request" << std::endl;
+        break;
+      }
+      global_server->receiveMessage(document);
       break;
 
     default:
@@ -103,9 +111,9 @@ callback_nrt_ws(struct libwebsocket_context *context,
 static struct libwebsocket_protocols protocols[] = {
 	/* first protocol must always be HTTP handler */
 	{
-		"http-only",		/* name */
-		callback_http,		/* callback */
-		0			/* per_session_data_size */
+		"http-only",	 /* name */
+		callback_http, /* callback */
+		0			         /* per_session_data_size */
 	},
   {
     "nrt-ws-protocol",
@@ -125,6 +133,7 @@ Server::Server() :
 { 
   sprintf((char*)&itsStartMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], "NRT_MESSAGE_BEGIN");
   sprintf((char*)&itsEndMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], "NRT_MESSAGE_END");
+  global_server = this;
 }
 
 // ######################################################################
@@ -158,12 +167,14 @@ void Server::stop()
 }
 
 // ######################################################################
+void Server::registerCallback(std::string const & messageName, std::function<void(rapidjson::Document const&)> function)
+{
+  itsCallbacks[messageName] = function;
+}
+
+// ######################################################################
 void Server::broadcastMessage(std::string const& message)
 {
-  //std::cout << "----------------------- Sending Message -----------------------" << std::endl;
-  //std::cout << message << std::endl;
-  //std::cout << "---------------------------------------------------------------" << std::endl;
-
 	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + message.length() + LWS_SEND_BUFFER_POST_PADDING];
   std::copy(message.begin(), message.end(), &buf[LWS_SEND_BUFFER_PRE_PADDING]);
 
@@ -172,3 +183,13 @@ void Server::broadcastMessage(std::string const& message)
   libwebsockets_broadcast(&protocols[PROTOCOL_NRT_WS], &itsEndMsgBuf[LWS_SEND_BUFFER_PRE_PADDING], sizeof("NRT_MESSAGE_END"));
 }
 
+// ######################################################################
+void Server::receiveMessage(rapidjson::Document const & document)
+{
+  std::string const & msgtype = document["msgtype"].GetString();
+
+  if(itsCallbacks.count(msgtype))
+    itsCallbacks[msgtype](document);
+  else
+    std::cerr << "No callback registered for [" << msgtype << "]" << std::endl;
+}

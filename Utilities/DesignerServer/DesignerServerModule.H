@@ -23,8 +23,13 @@ class DesignerServerModule : public nrt::Module,
     void run();
 
   private:
+  
     Server itsServer;
     std::mutex itsMtx;
+
+    void callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
+
+    nrt::blackboard::BlackboardFederationSummary itsLastFederationSummary;
 };
 
 #endif // NRT_MODULES_UTILITIES_DESIGNERSERVER_DESIGNERSERVERMODULE_H
