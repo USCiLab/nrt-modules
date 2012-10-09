@@ -15,7 +15,7 @@ NumberPrinterModule::NumberPrinterModule(std::string const & instanceName) :
 void NumberPrinterModule::onMessage(numberprinter::InputMessage msg)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  NRT_INFO(itsLabelParam.getVal() << ": " << msg->value);
+  NRT_INFO(itsLabelParam.getVal() << ": " << msg->value());
 }
 
 NRT_REGISTER_MODULE(NumberPrinterModule);
