@@ -1,0 +1,76 @@
+Module: 
+  general: 
+    displayname: Freenect Source 
+    classname: FreenectSourceModule 
+    category: /Robotics/PointCloud
+    synopsis: Publishes data from a Kinect using the libfreenect library. 
+    description: > 
+      This author is too lazy to write a description!
+ 
+    keywords: 
+      - kinect
+      - point cloud
+      - pointcloud
+      - rgbd
+ 
+    subscriberports: 
+
+    checkerports: 
+
+    posterports: 
+      - name: RGBImage
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "Color image from the RGB sensor"
+      - name: DepthImage
+        outmsg: GenericImageMessage
+        retmsg: void
+        description: "Depth image from the IR sensor"
+      - name: Cloud
+        outmsg: GenericCloudMessage
+        retmsg: void
+        description: "The output point cloud generated from the depth image"
+ 
+  authorship: 
+    author: Randolph Voorhies
+    email: 
+    mainurl: 
+    supporturl: 
+    otherurl: 
+    address: 
+ 
+  licensing: 
+    version: 
+    copyright: 
+    license: 
+    distribution: 
+    restrictions: 
+ 
+  files: 
+    icon:  
+    screenshots: 
+    objectfile: build/FreenectSourceModule.so 
+    docfiles: 
+    sharedfiles: 
+    otherfiles: 
+ 
+  nrt:                                 
+    package: 
+    nrtversion: 
+    arch: 
+    locale: 
+ 
+  os: 
+    name: 
+    version: 
+    depends: 
+    recommends: 
+    suggests: 
+    conflicts: 
+    replaces: 
+    breaks: 
+    provides: 
+ 
+  package: 
+    signature: 
+    md5: 
