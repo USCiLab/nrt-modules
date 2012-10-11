@@ -47,7 +47,7 @@ Module:
     restrictions: 
  
   files: 
-    icon:  
+    icon: icon.png 
     screenshots: 
     objectfile: build/FreenectSourceModule.so 
     docfiles: 
