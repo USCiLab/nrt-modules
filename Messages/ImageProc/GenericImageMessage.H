@@ -43,6 +43,8 @@ NRT_DECLARE_MESSAGE(GenericImageMessage)
   public:
     GenericImageMessage() { }
     GenericImageMessage(nrt::GenericImage img_) : img(img_) { }
+    template<class T>
+      GenericImageMessage(nrt::Image<T> img_) : img(nrt::GenericImage(img_)) {}
     virtual ~GenericImageMessage() { }
 
     nrt::GenericImage img;

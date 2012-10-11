@@ -45,17 +45,17 @@ void *WebVisualizerModule::HTTPRequestCallback(enum mg_event event,
     {
       // check for messages, update
       if (auto batteryResult = check<webvisualizer::BatteryInfo>(nrt::MessageCheckerPolicy::Unseen))
-        itsVoltage = batteryResult.get()->value;
+        itsVoltage = batteryResult.get()->value();
 
       if (auto gyroResult = check<webvisualizer::GyroInfo>(nrt::MessageCheckerPolicy::Unseen))
-        itsGyro = gyroResult.get()->value;
+        itsGyro = gyroResult.get()->value();
 
       if (auto compassResult = check<webvisualizer::CompassInfo>(nrt::MessageCheckerPolicy::Unseen))
-        itsCompass = compassResult.get()->value;
+        itsCompass = compassResult.get()->value();
 
       if (auto gpsResult = check<webvisualizer::GpsLatLong>(nrt::MessageCheckerPolicy::Unseen))
       {
-        std::pair<nrt::real, nrt::real> gps = gpsResult.get()->value;
+        std::pair<nrt::real, nrt::real> gps = gpsResult.get()->value();
         itsLatitude = gps.first;
         //itsLatitude = (gps->isNorth ? 1 : -1);
         //itsLatitude *= gps->latitude;
