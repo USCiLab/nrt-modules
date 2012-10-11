@@ -37,7 +37,9 @@ class FreenectSourceModule : public nrt::Module,
 
    void depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp);
    void rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp);
-    
+
+   nrt::Image<nrt::PixRGB<uint8_t>> itsRGBImage;
+   nrt::Image<nrt::PixGray<float>> itsDepthImage;
 };
 
 #endif // POINTCLOUD_FREENECTSOURCE_FREENECTSOURCEMODULE_H
