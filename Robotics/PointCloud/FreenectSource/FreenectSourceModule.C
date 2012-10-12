@@ -8,8 +8,7 @@
 FreenectSourceModule::FreenectSourceModule(std::string const & instanceName) :
     nrt::Module(instanceName),
     itsRGBImage(640, 480),
-    itsDepthImage(640, 480),
-    itsNewRGB(false)
+    itsDepthImage(640, 480)
 {  }
 
 // ######################################################################
@@ -69,23 +68,34 @@ void rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp)
   FreenectSourceModule * module = static_cast<FreenectSourceModule*>(freenect_get_user(dev));
   module->rgbCallback(dev, rgb, timestamp);
 }
+
+// ######################################################################
 void FreenectSourceModule::rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
-  std::lock_guard<std::mutex> _(itsRGBMtx);
-  std::swap(itsFrontRGBBuffer, itsMidRGBBuffer);
-  freenect_set_video_buffer(dev, &itsFrontRGBBuffer[0]);
-  itsNewRGB = true;
+  {
+    std::unique_lock<std::mutex> _(itsRGBMtx);
+    std::swap(itsFrontRGBBuffer, itsMidRGBBuffer);
+    freenect_set_video_buffer(dev, &itsFrontRGBBuffer[0]);
+  }
+  itsRGBCondition.notify_all();
+}
 
+// ######################################################################
+void FreenectSourceModule::rgbHandlerThread()
+{
+  while(running())
+  {
+    {
+      std::unique_lock<std::mutex> _(itsRGBMtx);
+      itsRGBCondition.wait(_);
+      std::swap(itsMidRGBBuffer, itsBackRGBBuffer);
+    }
 
-  //memcpy(&itsFrontRGBBuffer[0], rgb, sizeof(uint8_t)*640*480*3);
-
-  //nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
-  //memcpy(image.pod_begin(), rgb, sizeof(char)*640*480*3);
-  //
-  //std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
-  //post<freenectsourcemodule::RGBImage>(rgbmsg);
-
-  //itsRGBImage = image;
+    nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
+    memcpy(image.pod_begin(), &itsBackRGBBuffer[0], sizeof(char)*640*480*3);
+    std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
+    post<freenectsourcemodule::RGBImage>(rgbmsg);
+  }
 }
 
 // ######################################################################
@@ -135,30 +145,38 @@ void FreenectSourceModule::run()
   bool run_freenect = true;
   std::thread freenect_thread([f_ctx, &run_freenect]()
       { while(run_freenect) { freenect_process_events(f_ctx); } });
+
+  // Start a thread to handle the RGB data as it makes its way into the mid buffer
+  std::thread rgb_handler_thread(std::bind(&FreenectSourceModule::rgbHandlerThread, this));
   
+
+
+
   while(running()) 
   { 
-    bool newRGB;
-    {
-      std::lock_guard<std::mutex> _(itsRGBMtx);
-      newRGB = itsNewRGB;
-      if(newRGB) 
-      {
-        std::swap(itsMidRGBBuffer, itsBackRGBBuffer);
-        itsNewRGB = false;
-      }
-    }
+    //bool newRGB;
+    //{
+    //  std::lock_guard<std::mutex> _(itsRGBMtx);
+    //  newRGB = itsNewRGB;
+    //  if(newRGB) 
+    //  {
+    //    std::swap(itsMidRGBBuffer, itsBackRGBBuffer);
+    //    itsNewRGB = false;
+    //  }
+    //}
 
-    if(newRGB)
-    {
-      nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
-      memcpy(image.pod_begin(), &itsBackRGBBuffer[0], sizeof(char)*640*480*3);
-      std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
-      post<freenectsourcemodule::RGBImage>(rgbmsg);
-    }
+    //if(newRGB)
+    //{
+    //  nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
+    //  memcpy(image.pod_begin(), &itsBackRGBBuffer[0], sizeof(char)*640*480*3);
+    //  std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
+    //  post<freenectsourcemodule::RGBImage>(rgbmsg);
+    //}
     
-  
+    sleep(1);
   }
+
+  NRT_INFO("Done Running... Shutting Down");
 
   run_freenect = false;
   freenect_thread.join();
@@ -168,6 +186,7 @@ void FreenectSourceModule::run()
 
 	freenect_close_device(f_dev);
 	freenect_shutdown(f_ctx);
+  NRT_INFO("Finished shutting down...");
 }
 
 // ######################################################################
