@@ -38,6 +38,17 @@ class FreenectSourceModule : public nrt::Module,
    void depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp);
    void rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp);
 
+
+   std::vector<uint16_t> itsFrontDepthBuffer;
+   std::vector<uint16_t> itsMidDepthBuffer;
+   std::vector<uint16_t> itsBackDepthBuffer;
+
+   std::mutex itsRGBMtx;
+   std::vector<uint8_t> itsFrontRGBBuffer;
+   std::vector<uint8_t> itsMidRGBBuffer;
+   std::vector<uint8_t> itsBackRGBBuffer;
+   bool itsNewRGB;
+
    nrt::Image<nrt::PixRGB<uint8_t>> itsRGBImage;
    nrt::Image<nrt::PixGray<float>> itsDepthImage;
 };

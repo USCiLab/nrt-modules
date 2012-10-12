@@ -8,7 +8,8 @@
 FreenectSourceModule::FreenectSourceModule(std::string const & instanceName) :
     nrt::Module(instanceName),
     itsRGBImage(640, 480),
-    itsDepthImage(640, 480)
+    itsDepthImage(640, 480),
+    itsNewRGB(false)
 {  }
 
 // ######################################################################
@@ -23,40 +24,43 @@ void depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp)
 }
 void FreenectSourceModule::depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
-	uint16_t const * const depth = (uint16_t*)v_depth;
-  uint16_t const * depth_in_ptr = depth;
-  nrt::PixRGB<uint8_t> const * rgb_ptr = itsRGBImage.const_begin();
+  //std::lock_guard<std::mutex> _(itsBuffMtx);
+  //memcpy(&itsFrontDepthBuffer[0], v_depth, sizeof(uint16_t)*640*480);
 
-  nrt::Image<nrt::PixGray<float>> depthImage(640, 480);
-  float * depth_out_ptr = depthImage.pod_begin();
+	//uint16_t const * const depth = (uint16_t*)v_depth;
+  //uint16_t const * depth_in_ptr = depth;
+  //nrt::PixRGB<uint8_t> const * rgb_ptr = itsRGBImage.const_begin();
 
-  nrt::PointCloud<nrt::PointXYZRGBAF> cloud;
+  //nrt::Image<nrt::PixGray<float>> depthImage(640, 480);
+  //float * depth_out_ptr = depthImage.pod_begin();
 
-  double world_x = 0;
-  double world_y = 0;
-  for(int cam_y=0; cam_y<480; ++cam_y)
-    for(int cam_x=0; cam_x<640; ++cam_x)
-    {
-      double const world_z = (*depth_in_ptr);
-      freenect_camera_to_world(dev, cam_x, cam_y, world_z, &world_x, &world_y);
+  //nrt::PointCloud<nrt::PointXYZRGBAF> cloud;
 
-      (*depth_out_ptr) = (*depth_in_ptr) / 100.0;
+  //double world_x = 0;
+  //double world_y = 0;
+  //for(int cam_y=0; cam_y<480; ++cam_y)
+  //  for(int cam_x=0; cam_x<640; ++cam_x)
+  //  {
+  //    double const world_z = (*depth_in_ptr);
+  //    freenect_camera_to_world(dev, cam_x, cam_y, world_z, &world_x, &world_y);
 
-      nrt::PointXYZRGBAF point(nrt::Point3DEd(world_x / 100.0, world_y / 100.0, world_z / 100.0), nrt::PixRGBA<float>(*rgb_ptr));
-      cloud.insert(point);
+  //    (*depth_out_ptr) = (*depth_in_ptr) / 100.0;
 
-      ++depth_in_ptr;
-      ++depth_out_ptr;
-      ++rgb_ptr;
-    }
+  //    nrt::PointXYZRGBAF point(nrt::Point3DEd(world_x / 100.0, world_y / 100.0, world_z / 100.0), nrt::PixRGBA<float>(*rgb_ptr));
+  //    cloud.insert(point);
 
-  std::unique_ptr<GenericImageMessage> depthmsg(new GenericImageMessage(depthImage));
-  post<freenectsourcemodule::DepthImage>(depthmsg);
+  //    ++depth_in_ptr;
+  //    ++depth_out_ptr;
+  //    ++rgb_ptr;
+  //  }
 
-  std::unique_ptr<GenericCloudMessage> cloudmsg(new GenericCloudMessage(cloud));
-  post<freenectsourcemodule::Cloud>(cloudmsg);
+  //std::unique_ptr<GenericImageMessage> depthmsg(new GenericImageMessage(depthImage));
+  //post<freenectsourcemodule::DepthImage>(depthmsg);
 
-  itsDepthImage = depthImage;
+  //std::unique_ptr<GenericCloudMessage> cloudmsg(new GenericCloudMessage(cloud));
+  //post<freenectsourcemodule::Cloud>(cloudmsg);
+
+  //itsDepthImage = depthImage;
 }
 
 // ######################################################################
@@ -67,15 +71,22 @@ void rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp)
 }
 void FreenectSourceModule::rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp)
 {
-  nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
-  memcpy(image.pod_begin(), rgb, sizeof(char)*640*480*3);
-  
-  std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
-  post<freenectsourcemodule::RGBImage>(rgbmsg);
+  std::lock_guard<std::mutex> _(itsRGBMtx);
+  std::swap(itsFrontRGBBuffer, itsMidRGBBuffer);
+  freenect_set_video_buffer(dev, &itsFrontRGBBuffer[0]);
+  itsNewRGB = true;
 
-  itsRGBImage = image;
+
+  //memcpy(&itsFrontRGBBuffer[0], rgb, sizeof(uint8_t)*640*480*3);
+
+  //nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
+  //memcpy(image.pod_begin(), rgb, sizeof(char)*640*480*3);
+  //
+  //std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
+  //post<freenectsourcemodule::RGBImage>(rgbmsg);
+
+  //itsRGBImage = image;
 }
-
 
 // ######################################################################
 void FreenectSourceModule::run()
@@ -107,13 +118,50 @@ void FreenectSourceModule::run()
   freenect_set_video_mode(f_dev, freenect_find_video_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_VIDEO_RGB));
   freenect_set_depth_mode(f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED));
 
-  std::vector<uint8_t> rgb_buffer(648*480*3);
-  freenect_set_video_buffer(f_dev, &rgb_buffer[0]);
+  itsFrontDepthBuffer.resize(640*480);
+  itsMidDepthBuffer.resize(640*480);
+  itsBackDepthBuffer.resize(640*480);
+  itsFrontRGBBuffer.resize(640*480*3);
+  itsMidRGBBuffer.resize(640*480*3);
+  itsBackRGBBuffer.resize(640*480*3);
+
+  freenect_set_video_buffer(f_dev, &itsFrontRGBBuffer[0]);
 
   freenect_start_depth(f_dev);
   freenect_start_video(f_dev);
+
+  // The freenect_process_events method needs to be called as fast as possible
+  // so as not to lose packets
+  bool run_freenect = true;
+  std::thread freenect_thread([f_ctx, &run_freenect]()
+      { while(run_freenect) { freenect_process_events(f_ctx); } });
   
-  while(running()) { freenect_process_events(f_ctx); }
+  while(running()) 
+  { 
+    bool newRGB;
+    {
+      std::lock_guard<std::mutex> _(itsRGBMtx);
+      newRGB = itsNewRGB;
+      if(newRGB) 
+      {
+        std::swap(itsMidRGBBuffer, itsBackRGBBuffer);
+        itsNewRGB = false;
+      }
+    }
+
+    if(newRGB)
+    {
+      nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
+      memcpy(image.pod_begin(), &itsBackRGBBuffer[0], sizeof(char)*640*480*3);
+      std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
+      post<freenectsourcemodule::RGBImage>(rgbmsg);
+    }
+    
+  
+  }
+
+  run_freenect = false;
+  freenect_thread.join();
 
 	freenect_stop_depth(f_dev);
 	freenect_stop_video(f_dev);
