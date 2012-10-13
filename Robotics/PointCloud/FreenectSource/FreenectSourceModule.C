@@ -1,7 +1,6 @@
 /*! @file PointCloud/FreenectSource/FreenectSourceModule.C */
 
 #include "FreenectSourceModule.H"
-#include <libfreenect/libfreenect-registration.h>
 #include <libfreenect.hpp>
 
 // ######################################################################
@@ -21,45 +20,93 @@ void depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp)
   FreenectSourceModule * module = static_cast<FreenectSourceModule*>(freenect_get_user(dev));
   module->depthCallback(dev, v_depth, timestamp);
 }
+// ######################################################################
 void FreenectSourceModule::depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp)
 {
-  //std::lock_guard<std::mutex> _(itsBuffMtx);
-  //memcpy(&itsFrontDepthBuffer[0], v_depth, sizeof(uint16_t)*640*480);
+  {
+    std::unique_lock<std::mutex> _(itsDepthMtx);
+    std::memcpy(&itsFrontDepthBuffer[0], v_depth, sizeof(uint16_t) * itsFrontDepthBuffer.size());
+  }
+  itsDepthCondition.notify_all();
+}
+// ######################################################################
+void FreenectSourceModule::depthHandlerThread()
+{
+  while(running())
+  {
+    {
+      std::unique_lock<std::mutex> _(itsDepthMtx);
+      itsDepthCondition.wait(_);
+      std::swap(itsFrontDepthBuffer, itsBackDepthBuffer);
+    }
+    if(!running()) return;
 
-	//uint16_t const * const depth = (uint16_t*)v_depth;
-  //uint16_t const * depth_in_ptr = depth;
-  //nrt::PixRGB<uint8_t> const * rgb_ptr = itsRGBImage.const_begin();
+    nrt::Image<nrt::PixRGB<uint8_t>> rgbImage;
+    {
+      std::unique_lock<std::mutex> _(itsRGBImageMtx);
+      rgbImage = itsRGBImage;
+      rgbImage.deepCopy();
+    }
 
-  //nrt::Image<nrt::PixGray<float>> depthImage(640, 480);
-  //float * depth_out_ptr = depthImage.pod_begin();
+    uint16_t const * depth_in_ptr = &itsBackDepthBuffer[0];
+    nrt::PixRGB<uint8_t> const * rgb_ptr = rgbImage.const_begin();
 
-  //nrt::PointCloud<nrt::PointXYZRGBAF> cloud;
+    nrt::Image<nrt::PixGray<float>> depthImage(640, 480);
+    float * depth_out_ptr = depthImage.pod_begin();
 
-  //double world_x = 0;
-  //double world_y = 0;
-  //for(int cam_y=0; cam_y<480; ++cam_y)
-  //  for(int cam_x=0; cam_x<640; ++cam_x)
-  //  {
-  //    double const world_z = (*depth_in_ptr);
-  //    freenect_camera_to_world(dev, cam_x, cam_y, world_z, &world_x, &world_y);
+    nrt::PointCloud<nrt::PointXYZRGBAF> cloud(640*480);
+    nrt::PointCloud<nrt::PointXYZRGBAF>::iterator cloud_out_ptr = cloud.begin();
 
-  //    (*depth_out_ptr) = (*depth_in_ptr) / 100.0;
+    float const ref_pix_size = itsRegistration.zero_plane_info.reference_pixel_size;
+    float const ref_distance = itsRegistration.zero_plane_info.reference_distance;
+    float const ref_factor = 2.0F * ref_pix_size  / ref_distance;
 
-  //    nrt::PointXYZRGBAF point(nrt::Point3DEd(world_x / 100.0, world_y / 100.0, world_z / 100.0), nrt::PixRGBA<float>(*rgb_ptr));
-  //    cloud.insert(point);
+    float const center_x = 640.0F / 2.0F;
+    float const center_y = 480.0F / 2.0F;
 
-  //    ++depth_in_ptr;
-  //    ++depth_out_ptr;
-  //    ++rgb_ptr;
-  //  }
+    size_t num_points = 0;
+    for(int cam_y=0; cam_y<480; ++cam_y)
+      for(int cam_x=0; cam_x<640; ++cam_x)
+      {
+        float const world_z = (*depth_in_ptr) / 100.0F;
+        if(world_z != FREENECT_DEPTH_MM_NO_VALUE)
+        {
+          float const factor = ref_factor * world_z;
+          float const world_x = (cam_x - center_x) * factor;
+          float const world_y = (cam_y - center_y) * factor;
 
-  //std::unique_ptr<GenericImageMessage> depthmsg(new GenericImageMessage(depthImage));
-  //post<freenectsourcemodule::DepthImage>(depthmsg);
+          (*depth_out_ptr) = (*depth_in_ptr);
 
-  //std::unique_ptr<GenericCloudMessage> cloudmsg(new GenericCloudMessage(cloud));
-  //post<freenectsourcemodule::Cloud>(cloudmsg);
+          nrt::Point3DEf & pos = cloud_out_ptr->get<nrt::Point3DEf>();
+          pos.x() = world_x;
+          pos.y() = world_y;
+          pos.z() = world_z;
 
-  //itsDepthImage = depthImage;
+          nrt::PixRGBA<float> & rgb = cloud_out_ptr->get<nrt::PixRGBA<float>>();
+          rgb.setR(rgb_ptr->r());
+          rgb.setG(rgb_ptr->g());
+          rgb.setB(rgb_ptr->b());
+          rgb.setA(255.0F);
+
+          ++num_points;
+        }
+
+        ++depth_in_ptr;
+        ++depth_out_ptr;
+        ++rgb_ptr;
+        ++cloud_out_ptr;
+      }
+
+    cloud.resize(num_points);
+
+    std::unique_ptr<GenericImageMessage> depthmsg(new GenericImageMessage(depthImage));
+    post<freenectsourcemodule::DepthImage>(depthmsg);
+
+    std::unique_ptr<GenericCloudMessage> cloudmsg(new GenericCloudMessage(cloud));
+    post<freenectsourcemodule::Cloud>(cloudmsg);
+
+    itsDepthImage = depthImage;
+  }
 }
 
 // ######################################################################
@@ -94,6 +141,12 @@ void FreenectSourceModule::rgbHandlerThread()
 
     nrt::Image<nrt::PixRGB<uint8_t>> image(640, 480);
     memcpy(image.pod_begin(), &itsBackRGBBuffer[0], sizeof(char)*640*480*3);
+
+    {
+      std::unique_lock<std::mutex> _(itsRGBImageMtx);
+      itsRGBImage = image;
+    }
+
     std::unique_ptr<GenericImageMessage> rgbmsg(new GenericImageMessage(image));
     post<freenectsourcemodule::RGBImage>(rgbmsg);
   }
@@ -121,6 +174,9 @@ void FreenectSourceModule::run()
 	if (freenect_open_device(f_ctx, &f_dev, user_device_number) < 0) 
   { NRT_WARNING("Could not open kinect device - bailing out"); return; }
 
+  itsDev = f_dev;
+  itsRegistration = freenect_copy_registration(itsDev);
+
   freenect_set_user(f_dev, this);
   
 	freenect_set_depth_callback(f_dev, ::depthCallback);
@@ -130,7 +186,6 @@ void FreenectSourceModule::run()
   freenect_set_depth_mode(f_dev, freenect_find_depth_mode(FREENECT_RESOLUTION_MEDIUM, FREENECT_DEPTH_REGISTERED));
 
   itsFrontDepthBuffer.resize(640*480);
-  itsMidDepthBuffer.resize(640*480);
   itsBackDepthBuffer.resize(640*480);
   itsFrontRGBBuffer.resize(640*480*3);
   itsMidRGBBuffer.resize(640*480*3);
@@ -147,8 +202,9 @@ void FreenectSourceModule::run()
   std::thread freenect_thread([f_ctx, &run_freenect]()
       { while(run_freenect) { freenect_process_events(f_ctx); } });
 
-  // Start a thread to handle the RGB data as it makes its way into the mid buffer
+  // Start threads to handle the RGB and Depth data as it makes its way into the mid buffers
   std::thread rgb_handler_thread(std::bind(&FreenectSourceModule::rgbHandlerThread, this));
+  std::thread depth_handler_thread(std::bind(&FreenectSourceModule::depthHandlerThread, this));
   
   // Wait for shutdown
   while(running()) sleep(1);
@@ -164,6 +220,8 @@ void FreenectSourceModule::run()
 
 	freenect_close_device(f_dev);
 	freenect_shutdown(f_ctx);
+
+  freenect_destroy_registration(&itsRegistration);
 }
 
 // ######################################################################

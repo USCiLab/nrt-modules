@@ -7,6 +7,7 @@
 #include <Messages/PointCloud/GenericCloudMessage.H>
 #include <Messages/ImageProc/GenericImageMessage.H>
 #include <libfreenect/libfreenect.h>
+#include <libfreenect/libfreenect-registration.h>
 
 // namespace for ports and parameters of FreenectSourceModule
 namespace freenectsourcemodule
@@ -36,22 +37,27 @@ class FreenectSourceModule : public nrt::Module,
     virtual ~FreenectSourceModule();
 
    void depthCallback(freenect_device *dev, void *v_depth, uint32_t timestamp);
+   void depthHandlerThread();
 
    void rgbCallback(freenect_device *dev, void *rgb, uint32_t timestamp);
    void rgbHandlerThread();
 
+   std::mutex itsDepthMtx;
+   std::condition_variable itsDepthCondition;
    std::vector<uint16_t> itsFrontDepthBuffer;
-   std::vector<uint16_t> itsMidDepthBuffer;
    std::vector<uint16_t> itsBackDepthBuffer;
+   nrt::Image<nrt::PixGray<float>> itsDepthImage;
 
    std::mutex itsRGBMtx;
+   std::mutex itsRGBImageMtx;
    std::condition_variable itsRGBCondition;
    std::vector<uint8_t> itsFrontRGBBuffer;
    std::vector<uint8_t> itsMidRGBBuffer;
    std::vector<uint8_t> itsBackRGBBuffer;
-   
    nrt::Image<nrt::PixRGB<uint8_t>> itsRGBImage;
-   nrt::Image<nrt::PixGray<float>> itsDepthImage;
+
+   freenect_device * itsDev;
+   freenect_registration itsRegistration;
 };
 
 #endif // POINTCLOUD_FREENECTSOURCE_FREENECTSOURCEMODULE_H
