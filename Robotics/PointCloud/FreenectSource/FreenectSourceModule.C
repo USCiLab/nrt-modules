@@ -6,8 +6,7 @@
 // ######################################################################
 FreenectSourceModule::FreenectSourceModule(std::string const & instanceName) :
     nrt::Module(instanceName),
-    itsRGBImage(640, 480),
-    itsDepthImage(640, 480)
+    itsRGBImage(640, 480)
 {  }
 
 // ######################################################################
@@ -49,7 +48,7 @@ void FreenectSourceModule::depthHandlerThread()
     }
 
     uint16_t const * depth_in_ptr = &itsBackDepthBuffer[0];
-    nrt::PixRGB<uint8_t> const * rgb_ptr = rgbImage.const_begin();
+    nrt::PixRGB<uint8_t> const * rgb_in_ptr = rgbImage.const_begin();
 
     nrt::Image<nrt::PixGray<float>> depthImage(640, 480);
     float * depth_out_ptr = depthImage.pod_begin();
@@ -69,13 +68,13 @@ void FreenectSourceModule::depthHandlerThread()
       for(int cam_x=0; cam_x<640; ++cam_x)
       {
         float const world_z = (*depth_in_ptr) / 100.0F;
-        if(world_z != FREENECT_DEPTH_MM_NO_VALUE)
+        (*depth_out_ptr) = world_z;
+
+        if(*depth_in_ptr != FREENECT_DEPTH_MM_NO_VALUE)
         {
           float const factor = ref_factor * world_z;
           float const world_x = (cam_x - center_x) * factor;
           float const world_y = (cam_y - center_y) * factor;
-
-          (*depth_out_ptr) = (*depth_in_ptr);
 
           nrt::Point3DEf & pos = cloud_out_ptr->get<nrt::Point3DEf>();
           pos.x() = world_x;
@@ -83,9 +82,9 @@ void FreenectSourceModule::depthHandlerThread()
           pos.z() = world_z;
 
           nrt::PixRGBA<float> & rgb = cloud_out_ptr->get<nrt::PixRGBA<float>>();
-          rgb.setR(rgb_ptr->r());
-          rgb.setG(rgb_ptr->g());
-          rgb.setB(rgb_ptr->b());
+          rgb.setR(rgb_in_ptr->r());
+          rgb.setG(rgb_in_ptr->g());
+          rgb.setB(rgb_in_ptr->b());
           rgb.setA(255.0F);
 
           ++num_points;
@@ -93,7 +92,7 @@ void FreenectSourceModule::depthHandlerThread()
 
         ++depth_in_ptr;
         ++depth_out_ptr;
-        ++rgb_ptr;
+        ++rgb_in_ptr;
         ++cloud_out_ptr;
       }
 
@@ -104,8 +103,6 @@ void FreenectSourceModule::depthHandlerThread()
 
     std::unique_ptr<GenericCloudMessage> cloudmsg(new GenericCloudMessage(cloud));
     post<freenectsourcemodule::Cloud>(cloudmsg);
-
-    itsDepthImage = depthImage;
   }
 }
 

@@ -46,7 +46,6 @@ class FreenectSourceModule : public nrt::Module,
    std::condition_variable itsDepthCondition;
    std::vector<uint16_t> itsFrontDepthBuffer;
    std::vector<uint16_t> itsBackDepthBuffer;
-   nrt::Image<nrt::PixGray<float>> itsDepthImage;
 
    std::mutex itsRGBMtx;
    std::mutex itsRGBImageMtx;
