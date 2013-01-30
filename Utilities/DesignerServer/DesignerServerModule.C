@@ -6,7 +6,8 @@ using namespace designerserver;
 
 // ######################################################################
 DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
-  Module(instanceName)
+  Module(instanceName),
+  itsServer(WampServer::getInstance())
 {
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");

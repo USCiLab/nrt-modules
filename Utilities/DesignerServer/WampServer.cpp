@@ -5,7 +5,6 @@ extern "C"
   #include "libs/libwebsockets/libwebsockets.h"
 }
 
-
 enum wamp_protocols {
   /* always first */
   PROTOCOL_HTTP = 0,
@@ -70,6 +69,7 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
       // First time getting called, create the wamp server object
       pss->ws = new WampSession(context, wsi);
       ws = pss->ws;
+      ws->setCallbackTable(WampServer::getInstance().getCallbackTable());
       
       ws->sendWelcome();
       break;
@@ -130,6 +130,11 @@ itsContext(nullptr)
 WampServer::~WampServer()
 {
   
+}
+
+std::map<std::string, std::function<std::string (rapidjson::Document const &)>>* WampServer::getCallbackTable()
+{
+  return &itsCallbacks;
 }
 
 void WampServer::start(int port, std::string interface)

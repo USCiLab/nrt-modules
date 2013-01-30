@@ -8,7 +8,16 @@
 class WampServer
 {
 public:
+  static WampServer& getInstance()
+  {
+      static WampServer instance;
+      return instance;
+  }
+private:
   WampServer ();
+  WampServer(WampServer const&);              // Don't Implement
+  void operator=(WampServer const&); // Don't implement
+  
   virtual ~WampServer ();
 
 public:
@@ -16,6 +25,9 @@ public:
   void stop();
   void broadcastMessage(std::string msg);
   void registerProcedure(std::string const & messageName, std::function<std::string (rapidjson::Document const &)> callback);
+  
+public:
+  std::map<std::string, std::function<std::string (rapidjson::Document const &)>>* getCallbackTable();
   
 private:
   std::vector<WampSession*> sessionPool;

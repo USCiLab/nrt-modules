@@ -37,7 +37,7 @@ class DesignerServerModule : public nrt::Module,
   private:
     std::shared_ptr<nrt::blackboard::BlackboardFederationSummary const> itsLastFederationUpdate;
   
-    WampServer itsServer;
+    WampServer &itsServer;
     std::mutex itsMtx;
 
 

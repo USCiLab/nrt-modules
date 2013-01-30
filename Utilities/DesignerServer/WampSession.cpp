@@ -119,12 +119,12 @@ void WampSession::recvCall(rapidjson::Document const & document)
   std::string callID = document[1u].GetString();
   std::string procURI = document[2u].GetString();
   
-  // if(itsCallbacks.count(procURI)) {
-  //   std::cout << "Will make call" << std::endl;
-  //   
-  // } else {
-  //   std::cerr << "URI is unregistered.\n";
-  // }
+  if(callbackTable->count(procURI)) {
+    std::cout << "Will make call" << std::endl;
+    
+  } else {
+    std::cerr << "URI is unregistered.\n";
+  }
 }
 void WampSession::sendCallResult()
 {
