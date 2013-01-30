@@ -4,8 +4,8 @@
 #include <nrt/Core/Blackboard/ModuleLoaderMessages.H>
 #include <nrt/Core/Blackboard/Module.H>
 #include "libs/rapidjson/document.h"
+#include "WampSession.h"
 #include "WampServer.h"
-#include "WampServerFactory.h"
 
 namespace designerserver
 {
@@ -37,7 +37,7 @@ class DesignerServerModule : public nrt::Module,
   private:
     std::shared_ptr<nrt::blackboard::BlackboardFederationSummary const> itsLastFederationUpdate;
   
-    WampServerFactory itsServerFactory;
+    WampServer itsServer;
     std::mutex itsMtx;
 
 

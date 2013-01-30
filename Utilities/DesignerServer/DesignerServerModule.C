@@ -11,16 +11,16 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");
 
-  itsServerFactory.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
+  itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
 
-  itsServerFactory.start(8080);
+  itsServer.start(8080);
 }
 
 // ######################################################################
 DesignerServerModule::~DesignerServerModule()
 {
-  itsServerFactory.stop();
+  itsServer.stop();
 }
 
 // ######################################################################
@@ -34,14 +34,14 @@ void DesignerServerModule::onMessage(BlackboardFederationSummary m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
   itsLastFederationUpdate = m;
-  itsServerFactory.broadcastMessage(toJSON(*m));
+  itsServer.broadcastMessage(toJSON(*m));
 }
 
 // ######################################################################
 void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  itsServerFactory.broadcastMessage(toJSON(*m));
+  itsServer.broadcastMessage(toJSON(*m));
 }
 
 // ######################################################################
