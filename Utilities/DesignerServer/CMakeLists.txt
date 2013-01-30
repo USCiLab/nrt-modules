@@ -5,8 +5,8 @@ include(NRTHelpers)
 
 file(GLOB LWSSources libs/libwebsockets/*.c)
 nrt_build_module(DesignerServerModule
-  SOURCES DesignerServerModule.C ${LWSSources} Server.C
-  LINK_LIBS json)
+  SOURCES DesignerServerModule.C ${LWSSources} WampServer.cpp WampServerFactory.cpp
+  )
 
 find_package(ZLIB QUIET)
 if(ZLIB_FOUND)

@@ -4,7 +4,8 @@
 #include <nrt/Core/Blackboard/ModuleLoaderMessages.H>
 #include <nrt/Core/Blackboard/Module.H>
 #include "libs/rapidjson/document.h"
-#include "Server.H"
+#include "WampServer.h"
+#include "WampServerFactory.h"
 
 namespace designerserver
 {
@@ -29,14 +30,14 @@ class DesignerServerModule : public nrt::Module,
 
     void run();
 
-    void callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
+    std::string callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
 
-    std::function<void(rapidjson::Document const&)> itsCallback;
+    // std::function<void(rapidjson::Document const&)> itsCallback;
 
   private:
     std::shared_ptr<nrt::blackboard::BlackboardFederationSummary const> itsLastFederationUpdate;
   
-    Server itsServer;
+    WampServerFactory itsServerFactory;
     std::mutex itsMtx;
 
 

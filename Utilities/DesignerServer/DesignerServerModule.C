@@ -11,16 +11,16 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");
 
-  itsServer.registerCallback("BlackboardFederationSummaryRequest",
+  itsServerFactory.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
 
-  itsServer.start(8080);
+  itsServerFactory.start(8080);
 }
 
 // ######################################################################
 DesignerServerModule::~DesignerServerModule()
 {
-  itsServer.stop();
+  itsServerFactory.stop();
 }
 
 // ######################################################################
@@ -34,23 +34,23 @@ void DesignerServerModule::onMessage(BlackboardFederationSummary m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
   itsLastFederationUpdate = m;
-  itsServer.broadcastMessage(toJSON(*m));
+  itsServerFactory.broadcastMessage(toJSON(*m));
 }
 
 // ######################################################################
 void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  itsServer.broadcastMessage(toJSON(*m));
+  itsServerFactory.broadcastMessage(toJSON(*m));
 }
 
 // ######################################################################
-void DesignerServerModule::callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message)
+std::string DesignerServerModule::callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  if(itsLastFederationUpdate)
-    itsServer.broadcastMessage(toJSON(*itsLastFederationUpdate));
-  else NRT_WARNING("No Federation Summary Available");
+  if(itsLastFederationUpdate) {
+    return toJSON(*itsLastFederationUpdate);
+  } else NRT_WARNING("No Federation Summary Available");
 }
 
 NRT_REGISTER_MODULE(DesignerServerModule);
