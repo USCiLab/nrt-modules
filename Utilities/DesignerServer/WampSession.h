@@ -36,13 +36,17 @@ class WampSession
   private:
     void recvPrefix(rapidjson::Document const & document);
     void recvCall(rapidjson::Document const & document);
-    void sendCallResult();
+    void sendCallResult(std::string const & callID, std::string const & msg);
     void sendCallError();
     void recvSubscribe(rapidjson::Document const & document);
     void recvUnsubscribe(rapidjson::Document const & document);
     void recvPublish(rapidjson::Document const & document);
     void sendEvent();
-        
+  
+  private:
+    // These abstract the raw io commands of libwebsocket
+    void writeText(std::string const & msg);
+    
   private:
     libwebsocket_context *wsContext;
     libwebsocket *wsInterface;

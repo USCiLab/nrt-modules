@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/time.h>
 #include <iostream>
+#include <sstream>
 #include "libs/rapidjson/document.h"
 extern "C"
 {
@@ -105,7 +106,7 @@ void WampSession::sendWelcome()
 {
   std::cout << "Send Welcome Msg" << std::endl;
   std::string msg = "[0, \"v59mbCGDXZ7WTyxB\", 1, \"Autobahn/0.5.1\"]";
-  libwebsocket_write(wsInterface, (unsigned char*)msg.c_str(), msg.length(), LWS_WRITE_TEXT);
+  writeText(msg);
 }
 
 void WampSession::recvPrefix(rapidjson::Document const & document)
@@ -122,13 +123,27 @@ void WampSession::recvCall(rapidjson::Document const & document)
   if(callbackTable->count(procURI)) {
     std::cout << "Will make call" << std::endl;
     
+    try {
+      std::string result = (*callbackTable)[procURI](document);
+      std::cout << "Success" << std::endl;
+      sendCallResult(callID, result);
+      
+    } catch(const std::exception &e) {
+      std::cerr << "Error" << std::endl;
+      
+    }
+    
   } else {
     std::cerr << "URI is unregistered.\n";
   }
 }
-void WampSession::sendCallResult()
+void WampSession::sendCallResult(std::string const & callID, std::string const & msg)
 {
+  std::stringstream ss;
   
+  ss << "[" << WAMP_CALLRESULT << ", \"" << callID << "\", " << msg << "]";
+  
+  writeText(ss.str());
 }
 void WampSession::sendCallError()
 {
@@ -149,4 +164,10 @@ void WampSession::recvPublish(rapidjson::Document const & document)
 void WampSession::sendEvent()
 {
   
+}
+
+
+void WampSession::writeText(std::string const & msg)
+{
+  libwebsocket_write(wsInterface, (unsigned char*)msg.c_str(), msg.length(), LWS_WRITE_TEXT);
 }
