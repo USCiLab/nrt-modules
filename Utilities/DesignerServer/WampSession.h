@@ -9,6 +9,7 @@
 
 class libwebsocket_context;
 class libwebsocket;
+class WampServer;
 
 #define WAMP_SERVER_IDENTITY "libwamp 0.1"
 #define WAMP_PROTOCOL_VERSION 1
@@ -16,12 +17,9 @@ class libwebsocket;
 class WampSession
 {  
   public:
-    WampSession(libwebsocket_context *ctx, libwebsocket *wsi);
+    WampSession(WampServer* parent, libwebsocket_context *ctx, libwebsocket *wsi);
     ~WampSession();
     
-  public:
-    void setCallbackTable(std::map<std::string, std::function<std::string (rapidjson::Document const &)> >*);
-        
   public:
     /**
     * Using the message type given in the argument, call the appropriate recv function.
@@ -33,6 +31,8 @@ class WampSession
     */
   public:
     void sendWelcome();
+    void sendEvent(std::string const & topic, std::string const & msg);
+    
   private:
     void recvPrefix(rapidjson::Document const & document);
     void recvCall(rapidjson::Document const & document);
@@ -41,7 +41,6 @@ class WampSession
     void recvSubscribe(rapidjson::Document const & document);
     void recvUnsubscribe(rapidjson::Document const & document);
     void recvPublish(rapidjson::Document const & document);
-    void sendEvent();
   
   private:
     // These abstract the raw io commands of libwebsocket
@@ -53,7 +52,7 @@ class WampSession
     
     std::string sessionID;
     
-    std::map<std::string, std::function<std::string (rapidjson::Document const &)> > *callbackTable;
+    WampServer *server;
   private:
     
 };

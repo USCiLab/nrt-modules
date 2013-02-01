@@ -20,14 +20,40 @@ private:
   
   virtual ~WampServer ();
 
+  /*****************
+  * Usable interface
+  *****************/
 public:
-  void start(int port, std::string interface="");
+  /**
+  * Starts the server on port aPort
+  */
+  void start(int aPort, std::string interface="");
+  
+  /**
+  * Stop the server
+  */
   void stop();
-  void broadcastMessage(std::string msg);
+  
+  /**
+  * Broadcast an event to all interested parties
+  */
+  void broadcastEvent(std::string topic, std::string msg);
+  
+  /**
+  * Register a procedure for RPC
+  */
   void registerProcedure(std::string const & messageName, std::function<std::string (rapidjson::Document const &)> callback);
   
+  /*******************
+  * Internal interface
+  *******************/
 public:
-  std::map<std::string, std::function<std::string (rapidjson::Document const &)>>* getCallbackTable();
+  // Removes all traces of ws
+  void endSession(WampSession* ws);
+  
+public:
+  std::map<std::string, std::function<std::string (rapidjson::Document const &)>>* getCallbackTable() { return &itsCallbacks; }
+  std::map<std::string, std::vector<WampSession*>>* getSubscriptionTable() { return &itsSubscriptions; }
   
 private:
   std::vector<WampSession*> sessionPool;
@@ -38,7 +64,8 @@ private:
   
   libwebsocket_context* itsContext;
   
-  std::map<std::string, std::function<std::string (rapidjson::Document const &)> > itsCallbacks;
+  std::map<std::string, std::function<std::string (rapidjson::Document const &)>> itsCallbacks;
+  std::map<std::string, std::vector<WampSession*>> itsSubscriptions;
 };
 
 #endif

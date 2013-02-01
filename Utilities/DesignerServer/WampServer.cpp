@@ -1,5 +1,6 @@
 #include "WampServer.h"
 #include <iostream>
+#include <algorithm>
 extern "C"
 {
   #include "libs/libwebsockets/libwebsockets.h"
@@ -66,20 +67,18 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
   
 	switch (reason) {      
     case LWS_CALLBACK_ESTABLISHED:
-      // First time getting called, create the wamp server object
-      pss->ws = new WampSession(context, wsi);
+      // First time getting called, create the wamp session object
+      pss->ws = new WampSession(&WampServer::getInstance(), context, wsi);
       ws = pss->ws;
-      ws->setCallbackTable(WampServer::getInstance().getCallbackTable());
       
       ws->sendWelcome();
       break;
-
-    case LWS_CALLBACK_BROADCAST:
-      // n = libwebsocket_write(wsi, (unsigned char*)in, len, LWS_WRITE_TEXT);
-      // if (n < 0) {
-      //   std::cerr << "ERROR writing to socket" << std::endl;
-      //   return 1;
-      // }
+      
+    case LWS_CALLBACK_CLOSED:
+      // Last time getting called, delete our object and clean up
+      WampServer::getInstance().endSession(ws);
+      delete ws;
+      std::cout << "Disconnect\n\n\n";
       break;
 
     case LWS_CALLBACK_RECEIVE:
@@ -93,6 +92,15 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
       ws->routeMsg(document);
       break;
 
+    // case LWS_CALLBACK_BROADCAST:
+    // 
+    //   // n = libwebsocket_write(wsi, (unsigned char*)in, len, LWS_WRITE_TEXT);
+    //   // if (n < 0) {
+    //   //   std::cerr << "ERROR writing to socket" << std::endl;
+    //   //   return 1;
+    //   // }
+    //   break;
+    
     default:
       break;
 
@@ -132,11 +140,6 @@ WampServer::~WampServer()
   
 }
 
-std::map<std::string, std::function<std::string (rapidjson::Document const &)>>* WampServer::getCallbackTable()
-{
-  return &itsCallbacks;
-}
-
 void WampServer::start(int port, std::string interface)
 {
   if(itsContext != nullptr) stop();
@@ -160,19 +163,34 @@ void WampServer::stop()
   try{ itsThread.join(); } catch(...) {}
 }
 
-void WampServer::broadcastMessage(std::string message)
+void WampServer::broadcastEvent(std::string topic, std::string message)
 {
-  std::cout << "Broad cast " << std::endl;
+  std::cout << "Broadcast " << std::endl;  
+  std::vector<WampSession*> interested_parties = itsSubscriptions[topic];
   
-	unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + message.length() + LWS_SEND_BUFFER_POST_PADDING];
-  std::copy(message.begin(), message.end(), &buf[LWS_SEND_BUFFER_PRE_PADDING]);
-
-  libwebsockets_broadcast(&protocols[PROTOCOL_WAMP_WS], &buf[LWS_SEND_BUFFER_PRE_PADDING], message.size());
+  for(std::vector<WampSession*>::iterator it = interested_parties.begin(); it != interested_parties.end(); it++) {
+    std::cout << "\tSomeone is interested\n";
+    WampSession *ws = *it;
+    ws->sendEvent(topic, message);
+  }
 }
 
 void WampServer::registerProcedure(std::string const & messageName, std::function<std::string (rapidjson::Document const&)> callback)
 {
   itsCallbacks[messageName] = callback;
+}
+
+void WampServer::endSession(WampSession* ws)
+{
+  // Remove from registered subscriptions
+  for(std::map<std::string, std::vector<WampSession*>>::iterator it = itsSubscriptions.begin(); it != itsSubscriptions.end(); it++) {
+    std::vector<WampSession*> *sessions = &it->second;
+    
+    sessions->erase(std::remove_if(sessions->begin(), sessions->end(), [ws](WampSession* wampsession){
+      return wampsession == ws;
+    }), sessions->end());
+  }
+
 }
 
 void WampServer::serveRequests()

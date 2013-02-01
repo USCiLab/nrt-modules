@@ -35,14 +35,14 @@ void DesignerServerModule::onMessage(BlackboardFederationSummary m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
   itsLastFederationUpdate = m;
-  itsServer.broadcastMessage(toJSON(*m));
+  itsServer.broadcastEvent("org.nrtkit.designer/event/blackboard_federation_summary", toJSON(*m));
 }
 
 // ######################################################################
 void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 {
   std::lock_guard<std::mutex> _(itsMtx);
-  itsServer.broadcastMessage(toJSON(*m));
+  itsServer.broadcastEvent("org.nrtkit.designer/event/module_param_update", toJSON(*m));
 }
 
 // ######################################################################

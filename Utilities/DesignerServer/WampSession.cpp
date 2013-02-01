@@ -12,7 +12,8 @@ extern "C"
   #include "libs/libwebsockets/libwebsockets.h"
 }
 #include <stdexcept>
-#include "WampSession.H"
+#include "WampSession.h"
+#include "WampServer.h"
 
 enum wamp_message_types {
   /* Auxillary */
@@ -30,20 +31,16 @@ enum wamp_message_types {
 };
 
 
-WampSession::WampSession(libwebsocket_context *ctx, libwebsocket *wsi) :
-  callbackTable(NULL)
+WampSession::WampSession(WampServer* parent, libwebsocket_context *ctx, libwebsocket *wsi) :
+server(nullptr)
 {
+  this->server = parent;
   this->wsContext = ctx;
   this->wsInterface = wsi;
 }
 
 WampSession::~WampSession() 
 {
-}
-
-void WampSession::setCallbackTable(std::map<std::string, std::function<std::string (rapidjson::Document const &)> > * aCallbackTable)
-{
-  callbackTable = aCallbackTable;
 }
 
 void WampSession::routeMsg(rapidjson::Document const & document)
@@ -71,34 +68,6 @@ void WampSession::routeMsg(rapidjson::Document const & document)
       recvPublish(document);
       break;
   }
-  // if(wamp_msg_type == WAMP_PREFIX) {
-  //   std::cerr << "Prefix not supported yet." << std::endl;
-  //   throw std::runtime_error("Prefix not supported");
-  // } else if(wamp_msg_type == WAMP_CALL) {
-  //   std::cout << "WAMP_CALL" << std::endl;
-  //   
-  //   std::cout << "Call id?" << std::endl;
-  //   std::string callID = document[1u].GetString();
-  //   std::cout << callID << " now procURI? " << std::endl;
-  //   std::string procURI = document[2u].GetString();
-  //   
-  //   std::cout << callID << " " << procURI << std::endl;
-  //   std::cout << &itsCallbacks << std::endl;
-  //   assert(&itsCallbacks != NULL);
-  //   
-  //   if(itsCallbacks.count(procURI)) {
-  //     std::cout << "Do callback\n";
-  //     // std::cout << "Calling function: " << itsCallbacks[procURI].target<void>() << std::endl;
-  //     // itsCallbacks[procURI](document);
-  //     // std::stringstream ss;
-  //     // ss << "[3, \"" << callID << "\", " << result << "]";
-  //     // libwebsocket_write(wsi, (unsigned char*)ss.c_str(), ss.length(), LWS_WRITE_TEXT);
-  //   } else {
-  //     std::cerr << "No callback registered for [" << procURI << "]" << std::endl;
-  //   }
-  // } else {
-  //   std::cerr << "Type " << wamp_msg_type << " not yet supported" << std::endl;
-  // }
 }
 
 // Actions
@@ -120,11 +89,11 @@ void WampSession::recvCall(rapidjson::Document const & document)
   std::string callID = document[1u].GetString();
   std::string procURI = document[2u].GetString();
   
-  if(callbackTable->count(procURI)) {
+  if(server->getCallbackTable()->count(procURI)) {
     std::cout << "Will make call" << std::endl;
     
     try {
-      std::string result = (*callbackTable)[procURI](document);
+      std::string result = (*server->getCallbackTable())[procURI](document);
       std::cout << "Success" << std::endl;
       sendCallResult(callID, result);
       
@@ -137,6 +106,7 @@ void WampSession::recvCall(rapidjson::Document const & document)
     std::cerr << "URI is unregistered.\n";
   }
 }
+
 void WampSession::sendCallResult(std::string const & callID, std::string const & msg)
 {
   std::stringstream ss;
@@ -145,25 +115,38 @@ void WampSession::sendCallResult(std::string const & callID, std::string const &
   
   writeText(ss.str());
 }
+
 void WampSession::sendCallError()
 {
   
 }
+
 void WampSession::recvSubscribe(rapidjson::Document const & document)
 {
+  std::string topicURI = document[1u].GetString();
+  std::map<std::string, std::vector<WampSession*>> *table = server->getSubscriptionTable();
   
+  // Register ourself
+  (*table)[topicURI].push_back(this);
+  std::cout << "Registered for topic " << topicURI << std::endl;
 }
+
 void WampSession::recvUnsubscribe(rapidjson::Document const & document)
 {
   
 }
+
 void WampSession::recvPublish(rapidjson::Document const & document)
 {
   
 }
-void WampSession::sendEvent()
+
+void WampSession::sendEvent(std::string const & topic, std::string const & msg)
 {
+  std::stringstream ss;
+  ss << "[" << WAMP_EVENT << ", \"" << topic << "\", " << msg << "]";
   
+  writeText(ss.str());
 }
 
 
