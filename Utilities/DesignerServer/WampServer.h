@@ -5,6 +5,26 @@
 #include <string>
 #include "WampSession.h"
 
+class WampRPCException
+{
+public:
+  WampRPCException(std::string errorURI, std::string errorDesc, std::string errorDetails="") :
+    errorURI(errorURI), errorDesc(errorDesc), errorDetails(errorDetails) {}
+    
+  std::string what(void) const {
+    return errorURI + " " + errorDesc + " " + errorDetails + "\n";
+  }
+  
+  std::string getErrorURI() const { return errorURI; }
+  std::string getErrorDesc() const { return errorDesc; }
+  std::string getErrorDetails() const { return errorDetails; }
+  
+private:
+  std::string errorURI;
+  std::string errorDesc;
+  std::string errorDetails;
+};
+
 class WampServer
 {
 public:

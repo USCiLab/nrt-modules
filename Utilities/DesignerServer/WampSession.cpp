@@ -97,9 +97,9 @@ void WampSession::recvCall(rapidjson::Document const & document)
       std::cout << "Success" << std::endl;
       sendCallResult(callID, result);
       
-    } catch(const std::exception &e) {
-      std::cerr << "Error" << std::endl;
-      
+    } catch(const WampRPCException &e) {
+      std::cerr << "Error " << e.what() << std::endl;
+      sendCallError(callID, e.getErrorURI(), e.getErrorDesc(), e.getErrorDetails());
     }
     
   } else {
@@ -116,9 +116,19 @@ void WampSession::sendCallResult(std::string const & callID, std::string const &
   writeText(ss.str());
 }
 
-void WampSession::sendCallError()
+void WampSession::sendCallError(std::string const & callID, std::string const & errorURI, std::string const & errorDesc, std::string const & errorDetails)
 {
+  std::stringstream ss;
   
+  ss << "[" << WAMP_CALLERROR << ", \"" << callID << "\", \"" << errorURI << "\", \"" << errorDesc << "\"";
+  if(errorDetails == "") {
+    ss << "]";
+  } else {
+    // errorDetails is already escaped json
+    ss << ", " << errorDetails << "]";
+  }
+  
+  writeText(ss.str());
 }
 
 void WampSession::recvSubscribe(rapidjson::Document const & document)

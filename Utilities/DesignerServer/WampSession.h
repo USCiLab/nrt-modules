@@ -10,6 +10,7 @@
 class libwebsocket_context;
 class libwebsocket;
 class WampServer;
+class WampRPCException;
 
 #define WAMP_SERVER_IDENTITY "libwamp 0.1"
 #define WAMP_PROTOCOL_VERSION 1
@@ -37,7 +38,10 @@ class WampSession
     void recvPrefix(rapidjson::Document const & document);
     void recvCall(rapidjson::Document const & document);
     void sendCallResult(std::string const & callID, std::string const & msg);
-    void sendCallError();
+    /**
+    * Note: errorDetails is already escaped; e.g. a JSON object or array. If not needed, it is an empty string.
+    */
+    void sendCallError(std::string const & callID, std::string const & errorURI, std::string const & errorDesc, std::string const & errorDetails);
     void recvSubscribe(rapidjson::Document const & document);
     void recvUnsubscribe(rapidjson::Document const & document);
     void recvPublish(rapidjson::Document const & document);
