@@ -12,6 +12,8 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");
   setSubscriberTopicFilter<GUIdataInput>(".*");
+  setPosterTopic<ModuleLoaderRefresh>("NRT_RequestLoaderSummary");
+  
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
@@ -96,9 +98,23 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
   
   std::shared_ptr<nrt::LoaderSummaryMessage const> loaderSummary;
   try {
-    loaderSummary = post<designerserver::ModuleLoaderRefresh>(trigger).get();
-  } catch(const std::exception &e) {
-    std::cout << "Exception :: " << e.what() << std::endl;
+    auto result = post<designerserver::ModuleLoaderRefresh>(trigger);
+    while ( !result.empty() ) {
+      if(result.ready())
+      {
+        loaderSummary = result.get();
+        if(loaderSummary->bbNick != bbnick) continue;
+      }
+      else
+      {
+        std::cerr << "Result not ready...\n";
+        usleep(1000);
+      }
+      
+    }
+  } catch(std::exception &ex) {
+    std::cout << ex.what() << std::endl;
+    
     throw WampRPCException("org.nrtkit.designer/error/prototype_load", "NRT could not get the bbnick", "\"" + bbnick + "\"");
   }
   

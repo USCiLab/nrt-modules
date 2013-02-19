@@ -111,7 +111,13 @@ void WampSession::sendCallResult(std::string const & callID, std::string const &
 {
   std::stringstream ss;
   
-  ss << "[" << WAMP_CALLRESULT << ", \"" << callID << "\", " << msg << "]";
+  ss << "[" << WAMP_CALLRESULT << ", \"" << callID << "\"";
+  
+  if(msg == "") {
+    ss << "]";
+  } else {
+    ss << ", " << msg << "]";
+  }
   
   writeText(ss.str());
 }

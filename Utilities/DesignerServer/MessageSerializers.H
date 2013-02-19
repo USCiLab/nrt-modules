@@ -375,30 +375,39 @@ std::string toJSON(nrt::GUIdataMessage const & message)
 // ######################################################################
 std::string toJSON(nrt::LoaderSummaryMessage const & message)
 {
-  return "{}";
-  // rapidjson::StringBuffer buffer;
-  // jsonwriter writer(buffer);
-  // {
-  //   writer.StartObject();
-  // 
-  //   writer.String("msgtype"); writer.String("LoaderSummaryMessage");
-  // 
-  //   writer.String("message");
-  //   {
-  //     writer.StartArray();
-  //     for(std::pair<std::string, nrt::blackboard::GUIdata> const & guidata : message.guidata)
-  //     {
-  //       writer.StartObject();
-  //       writer.String("id"); writer.String(guidata.first.c_str());
-  //       toJSON(guidata.second, writer);
-  //       writer.EndObject();
-  //     }
-  //     writer.EndArray();
-  //   }
-  // 
-  //   writer.EndObject();
-  // }
-  // return buffer.GetString();
+  rapidjson::StringBuffer buffer;
+  jsonwriter writer(buffer);
+  {
+    writer.StartObject();
+    {
+      writer.String("msgtype"); writer.String("LoaderSummaryMessage");
+  
+      writer.String("message");
+      {
+        writer.StartObject();
+      
+        writer.String("bbNick"); writer.String(message.bbNick.c_str());
+        writer.String("bbUID"); writer.String(message.bbUID.c_str());
+        // writer.String("hostname"); writer.String(message.hostname.c_str());
+      
+        writer.String("modules");
+        writer.StartArray();
+        for(nrt::LoaderSummaryMessage::moduledescr const & prototype : message.modules)
+        {
+          writer.StartObject();
+        
+          writer.String("logicalPath"); writer.String(prototype.logicalPath.c_str());
+        
+          writer.EndObject();
+        }
+        writer.EndArray();
+      
+        writer.EndObject();
+      }
+    }
+    writer.EndObject();
+  }
+  return buffer.GetString();
 }
 
 
