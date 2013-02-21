@@ -12,9 +12,10 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setSubscriberTopicFilter<BlackboardFederationSummary>(".*");
   setSubscriberTopicFilter<ModuleParamChanged>(".*");
   setSubscriberTopicFilter<GUIdataInput>(".*");
-  setPosterTopic<ModuleLoaderRefresh>("NRT_RequestLoaderSummary");
   
-
+  setPosterTopic<ModuleLoaderRefresh>("NRT_RequestLoaderSummary");
+  setPosterTopic<GUIdataOutput>("NRT_SetGUIdata");
+  
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
 
@@ -24,20 +25,22 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   itsServer.registerProcedure("org.nrtkit.designer/get/prototypes",
       std::bind(&DesignerServerModule::callback_LoaderSummaryRequest, this, std::placeholders::_1));
   
+  itsServer.registerProcedure("org.nrtkit.designer/update/module_position",
+      std::bind(&DesignerServerModule::callback_ModulePositionUpdated, this, std::placeholders::_1));
+  
   itsServer.start(8080);
 }
 
 // ######################################################################
 DesignerServerModule::~DesignerServerModule()
 {
+  NRT_INFO("Stopping Server");
   itsServer.stop();
 }
 
 // ######################################################################
 void DesignerServerModule::run()
-{
-  while(running()) usleep(10000);
-}
+{ }
 
 // ######################################################################
 void DesignerServerModule::onMessage(BlackboardFederationSummary m)
@@ -57,9 +60,21 @@ void DesignerServerModule::onMessage(designerserver::ModuleParamChanged m)
 // ######################################################################
 void DesignerServerModule::onMessage(designerserver::GUIdataInput m)
 {
+  NRT_INFO("Got GUI data");  
+  if(itsLastSentGUIdataPtr == m.get())
+  {
+    NRT_INFO("Skipping self-sent data");
+    return;
+  }
+  
+  std::cout << "---------- RECEIVING GUI DATA -------------" << std::endl;
+  for(auto gd : m->guidata)
+    std::cout << gd.first << " (" << gd.second.x << ", " << gd.second.y << ")" << std::endl; 
+  std::cout << "-------------------------------------------" << std::endl;
+  
   std::lock_guard<std::mutex> _(itsMtx);
   itsLastGUIUpdate = m;
-  itsServer.broadcastEvent("org.nrtkit.designer/event/gui_data_input", toJSON(*m));
+  itsServer.broadcastEvent("org.nrtkit.designer/event/gui_data_update", toJSON(*m));
 }
 
 // ######################################################################
@@ -125,5 +140,57 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
   return "";
 }
 
+std::string DesignerServerModule::callback_ModulePositionUpdated(rapidjson::Document const & message)
+{
+  std::unique_ptr<nrt::GUIdataMessage> payload(new nrt::GUIdataMessage);
+  
+  {
+    std::lock_guard<std::mutex> _(itsMtx);
+  
+    if(message.Capacity() != 4){
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+  
+    if(!message[3u].IsObject()) {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+    
+    if(message[3u].HasMember("moduid") && message[3u].HasMember("x") && message[3u].HasMember("y")) {
+      std::string moduid = message[3u]["moduid"].GetString();
+      int x = message[3u]["x"].GetInt();
+      int y = message[3u]["y"].GetInt();
+    
+      std::cout << "Got " << moduid << " " << x << ", " << y << std::endl;
+    
+      // Prepare a GUIdata object
+      std::string key = "m:" + moduid;
+      nrt::blackboard::GUIdata gd = nrt::blackboard::GUIdata();
+      gd.x = x;
+      gd.y = y;
+    
+      // Prepare the GUIdataMessage
+      payload->guidata[key] = gd;
+    
+      NRT_INFO("Posting GUI data");
+      // Away it goes
+    } else {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Invalid object");
+    }
+      
+  }
+  
+  std::cout << "---------- SENDING GUI DATA -------------" << std::endl;
+  for(auto gd : payload->guidata)
+    std::cout << gd.first << " (" << gd.second.x << ", " << gd.second.y << ")" << std::endl; 
+  std::cout << "-----------------------------------------" << std::endl;
+  
+  itsLastSentGUIdataPtr = payload.get();
+  post<designerserver::GUIdataOutput>(payload);
+    
+  std::cout << "Passed" << std::endl;
+    
+  return "";
+    
+}
 
 NRT_REGISTER_MODULE(DesignerServerModule);

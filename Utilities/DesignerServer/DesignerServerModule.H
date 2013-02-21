@@ -4,6 +4,7 @@
 #include <nrt/Core/Blackboard/ModuleLoaderMessages.H>
 #include <nrt/Core/Blackboard/Module.H>
 #include "libs/rapidjson/document.h"
+#include <nrt/Core/Blackboard/BlackboardManagerMessages.H>
 #include "WampSession.h"
 #include "WampServer.h"
 
@@ -20,6 +21,9 @@ namespace designerserver
   
   NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL( ModuleLoaderRefresh,
     nrt::BBNickTrigger, nrt::LoaderSummaryMessage, "Refresh the list of modules available on a loader");
+  
+  NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL(GUIdataOutput, 
+    nrt::GUIdataMessage, void, "GUI Data Changes Output")
 }
 
 
@@ -27,7 +31,8 @@ class DesignerServerModule : public nrt::Module,
                              public nrt::MessageSubscriber<designerserver::BlackboardFederationSummary,
                                                            designerserver::ModuleParamChanged,
                                                            designerserver::GUIdataInput>,
-                             public nrt::MessagePoster<designerserver::ModuleLoaderRefresh>
+                             public nrt::MessagePoster<designerserver::ModuleLoaderRefresh,
+                                                       designerserver::GUIdataOutput>
 {
   public:
     DesignerServerModule(std::string const & instanceName = "");
@@ -42,6 +47,7 @@ class DesignerServerModule : public nrt::Module,
     std::string callback_BlackboardFederationSummaryRequest(rapidjson::Document const & message);
     std::string callback_GUIDataRequest(rapidjson::Document const & message);
     std::string callback_LoaderSummaryRequest(rapidjson::Document const & message);
+    std::string callback_ModulePositionUpdated(rapidjson::Document const & message);
     
 
     // std::function<void(rapidjson::Document const&)> itsCallback;
@@ -50,6 +56,9 @@ class DesignerServerModule : public nrt::Module,
     std::shared_ptr<nrt::blackboard::BlackboardFederationSummary const> itsLastFederationUpdate;
     std::shared_ptr<nrt::GUIdataMessage const> itsLastGUIUpdate;
   
+    // WARNING! Don't try to do anything with the data pointed to here. It's only to check if we're sending data to ourselves or not... Sorry!
+    nrt::GUIdataMessage * itsLastSentGUIdataPtr;
+    
     WampServer &itsServer;
     std::mutex itsMtx;
 

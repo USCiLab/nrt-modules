@@ -165,7 +165,7 @@ void WampServer::stop()
 
 void WampServer::broadcastEvent(std::string topic, std::string message)
 {
-  std::cout << "Broadcast " << std::endl;  
+  std::cout << "Broadcast on " << topic << std::endl;  
   std::vector<WampSession*> interested_parties = itsSubscriptions[topic];
   
   for(std::vector<WampSession*>::iterator it = interested_parties.begin(); it != interested_parties.end(); it++) {
