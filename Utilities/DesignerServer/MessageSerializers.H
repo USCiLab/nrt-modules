@@ -125,7 +125,7 @@ void toJSON(std::string const & namespc, std::string const & connec, nrt::blackb
 
   writer.String("instance"); writer.String(cs.instance.c_str());
 
-  writer.String("type"); 
+  writer.String("type");
   switch(cs.type)
   {
     case nrt::ConnectorType::Intra:  writer.String("Intra"); break;
@@ -145,17 +145,17 @@ void toJSON(nrt::blackboard::ConnectionSummary const & cs, jsonwriter & writer)
 {
   writer.StartObject();
 
-  writer.String("bbuid1");    writer.String(cs.bbuid1.c_str());     
+  writer.String("bbuid1");    writer.String(cs.bbuid1.c_str());
 
-  writer.String("module1");   writer.String(cs.module1.c_str());    
+  writer.String("module1");   writer.String(cs.module1.c_str());
 
-  writer.String("portname1"); writer.String(cs.portname1.c_str());  
+  writer.String("portname1"); writer.String(cs.portname1.c_str());
 
-  writer.String("bbuid2");    writer.String(cs.bbuid2.c_str());     
+  writer.String("bbuid2");    writer.String(cs.bbuid2.c_str());
 
-  writer.String("module2");   writer.String(cs.module2.c_str());    
+  writer.String("module2");   writer.String(cs.module2.c_str());
 
-  writer.String("portname2"); writer.String(cs.portname2.c_str());  
+  writer.String("portname2"); writer.String(cs.portname2.c_str());
 
   writer.EndObject();
 }
@@ -265,7 +265,7 @@ std::string toJSON(nrt::blackboard::BlackboardFederationSummary const & summary)
   jsonwriter writer(buffer);
 
   {
-    writer.StartObject(); 
+    writer.StartObject();
 
     writer.String("msgtype");
     writer.String("BlackboardFederationSummary");
@@ -281,7 +281,7 @@ std::string toJSON(nrt::blackboard::BlackboardFederationSummary const & summary)
         for(auto p : summary.bbnicks)
         {
           writer.StartObject();
-          writer.String("uid"); writer.String(p.first.c_str()); 
+          writer.String("uid"); writer.String(p.first.c_str());
           writer.String("nick"); writer.String(p.second.c_str());
           writer.EndObject();
         }
@@ -381,27 +381,29 @@ std::string toJSON(nrt::LoaderSummaryMessage const & message)
     writer.StartObject();
     {
       writer.String("msgtype"); writer.String("LoaderSummaryMessage");
-  
+
       writer.String("message");
       {
         writer.StartObject();
-      
+
         writer.String("bbNick"); writer.String(message.bbNick.c_str());
         writer.String("bbUID"); writer.String(message.bbUID.c_str());
         // writer.String("hostname"); writer.String(message.hostname.c_str());
-      
+
         writer.String("modules");
         writer.StartArray();
         for(nrt::LoaderSummaryMessage::moduledescr const & prototype : message.modules)
         {
           writer.StartObject();
-        
+
           writer.String("logicalPath"); writer.String(prototype.logicalPath.c_str());
-        
+
+          // TODO: Parse manifest, bring in icon
+
           writer.EndObject();
         }
         writer.EndArray();
-      
+
         writer.EndObject();
       }
     }

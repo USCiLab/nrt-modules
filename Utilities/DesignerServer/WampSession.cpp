@@ -39,31 +39,31 @@ server(nullptr)
   this->wsInterface = wsi;
 }
 
-WampSession::~WampSession() 
+WampSession::~WampSession()
 {
 }
 
 void WampSession::routeMsg(rapidjson::Document const & document)
 {
   int wamp_msg_type = document[0u].GetInt();
-  
+
   switch(wamp_msg_type) {
     case WAMP_PREFIX:
       recvPrefix(document);
       break;
-    
+
     case WAMP_CALL:
       recvCall(document);
       break;
-    
+
     case WAMP_SUBSCRIBE:
       recvSubscribe(document);
       break;
-    
+
     case WAMP_UNSUBSCRIBE:
       recvUnsubscribe(document);
       break;
-    
+
     case WAMP_PUBLISH:
       recvPublish(document);
       break;
@@ -88,44 +88,45 @@ void WampSession::recvCall(rapidjson::Document const & document)
   // Only supports one argument for now
   std::string callID = document[1u].GetString();
   std::string procURI = document[2u].GetString();
-  
+
   if(server->getCallbackTable()->count(procURI)) {
     std::cout << "Will make call" << std::endl;
-    
+
     try {
       std::string result = (*server->getCallbackTable())[procURI](document);
       std::cout << "Success" << std::endl;
       sendCallResult(callID, result);
-      
+
     } catch(const WampRPCException &e) {
       std::cerr << "Error " << e.what() << std::endl;
       sendCallError(callID, e.getErrorURI(), e.getErrorDesc(), e.getErrorDetails());
     }
-    
+
   } else {
     std::cerr << "URI is unregistered.\n";
+    sendCallError(callID, "org.wamp.libwamp/unregistered_uri", "URI was not registered", "{}");
   }
 }
 
 void WampSession::sendCallResult(std::string const & callID, std::string const & msg)
 {
   std::stringstream ss;
-  
+
   ss << "[" << WAMP_CALLRESULT << ", \"" << callID << "\"";
-  
+
   if(msg == "") {
     ss << "]";
   } else {
     ss << ", " << msg << "]";
   }
-  
+
   writeText(ss.str());
 }
 
 void WampSession::sendCallError(std::string const & callID, std::string const & errorURI, std::string const & errorDesc, std::string const & errorDetails)
 {
   std::stringstream ss;
-  
+
   ss << "[" << WAMP_CALLERROR << ", \"" << callID << "\", \"" << errorURI << "\", \"" << errorDesc << "\"";
   if(errorDetails == "") {
     ss << "]";
@@ -133,7 +134,7 @@ void WampSession::sendCallError(std::string const & callID, std::string const & 
     // errorDetails is already escaped json
     ss << ", " << errorDetails << "]";
   }
-  
+
   writeText(ss.str());
 }
 
@@ -141,7 +142,7 @@ void WampSession::recvSubscribe(rapidjson::Document const & document)
 {
   std::string topicURI = document[1u].GetString();
   std::map<std::string, std::vector<WampSession*>> *table = server->getSubscriptionTable();
-  
+
   // Register ourself
   (*table)[topicURI].push_back(this);
   std::cout << "Registered for topic " << topicURI << std::endl;
@@ -149,19 +150,19 @@ void WampSession::recvSubscribe(rapidjson::Document const & document)
 
 void WampSession::recvUnsubscribe(rapidjson::Document const & document)
 {
-  
+
 }
 
 void WampSession::recvPublish(rapidjson::Document const & document)
 {
-  
+
 }
 
 void WampSession::sendEvent(std::string const & topic, std::string const & msg)
 {
   std::stringstream ss;
   ss << "[" << WAMP_EVENT << ", \"" << topic << "\", " << msg << "]";
-  
+
   writeText(ss.str());
 }
 
