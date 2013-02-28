@@ -15,7 +15,7 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
 
   setPosterTopic<ModuleLoaderRefresh>("NRT_RequestLoaderSummary");
   setPosterTopic<GUIdataOutput>("NRT_SetGUIdata");
-  setPosterTopic<LoadModule>(".*");
+  setPosterTopic<LoadModule>("NRT_LoadModule");
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
@@ -114,6 +114,7 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
     while ( !result.empty() ) {
       if(result.ready())
       {
+        NRT_INFO("Loader summary request GOT");
         loaderSummary = result.get();
         if(loaderSummary->bbNick != bbnick) continue;
       }
@@ -212,22 +213,25 @@ std::string DesignerServerModule::callback_CreateModule(rapidjson::Document cons
   // Create the module
   std::shared_ptr<nrt::LoadModuleResponseMessage const> response;
 
-  auto result = post<designerserver::LoadModule>(payload);
-  while ( !result.empty() ) {
-    if(result.ready())
-    {
-      response = result.get();
+  try
+  {
+    auto results = post<designerserver::LoadModule>(payload);
+    while ( !results.empty() ) {
+      response = results.get();
       NRT_INFO("Response: " << response->className << " " << response->moduleUID);
-    }
-    else
-    {
-      std::cerr << "Result not ready...\n";
-      usleep(1000);
-    }
+      if(response->moduleUID == "")
+        continue;
 
+      return "\"" + response->moduleUID + "\"";
+    }
   }
+  catch(nrt::exception::ModuleException const & e)
+  { throw WampRPCException("org.nrtkit.designer/error/create_module_failed", e.what()); }
+  catch(nrt::exception::BlackboardException const & e)
+  { throw WampRPCException("org.nrtkit.designer/error/create_module_failed", e.what()); }
 
-  return "";
+  NRT_INFO("Well go on then...");
+  throw WampRPCException("org.nrtkit.designer/error/create_module_failed", "Loader with given bbnick did not respond");
 }
 
 NRT_REGISTER_MODULE(DesignerServerModule);
