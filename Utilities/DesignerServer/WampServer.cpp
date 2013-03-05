@@ -14,7 +14,7 @@ enum wamp_protocols {
 
   /* always last */
   DEMO_PROTOCOL_COUNT
-}; 
+};
 
 #define LOCAL_RESOURCE_PATH "/home/chris/nrt-modules/Utilities/DesignerServer/files"
 
@@ -55,7 +55,7 @@ struct per_session_data__wamp_server {
   WampSession *ws;
 };
 
-static int callback_wamp_ws(struct libwebsocket_context *context, 
+static int callback_wamp_ws(struct libwebsocket_context *context,
                             struct libwebsocket *wsi, enum libwebsocket_callback_reasons reason,
                             void *user, void *in, size_t len)
 {
@@ -64,16 +64,16 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
 
   rapidjson::Document document;
   std::string msgtype;
-  
-	switch (reason) {      
+
+	switch (reason) {
     case LWS_CALLBACK_ESTABLISHED:
       // First time getting called, create the wamp session object
       pss->ws = new WampSession(&WampServer::getInstance(), context, wsi);
       ws = pss->ws;
-      
+
       ws->sendWelcome();
       break;
-      
+
     case LWS_CALLBACK_CLOSED:
       // Last time getting called, delete our object and clean up
       WampServer::getInstance().endSession(ws);
@@ -82,25 +82,25 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
       break;
 
     case LWS_CALLBACK_RECEIVE:
-      std::cout << "Got: " << (char*)in << std::endl;
-      if(document.Parse<0>((char*)in).HasParseError() || !document.IsArray() ) 
-      { 
-        std::cerr << "ERROR parsing request" << std::endl;
+      std::cout << "[WampServer] Got Raw Data: " << (char*)in << std::endl;
+      if(document.Parse<0>((char*)in).HasParseError() || !document.IsArray() )
+      {
+        std::cerr << "[WampServer] ERROR parsing request" << std::endl;
         break;
       }
-      
+
       ws->routeMsg(document);
       break;
 
     // case LWS_CALLBACK_BROADCAST:
-    // 
+    //
     //   // n = libwebsocket_write(wsi, (unsigned char*)in, len, LWS_WRITE_TEXT);
     //   // if (n < 0) {
     //   //   std::cerr << "ERROR writing to socket" << std::endl;
     //   //   return 1;
     //   // }
     //   break;
-    
+
     default:
       break;
 
@@ -137,14 +137,14 @@ itsContext(nullptr)
 
 WampServer::~WampServer()
 {
-  
+
 }
 
 void WampServer::start(int port, std::string interface)
 {
   if(itsContext != nullptr) stop();
 
-  itsContext = libwebsocket_create_context(port, nullptr, protocols, 
+  itsContext = libwebsocket_create_context(port, nullptr, protocols,
                                            libwebsocket_internal_extensions, nullptr, nullptr,
                                            -1, -1, 0);
 
@@ -165,11 +165,11 @@ void WampServer::stop()
 
 void WampServer::broadcastEvent(std::string topic, std::string message)
 {
-  std::cout << "Broadcast on " << topic << std::endl;  
+  std::cout << "[WampServer] Broadcast on " << topic << std::endl;
   std::vector<WampSession*> interested_parties = itsSubscriptions[topic];
-  
+
   for(std::vector<WampSession*>::iterator it = interested_parties.begin(); it != interested_parties.end(); it++) {
-    std::cout << "\tSomeone is interested\n";
+    std::cout << "\t=> Someone is interested\n";
     WampSession *ws = *it;
     ws->sendEvent(topic, message);
   }
@@ -185,7 +185,7 @@ void WampServer::endSession(WampSession* ws)
   // Remove from registered subscriptions
   for(std::map<std::string, std::vector<WampSession*>>::iterator it = itsSubscriptions.begin(); it != itsSubscriptions.end(); it++) {
     std::vector<WampSession*> *sessions = &it->second;
-    
+
     sessions->erase(std::remove_if(sessions->begin(), sessions->end(), [ws](WampSession* wampsession){
       return wampsession == ws;
     }), sessions->end());

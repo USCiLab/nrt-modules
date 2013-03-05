@@ -73,7 +73,7 @@ void WampSession::routeMsg(rapidjson::Document const & document)
 // Actions
 void WampSession::sendWelcome()
 {
-  std::cout << "Send Welcome Msg" << std::endl;
+  std::cout << "[WampSession] Send Welcome Msg" << std::endl;
   std::string msg = "[0, \"v59mbCGDXZ7WTyxB\", 1, \"Autobahn/0.5.1\"]";
   writeText(msg);
 }
@@ -84,26 +84,26 @@ void WampSession::recvPrefix(rapidjson::Document const & document)
 }
 void WampSession::recvCall(rapidjson::Document const & document)
 {
-  std::cout << "RPC Call\n";
+  std::cout << "[WampSession] Make RPC Call: \n";
   // Only supports one argument for now
   std::string callID = document[1u].GetString();
   std::string procURI = document[2u].GetString();
 
   if(server->getCallbackTable()->count(procURI)) {
-    std::cout << "Will make call" << std::endl;
-
+    std::cout << "==============================\n";
     try {
       std::string result = (*server->getCallbackTable())[procURI](document);
-      std::cout << "Success" << std::endl;
+      std::cout << "[WampSession] Call succeeded" << std::endl;
       sendCallResult(callID, result);
 
     } catch(const WampRPCException &e) {
-      std::cerr << "Error " << e.what() << std::endl;
+      std::cerr << "[WampSession] Call raised error " << e.what() << std::endl;
       sendCallError(callID, e.getErrorURI(), e.getErrorDesc(), e.getErrorDetails());
     }
+    std::cout << "==============================\n\n";
 
   } else {
-    std::cerr << "URI is unregistered.\n";
+    std::cout << "URI is unregistered.\n\n";
     sendCallError(callID, "org.wamp.libwamp/unregistered_uri", "URI was not registered", "{}");
   }
 }
@@ -145,7 +145,7 @@ void WampSession::recvSubscribe(rapidjson::Document const & document)
 
   // Register ourself
   (*table)[topicURI].push_back(this);
-  std::cout << "Registered for topic " << topicURI << std::endl;
+  std::cout << "[WampSession] Registered for topic " << topicURI << std::endl;
 }
 
 void WampSession::recvUnsubscribe(rapidjson::Document const & document)

@@ -16,6 +16,7 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setPosterTopic<ModuleLoaderRefresh>("NRT_RequestLoaderSummary");
   setPosterTopic<GUIdataOutput>("NRT_SetGUIdata");
   setPosterTopic<LoadModule>("NRT_LoadModule");
+  setPosterTopic<UnloadModule>("NRT_UnloadModule");
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
@@ -32,6 +33,9 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   itsServer.registerProcedure("org.nrtkit.designer/post/module",
       std::bind(&DesignerServerModule::callback_CreateModule, this, std::placeholders::_1));
 
+  itsServer.registerProcedure("org.nrtkit.designer/delete/module",
+      std::bind(&DesignerServerModule::callback_DeleteModule, this, std::placeholders::_1));
+
   itsServer.start(8080);
 }
 
@@ -44,7 +48,9 @@ DesignerServerModule::~DesignerServerModule()
 
 // ######################################################################
 void DesignerServerModule::run()
-{ }
+{
+  std::cout << "Run" << std::endl;
+}
 
 // ######################################################################
 void DesignerServerModule::onMessage(BlackboardFederationSummary m)
@@ -232,6 +238,38 @@ std::string DesignerServerModule::callback_CreateModule(rapidjson::Document cons
 
   NRT_INFO("Well go on then...");
   throw WampRPCException("org.nrtkit.designer/error/create_module_failed", "Loader with given bbnick did not respond");
+}
+
+std::string DesignerServerModule::callback_DeleteModule(rapidjson::Document const & message)
+{
+  std::unique_ptr<nrt::UnloadModuleMessage> payload(new nrt::UnloadModuleMessage);
+
+  {
+    std::lock_guard<std::mutex> _(itsMtx);
+
+    if(message.Capacity() != 4){
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+
+    if(!message[3u].IsObject()) {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+
+    if(message[3u].HasMember("moduid")) {
+      payload->uid = message[3u]["moduid"].GetString();
+
+      // Away it goes
+    } else {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Invalid object");
+    }
+
+  }
+
+  // Delete the module
+  post<designerserver::UnloadModule>(payload);
+
+  NRT_INFO("Module Deleted.");
+  return "";
 }
 
 NRT_REGISTER_MODULE(DesignerServerModule);

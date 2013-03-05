@@ -9,8 +9,6 @@ typedef rapidjson::Writer<rapidjson::StringBuffer> jsonwriter;
 // ######################################################################
 void toJSON(nrt::ParameterSummary const & ps, jsonwriter & writer)
 {
-  NRT_INFO("ParameterSummary " << ps.name);
-
   writer.StartObject();
 
   writer.String("state");
@@ -100,7 +98,6 @@ void toJSON(std::string const & bbuid, std::string const & moduid, nrt::blackboa
 
   writer.String("parameters");
   {
-    NRT_INFO("Parameters");
     writer.StartArray();
     for(std::pair<std::string, nrt::ParameterSummary> const & p : ms.parameters)
     {

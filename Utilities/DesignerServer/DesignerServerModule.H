@@ -27,6 +27,10 @@ namespace designerserver
 
   NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (LoadModule,
     nrt::LoadModuleRequestMessage, nrt::LoadModuleResponseMessage, "Request module load")
+
+  NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (UnloadModule,
+    nrt::UnloadModuleMessage, void, "Unload module")
+
 }
 
 
@@ -36,7 +40,8 @@ class DesignerServerModule : public nrt::Module,
                                                            designerserver::GUIdataInput>,
                              public nrt::MessagePoster<designerserver::ModuleLoaderRefresh,
                                                        designerserver::GUIdataOutput,
-                                                       designerserver::LoadModule>
+                                                       designerserver::LoadModule,
+                                                       designerserver::UnloadModule>
 {
   public:
     DesignerServerModule(std::string const & instanceName = "");
@@ -53,6 +58,7 @@ class DesignerServerModule : public nrt::Module,
     std::string callback_LoaderSummaryRequest(rapidjson::Document const & message);
     std::string callback_ModulePositionUpdated(rapidjson::Document const & message);
     std::string callback_CreateModule(rapidjson::Document const & message);
+    std::string callback_DeleteModule(rapidjson::Document const & message);
 
 
     // std::function<void(rapidjson::Document const&)> itsCallback;
