@@ -54,20 +54,10 @@ void DisplaySinkModule::onMessage(displaysink::Image msg)
   if (nrt::MessageCheckerResults<nrt::Message<std::string>> res = check<displaysink::Label>(nrt::MessageCheckerPolicy::Any))
     while (res.exhausted() == false)
       if (std::shared_ptr<nrt::Message<std::string> const> msg = res.get()) {
-        label = msg->value;
+        label = msg->value();
       }
 
-  if (label.size() > 0)
-  {
-    nrt::Image<nrt::PixRGB<nrt::byte> > img = msg->img.convertTo<nrt::PixRGB<nrt::byte>>();
-
-    drawText(img, nrt::Point2D<nrt::int32>(2, 2), label.c_str(),
-        nrt::PixRGB<nrt::byte>(128,255,128), nrt::PixRGB<nrt::byte>(0,0,0),
-        SimpleFont::FIXED(10), nrt::ANCHOR_BOTTOM_LEFT);
-    itsDisplaySink->out(nrt::GenericImage(img));
-  } else {
-    itsDisplaySink->out(msg->img);
-  }
+  itsDisplaySink->out(msg->img);
 }
 
 // ######################################################################
