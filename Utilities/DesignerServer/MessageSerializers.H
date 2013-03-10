@@ -3,6 +3,11 @@
 #include "libs/rapidjson/writer.h"
 #include "libs/rapidjson/stringbuffer.h"
 #include <sstream>
+extern "C"
+{
+  #include "libs/libwebsockets/libwebsockets.h"
+}
+
 
 typedef rapidjson::Writer<rapidjson::StringBuffer> jsonwriter;
 
@@ -398,7 +403,32 @@ std::string toJSON(nrt::LoaderSummaryMessage const & message)
 
           writer.String("logicalPath"); writer.String(prototype.logicalPath.c_str());
 
-          // TODO: Parse manifest, bring in icon
+          // TODO: Parse manifest
+
+          unsigned int bufsize = prototype.icondata.size();
+          if(bufsize) {
+            // Get a ptr to the first byte
+            const nrt::byte* nrt_byte_buf = &(prototype.icondata[0]);
+
+            // cast it to a char* buf
+            const char* char_buf = reinterpret_cast<const char*>(nrt_byte_buf);
+
+            unsigned int base64_buf_size = (((bufsize + 1) * 4) / 3) + 5; // Base64 coded output is 4/3 as big, 5 bytes extra padding
+            char base64_encoded_icon[base64_buf_size];
+            int retval = lws_b64_encode_string(char_buf, bufsize, base64_encoded_icon, base64_buf_size);
+            if(retval < 0) {
+              NRT_WARNING("Failed to base64 encode icon data.");
+              writer.String("icondata"); writer.String("");
+            } else {
+              writer.String("icondata"); writer.String(base64_encoded_icon);
+            }
+          } else {
+            NRT_WARNING("No icon data to encode");
+            writer.String("icondata"); writer.String("");
+          }
+
+          writer.String("iconext"); writer.String(prototype.iconext.c_str());
+
 
           writer.EndObject();
         }

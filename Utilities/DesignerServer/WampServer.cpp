@@ -78,7 +78,7 @@ static int callback_wamp_ws(struct libwebsocket_context *context,
       // Last time getting called, delete our object and clean up
       WampServer::getInstance().endSession(ws);
       delete ws;
-      std::cout << "Disconnect\n\n\n";
+      std::cout << "[WampServer] Client Disconnect\n\n\n";
       break;
 
     case LWS_CALLBACK_RECEIVE:
