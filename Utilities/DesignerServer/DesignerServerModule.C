@@ -17,6 +17,8 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setPosterTopic<GUIdataOutput>("NRT_SetGUIdata");
   setPosterTopic<LoadModule>("NRT_LoadModule");
   setPosterTopic<UnloadModule>("NRT_UnloadModule");
+  setPosterTopic<ModifyModuleTopic>("NRT_ModifyTopic");
+
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
       std::bind(&DesignerServerModule::callback_BlackboardFederationSummaryRequest, this, std::placeholders::_1));
@@ -35,6 +37,9 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
 
   itsServer.registerProcedure("org.nrtkit.designer/delete/module",
       std::bind(&DesignerServerModule::callback_DeleteModule, this, std::placeholders::_1));
+
+  itsServer.registerProcedure("org.nrtkit.designer/edit/module/topic",
+      std::bind(&DesignerServerModule::callback_EditModuleTopic, this, std::placeholders::_1));
 
   itsServer.start(8080);
 }
@@ -118,17 +123,10 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
   try {
     auto result = post<designerserver::ModuleLoaderRefresh>(trigger);
     while ( !result.empty() ) {
-      if(result.ready())
-      {
-        NRT_INFO("Loader summary request GOT");
-        loaderSummary = result.get();
-        if(loaderSummary->bbNick != bbnick) continue;
-      }
-      else
-      {
-        std::cerr << "Result not ready...\n";
-        usleep(1000);
-      }
+
+      NRT_INFO("Loader summary request GOT");
+      loaderSummary = result.get();
+      if(loaderSummary->bbNick != bbnick) continue;
 
     }
   } catch(std::exception &ex) {
@@ -269,6 +267,58 @@ std::string DesignerServerModule::callback_DeleteModule(rapidjson::Document cons
   post<designerserver::UnloadModule>(payload);
 
   NRT_INFO("Module Deleted.");
+  return "";
+}
+
+std::string DesignerServerModule::callback_EditModuleTopic(rapidjson::Document const & message)
+{
+  std::unique_ptr<nrt::ModifyModuleTopicMessage> payload(new nrt::ModifyModuleTopicMessage);
+
+  {
+    std::lock_guard<std::mutex> _(itsMtx);
+
+    if(message.Capacity() != 4){
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+
+    if(!message[3u].IsObject()) {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+
+    if(message[3u].HasMember("moduid")
+      && message[3u].HasMember("port_type")
+      && message[3u].HasMember("portname")
+      && message[3u].HasMember("topi"))
+    {
+      payload->moduleUID = message[3u]["moduid"].GetString();
+      payload->portName = message[3u]["portname"].GetString();
+      payload->topi = message[3u]["topi"].GetString();
+
+      std::string port_type = message[3u]["port_type"].GetString();
+      if(port_type == "input")
+        payload->portType = nrt::ModifyModuleTopicMessage::PortType::ModuleSubscriber;
+      else if(port_type == "output")
+        payload->portType = nrt::ModifyModuleTopicMessage::PortType::ModulePoster;
+      else
+        throw WampRPCException("org.nrtkit.designer/error/argument_error", "Bad port type");
+
+      NRT_INFO("Payload: ");
+      NRT_INFO("Moduid: " << payload->moduleUID);
+      NRT_INFO("Portname: " << payload->portName);
+      NRT_INFO("Topic: " << payload->topi);
+      NRT_INFO("Port type: " << payload->portType);
+
+      // Away it goes
+    } else {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Invalid object");
+    }
+
+  }
+
+  // Edit the module topic
+  post<designerserver::ModifyModuleTopic>(payload);
+
+  NRT_INFO("Connection Created.");
   return "";
 }
 

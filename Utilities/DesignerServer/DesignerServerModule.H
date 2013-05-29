@@ -31,6 +31,8 @@ namespace designerserver
   NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (UnloadModule,
     nrt::UnloadModuleMessage, void, "Unload module")
 
+  NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (ModifyModuleTopic,
+    nrt::ModifyModuleTopicMessage, nrt::Message<bool>, "Modify module topic")
 }
 
 
@@ -41,7 +43,8 @@ class DesignerServerModule : public nrt::Module,
                              public nrt::MessagePoster<designerserver::ModuleLoaderRefresh,
                                                        designerserver::GUIdataOutput,
                                                        designerserver::LoadModule,
-                                                       designerserver::UnloadModule>
+                                                       designerserver::UnloadModule,
+                                                       designerserver::ModifyModuleTopic>
 {
   public:
     DesignerServerModule(std::string const & instanceName = "");
@@ -59,6 +62,7 @@ class DesignerServerModule : public nrt::Module,
     std::string callback_ModulePositionUpdated(rapidjson::Document const & message);
     std::string callback_CreateModule(rapidjson::Document const & message);
     std::string callback_DeleteModule(rapidjson::Document const & message);
+    std::string callback_EditModuleTopic(rapidjson::Document const & message);
 
 
     // std::function<void(rapidjson::Document const&)> itsCallback;
