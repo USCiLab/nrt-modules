@@ -18,6 +18,7 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setPosterTopic<LoadModule>("NRT_LoadModule");
   setPosterTopic<UnloadModule>("NRT_UnloadModule");
   setPosterTopic<ModifyModuleTopic>("NRT_ModifyTopic");
+  setPosterTopic<StartStopNRT>("NRT_SetState");
 
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
@@ -40,6 +41,9 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
 
   itsServer.registerProcedure("org.nrtkit.designer/edit/module/topic",
       std::bind(&DesignerServerModule::callback_EditModuleTopic, this, std::placeholders::_1));
+
+  itsServer.registerProcedure("org.nrtkit.designer/edit/nrt",
+      std::bind(&DesignerServerModule::callback_StartStopNRT, this, std::placeholders::_1));
 
   itsServer.start(8080);
 }
@@ -319,6 +323,43 @@ std::string DesignerServerModule::callback_EditModuleTopic(rapidjson::Document c
   post<designerserver::ModifyModuleTopic>(payload);
 
   NRT_INFO("Connection Created.");
+  return "";
+}
+
+std::string DesignerServerModule::callback_StartStopNRT(rapidjson::Document const & message)
+{
+
+  std::unique_ptr<nrt::SetStateMessage> payload(new nrt::SetStateMessage);
+
+  {
+    std::lock_guard<std::mutex> _(itsMtx);
+
+    NRT_INFO(message.Capacity());
+
+    if(message.Capacity() != 4){
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+    }
+
+    if(!message[3u].IsString()) {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Argument is not string");
+    }
+
+    const char* msg = message[3u].GetString();
+    if(strcmp(msg, "start") == 0) {
+      NRT_INFO("Start");
+      payload->state = nrt::SetStateMessage::State::Launch;
+    } else if(strcmp(msg, "stop") == 0) {
+      NRT_INFO("Stop");
+      payload->state = nrt::SetStateMessage::State::Stop;
+    } else {
+      throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Unrecognize message");
+    }
+
+  }
+
+  // Send msg
+  post<designerserver::StartStopNRT>(payload);
+
   return "";
 }
 
