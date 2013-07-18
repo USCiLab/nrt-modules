@@ -300,6 +300,9 @@ std::string toJSON(nrt::blackboard::BlackboardFederationSummary const & summary)
         writer.EndArray();
       }
 
+      writer.String("running");
+      writer.Bool(summary.running);
+
       writer.EndObject();
     }
 
