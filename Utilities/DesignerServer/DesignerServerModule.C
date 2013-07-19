@@ -128,9 +128,13 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
     auto result = post<designerserver::ModuleLoaderRefresh>(trigger);
     while ( !result.empty() ) {
 
-      NRT_INFO("Loader summary request GOT");
-      loaderSummary = result.get();
-      if(loaderSummary->bbNick != bbnick) continue;
+      std::shared_ptr<nrt::LoaderSummaryMessage const> currSummary = result.get();
+      NRT_INFO("Loader summary request GOT: " << currSummary->bbNick);
+      if(currSummary->bbNick == bbnick)
+      {
+        loaderSummary = currSummary;
+        break;
+      }
 
     }
   } catch(std::exception &ex) {
@@ -140,7 +144,10 @@ std::string DesignerServerModule::callback_LoaderSummaryRequest(rapidjson::Docum
   }
 
   if(loaderSummary)
+  {
+    NRT_INFO("GOT LOADER SUMMARY FROM " << bbnick << " with " << loaderSummary->modules.size() << " modules");
     return toJSON(*loaderSummary);
+  }
   else NRT_WARNING("No Loader Summary Message returned");
 
   return "";
