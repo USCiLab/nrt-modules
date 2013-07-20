@@ -34,6 +34,9 @@ namespace designerserver
   NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (ModifyModuleTopic,
     nrt::ModifyModuleTopicMessage, nrt::Message<bool>, "Modify module topic")
 
+  NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (ModifyModuleParam,
+    nrt::ModifyParamMessage, nrt::ModifyParamResponseMessage, "Modify module parameter")
+
   NRT_DECLARE_MESSAGEPOSTER_PORT_SPECIAL (StartStopNRT,
     nrt::SetStateMessage, void, "Start or stop NRT")
 
@@ -49,7 +52,8 @@ class DesignerServerModule : public nrt::Module,
                                                        designerserver::LoadModule,
                                                        designerserver::UnloadModule,
                                                        designerserver::ModifyModuleTopic,
-                                                       designerserver::StartStopNRT>
+                                                       designerserver::StartStopNRT,
+                                                       designerserver::ModifyModuleParam>
 {
   public:
     DesignerServerModule(std::string const & instanceName = "");
@@ -69,6 +73,7 @@ class DesignerServerModule : public nrt::Module,
     std::string callback_DeleteModule(rapidjson::Document const & message);
     std::string callback_EditModuleTopic(rapidjson::Document const & message);
     std::string callback_StartStopNRT(rapidjson::Document const & message);
+    std::string callback_SetParameter(rapidjson::Document const & message);
 
 
     // std::function<void(rapidjson::Document const&)> itsCallback;

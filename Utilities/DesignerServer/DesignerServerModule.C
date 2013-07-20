@@ -19,6 +19,7 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setPosterTopic<UnloadModule>("NRT_UnloadModule");
   setPosterTopic<ModifyModuleTopic>("NRT_ModifyTopic");
   setPosterTopic<StartStopNRT>("NRT_SetState");
+  setPosterTopic<ModifyModuleParam>("NRT_ModifyParam");
 
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
@@ -44,6 +45,9 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
 
   itsServer.registerProcedure("org.nrtkit.designer/edit/nrt",
       std::bind(&DesignerServerModule::callback_StartStopNRT, this, std::placeholders::_1));
+
+  itsServer.registerProcedure("org.nrtkit.designer/edit/parameter",
+      std::bind(&DesignerServerModule::callback_SetParameter, this, std::placeholders::_1));
 
   itsServer.start(8080);
 }
@@ -366,6 +370,58 @@ std::string DesignerServerModule::callback_StartStopNRT(rapidjson::Document cons
 
   // Send msg
   post<designerserver::StartStopNRT>(payload);
+
+  return "";
+}
+
+std::string DesignerServerModule::callback_SetParameter(rapidjson::Document const & message)
+{
+
+  if(message.Capacity() != 4){
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+  }
+
+  auto const & json_request = message[3u];
+
+  if(!json_request.IsObject()) {
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+  }
+
+  if(! (json_request.HasMember("parameter_descriptor") &&
+        json_request.HasMember("parameter_value") &&
+        json_request.HasMember("module_uid")) )
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+
+  auto const & parameter_descriptor = json_request["parameter_descriptor"].GetString();
+  auto const & parameter_value      = json_request["parameter_value"].GetString();
+  auto const & module_uid           = json_request["module_uid"].GetString();
+
+  std::unique_ptr<nrt::ModifyParamMessage> payload(new nrt::ModifyParamMessage);
+  payload->paramName  = parameter_descriptor;
+  payload->paramValue = parameter_value;
+  payload->moduleUID  = module_uid;
+
+  try
+  {
+    bool success = false;
+    NRT_INFO("Changing parameter [" << parameter_descriptor << "] [" << parameter_value << "] [" << module_uid << "]");
+    auto results = post<ModifyModuleParam>(payload);
+    while(!results.empty()) 
+      success |= results.get()->success;
+    NRT_INFO("   Success: " << success);
+  }
+  catch(nrt::exception::ModuleException e)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0) + "\n" + e.str());
+  }
+  catch(nrt::exception::BlackboardException e)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0) + "\n" + e.str());
+  }
+  catch(...)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", "Unknown Error");
+  }
 
   return "";
 }
