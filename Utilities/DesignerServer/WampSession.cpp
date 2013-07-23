@@ -123,16 +123,36 @@ void WampSession::sendCallResult(std::string const & callID, std::string const &
   writeText(ss.str());
 }
 
+namespace 
+{
+  std::string escapeJsonString(const std::string& input) {
+    std::ostringstream ss;
+    for (auto iter = input.cbegin(); iter != input.cend(); iter++) {
+      switch (*iter) {
+        case '\\': ss << "\\\\"; break;
+        case '"': ss << "\\\""; break;
+        case '/': ss << "\\/"; break;
+        case '\b': ss << "\\b"; break;
+        case '\f': ss << "\\f"; break;
+        case '\n': ss << "\\n"; break;
+        case '\r': ss << "\\r"; break;
+        case '\t': ss << "\\t"; break;
+        default: ss << *iter; break;
+      }
+    }
+    return ss.str();
+  }
+}
+
 void WampSession::sendCallError(std::string const & callID, std::string const & errorURI, std::string const & errorDesc, std::string const & errorDetails)
 {
   std::stringstream ss;
 
-  ss << "[" << WAMP_CALLERROR << ", \"" << callID << "\", \"" << errorURI << "\", \"" << errorDesc << "\"";
+  ss << "[" << WAMP_CALLERROR << ", \"" << callID << "\", \"" << errorURI << "\", \"" << escapeJsonString(errorDesc) << "\"";
   if(errorDetails == "") {
     ss << "]";
   } else {
-    // errorDetails is already escaped json
-    ss << ", " << errorDetails << "]";
+    ss << ", \"" << escapeJsonString(errorDetails) << "\"]";
   }
 
   writeText(ss.str());
