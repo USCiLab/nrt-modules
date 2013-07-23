@@ -20,6 +20,7 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
   setPosterTopic<ModifyModuleTopic>("NRT_ModifyTopic");
   setPosterTopic<StartStopNRT>("NRT_SetState");
   setPosterTopic<ModifyModuleParam>("NRT_ModifyParam");
+  setPosterTopic<GetModuleParam>("NRT_GetParam");
 
 
   itsServer.registerProcedure("org.nrtkit.designer/get/blackboard_federation_summary",
@@ -47,7 +48,10 @@ DesignerServerModule::DesignerServerModule(std::string const & instanceName) :
       std::bind(&DesignerServerModule::callback_StartStopNRT, this, std::placeholders::_1));
 
   itsServer.registerProcedure("org.nrtkit.designer/edit/parameter",
-      std::bind(&DesignerServerModule::callback_SetParameter, this, std::placeholders::_1));
+      std::bind(&DesignerServerModule::callback_EditParameter, this, std::placeholders::_1));
+
+  itsServer.registerProcedure("org.nrtkit.designer/get/parameter",
+      std::bind(&DesignerServerModule::callback_GetParameter, this, std::placeholders::_1));
 
   itsServer.start(8080);
 }
@@ -374,7 +378,7 @@ std::string DesignerServerModule::callback_StartStopNRT(rapidjson::Document cons
   return "";
 }
 
-std::string DesignerServerModule::callback_SetParameter(rapidjson::Document const & message)
+std::string DesignerServerModule::callback_EditParameter(rapidjson::Document const & message)
 {
 
   if(message.Capacity() != 4){
@@ -412,11 +416,11 @@ std::string DesignerServerModule::callback_SetParameter(rapidjson::Document cons
   }
   catch(nrt::exception::ModuleException e)
   {
-    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0) + "\n" + e.str());
+    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0), e.str());
   }
   catch(nrt::exception::BlackboardException e)
   {
-    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0) + "\n" + e.str());
+    throw WampRPCException("org.nrtkit.designer/error/set_parameter_failed", e.bbwhat(0), e.str());
   }
   catch(...)
   {
@@ -424,6 +428,62 @@ std::string DesignerServerModule::callback_SetParameter(rapidjson::Document cons
   }
 
   return "";
+}
+
+std::string DesignerServerModule::callback_GetParameter(rapidjson::Document const & message)
+{
+
+  if(message.Capacity() != 4){
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+  }
+
+  auto const & json_request = message[3u];
+
+  if(!json_request.IsObject()) {
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+  }
+
+  if(! (json_request.HasMember("parameter_descriptor") &&
+        json_request.HasMember("module_uid")) )
+    throw WampRPCException("org.nrtkit.designer/error/module_position_args", "Bad argument list");
+
+  auto const & parameter_descriptor = json_request["parameter_descriptor"].GetString();
+  auto const & module_uid           = json_request["module_uid"].GetString();
+
+  std::unique_ptr<nrt::GetParamMessage> payload(new nrt::GetParamMessage);
+  payload->paramName  = parameter_descriptor;
+  payload->moduleUID  = module_uid;
+
+  try
+  {
+    bool success = false;
+    NRT_INFO("Getting parameter [" << parameter_descriptor << "] [" << module_uid << "]");
+    auto results = post<GetModuleParam>(payload);
+    while(!results.empty()) 
+    {
+      auto result = results.get();
+      NRT_INFO("Got result: " << result->valid << " " << result->value);
+      if(result->valid)
+      {
+        return "\"" + result->value + "\"";
+      }
+    }
+    NRT_INFO("    Failed");
+  }
+  catch(nrt::exception::ModuleException e)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/get_parameter_failed", e.bbwhat(0), e.str());
+  }
+  catch(nrt::exception::BlackboardException e)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/get_parameter_failed", e.bbwhat(0), e.str());
+  }
+  catch(...)
+  {
+    throw WampRPCException("org.nrtkit.designer/error/get_parameter_failed", "Unknown Error");
+  }
+
+  throw WampRPCException("org.nrtkit.designer/error/get_parameter_failed", "No response");
 }
 
 NRT_REGISTER_MODULE(DesignerServerModule);
