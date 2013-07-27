@@ -396,7 +396,7 @@ std::string toJSON(nrt::LoaderSummaryMessage const & message)
 
         writer.String("bbNick"); writer.String(message.bbNick.c_str());
         writer.String("bbUID"); writer.String(message.bbUID.c_str());
-        // writer.String("hostname"); writer.String(message.hostname.c_str());
+        writer.String("hostname"); writer.String(message.hostname.c_str());
 
         writer.String("modules");
         writer.StartArray();
