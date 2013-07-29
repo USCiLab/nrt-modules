@@ -314,10 +314,12 @@ std::string DesignerServerModule::callback_EditModuleTopic(rapidjson::Document c
       payload->topi = message[3u]["topi"].GetString();
 
       std::string port_type = message[3u]["port_type"].GetString();
-      if(port_type == "input")
+      if(port_type == "subscriber")
         payload->portType = nrt::ModifyModuleTopicMessage::PortType::ModuleSubscriber;
-      else if(port_type == "output")
+      else if(port_type == "poster")
         payload->portType = nrt::ModifyModuleTopicMessage::PortType::ModulePoster;
+      else if(port_type == "checker")
+        payload->portType = nrt::ModifyModuleTopicMessage::PortType::ModuleChecker;
       else
         throw WampRPCException("org.nrtkit.designer/error/argument_error", "Bad port type");
 
@@ -410,7 +412,7 @@ std::string DesignerServerModule::callback_EditParameter(rapidjson::Document con
     bool success = false;
     NRT_INFO("Changing parameter [" << parameter_descriptor << "] [" << parameter_value << "] [" << module_uid << "]");
     auto results = post<ModifyModuleParam>(payload);
-    while(!results.empty()) 
+    while(!results.empty())
       success |= results.get()->success;
     NRT_INFO("   Success: " << success);
   }
@@ -459,7 +461,7 @@ std::string DesignerServerModule::callback_GetParameter(rapidjson::Document cons
     bool success = false;
     NRT_INFO("Getting parameter [" << parameter_descriptor << "] [" << module_uid << "]");
     auto results = post<GetModuleParam>(payload);
-    while(!results.empty()) 
+    while(!results.empty())
     {
       auto result = results.get();
       NRT_INFO("Got result: " << result->valid << " " << result->value);
