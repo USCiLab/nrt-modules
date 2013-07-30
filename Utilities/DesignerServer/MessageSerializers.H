@@ -406,7 +406,28 @@ std::string toJSON(nrt::LoaderSummaryMessage const & message)
 
           writer.String("logicalPath"); writer.String(prototype.logicalPath.c_str());
 
-          // TODO: Parse manifest
+          // TODO: Finish parsing manifest
+          writer.String("general");
+          {
+            writer.StartObject();
+            writer.String("displayname"); writer.String(prototype.manifest.general.displayname.c_str());
+            writer.String("classname"); writer.String(prototype.manifest.general.classname.c_str());
+
+            writer.String("category");
+            writer.StartArray();
+            for(auto c : prototype.manifest.general.category) writer.String(c.c_str());
+            writer.EndArray();
+
+            writer.String("synopsis"); writer.String(prototype.manifest.general.synopsis.c_str());
+            writer.String("description"); writer.String(prototype.manifest.general.description.c_str());
+
+            writer.String("keywords");
+            writer.StartArray();
+            for(auto k : prototype.manifest.general.keywords) writer.String(k.c_str());
+            writer.EndArray();
+
+            writer.EndObject();
+          }
 
           unsigned int bufsize = prototype.icondata.size();
           if(bufsize) {
